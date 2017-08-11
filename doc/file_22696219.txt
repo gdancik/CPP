@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>Service unavailable!</title>
+<link rev="made" href="mailto:info@ncbi.nlm.nih.gov" />
+<style type="text/css"><!--/*--><![CDATA[/*><!--*/ 
+    body { color: #000000; background-color: #FFFFFF; }
+    a:link { color: #0000CC; }
+    p, address {margin-left: 3em;}
+    span {font-size: smaller;}
+/*]]>*/--></style>
+</head>
+
+<body>
+<h1>Service unavailable!</h1>
+<p>
+
+
+    The server is temporarily unable to service your
+    request due to maintenance downtime or capacity
+    problems. Please try again later. 
+
+</p>
+<p>
+If you think this is a server error, please contact
+the <a href="mailto:info@ncbi.nlm.nih.gov">webmaster</a>.
+
+</p>
+
+<h2>Error 503</h2>
+<address>
+  <a href="/">www.ncbi.nlm.nih.gov</a><br />
+  
+  <span>Fri Aug 11 11:22:17 2017<br />
+  Apache</span>
+</address>
+</body>
+</html>
+

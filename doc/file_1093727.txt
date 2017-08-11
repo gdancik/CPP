@@ -1,0 +1,1 @@
+{"sourcedb": "PubMed","sourceid": "1093727","text":"[[80th birthday of Prof. Vladim  r Vondr  cek, M.D., D.Sc]. ","denotations":[{"obj":"Gene:2260","span":{"begin":42,"end":45}}]}

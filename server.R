@@ -6,13 +6,45 @@ library(wordcloud2)
 shinyServer(function(input, output) {
 
   
+  ######################################
+  # Error message function
+  ######################################
+  printError <-function(msg, files) {
+    print(msg)
+    print(files)
+  }
+  
+  #############################################################
+  # Error handling function to parse documents using fromJSON
+  # Errors result in a returned value of NA
+  #############################################################
+  tryJSON <- function(x) {
+    t = try(fromJSON(x), silent = TRUE)
+    if (class(t) == "try-error") {
+      return (NA)
+    }
+    return (t)
+  } 
+  
   files = Sys.glob("doc/file_*")
   
   # read in each file using scan
   docs = sapply(files, scan, what = "character", sep = "\n")
   
+  # remove docs with "Service unavailable" errors
+  errors = sapply(docs, length) > 1
+  w=which(errors)
+  docs = docs[-w]
+  printError("Warning: the following files could not be read in", names(w))
+  
   # convert each JSON formatted file to a list
-  l = lapply(docs, fromJSON)
+  l = lapply(docs, tryJSON)
+  
+  # remove and report docs that could not be processed #
+  keep = !is.na(l)
+  l = l[keep]
+  w = which(!keep)
+  printError("Warning: the following files could not be processed", names(w))
   
   # extract the abstract ('text') element to get a list of abstracts
   abstracts = sapply(l, function(x)x$text)
