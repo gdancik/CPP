@@ -1,6 +1,6 @@
 library(shiny)
 library(jsonlite)
-library(hunspell)
+library(tm)
 library(wordcloud2)
 
 shinyServer(function(input, output) {
@@ -26,6 +26,17 @@ shinyServer(function(input, output) {
     return (t)
   } 
   
+  #############################################################
+  # remove pure numeric strings from a vector
+  #############################################################
+  removePureNumbers <- function(x) {
+    g = grep("^[+-]*[0-9]+$", x)
+    if (length(g) == 0) {
+      return(x)
+    }
+    x[-g]
+  }
+  
   files = Sys.glob("doc/file_*")
   
   # read in each file using scan
@@ -50,12 +61,17 @@ shinyServer(function(input, output) {
   abstracts = sapply(l, function(x)x$text)
   
   # get a list, with each element a vector of words from an abstract
-  words = lapply(abstracts, hunspell_parse)
-  words = lapply(words, unique)
+  words = lapply(abstracts, removePunctuation,preserve_intra_word_dashes = TRUE )
+  words = lapply(words, stripWhitespace)
+  words = lapply(words, tolower)
+  words = unlist(words)
+  words = strsplit(words, " ")
   words = lapply(words, unlist)
+  words = lapply(words, removePureNumbers)
   
   # get a list, with each element a vector of stem words for each abstract
-  stems = lapply(words, hunspell_stem)
+  #stems = lapply(words, hunspell_stem)
+  stems = lapply(words, stemDocument)
   stems = lapply(stems, unique) 
   
   # summarize the stem words across all abstracts via a frequency table
