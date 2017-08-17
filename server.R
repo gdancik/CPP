@@ -48,9 +48,11 @@ shinyServer(function(input, output) {
     # remove docs with "Service unavailable" errors
     errors = sapply(docs, length) > 1
     w=which(errors)
-    docs = docs[-w]
-    readnames = x$name[w]
-
+    readnames = integer(0)
+    if (length(w) > 0) {
+        docs = docs[-w]
+        readnames = x$name[w]
+    }
     
     # convert each JSON formatted file to a list
     l = lapply(docs, tryJSON)
