@@ -62,8 +62,10 @@ shinyServer(function(input, output) {
     procnames = x$name[w]
     
     output$console = renderPrint({
-      cat("Warning, the following files could not be read:", sep='\n')
-      cat(readnames, sep = '\n')
+      if(length(readnames) > 0){
+        cat("Warning, the following files could not be read:", sep='\n')
+        cat(readnames, sep = '\n')
+      }
       if(length(procnames) > 0){
         cat("Warning, the following files could not be processed:", sep='\n')
         cat(procnames, sep='\n')
