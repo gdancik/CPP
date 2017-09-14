@@ -3,6 +3,12 @@ library(jsonlite)
 library(tm)
 library(wordcloud2)
 
+AUTO.READ = NULL
+
+if (!exists("AUTO.READ")) {
+  AUTO.READ = NULL
+}
+
 shinyServer(function(input, output) {
 
 
@@ -64,6 +70,12 @@ shinyServer(function(input, output) {
     procnames = x$name[w]
     
     output$console = renderPrint({
+      
+      if (!is.null(AUTO.READ)) {
+        cat("files automatically read from: ")
+        cat(AUTO.READ, "\n")
+      }
+      
       if(length(readnames) > 0){
         cat("Warning, the following files could not be read:", sep='\n')
         cat(readnames, sep = '\n')
@@ -79,7 +91,11 @@ shinyServer(function(input, output) {
   #############################################################
   # Analyze processed files and display wordcloud
   #############################################################
-  analyzeFiles <- function(l){
+  analyzeFiles <- function(){
+    print("In analyzeFiles")
+    l <- processedFiles$dat
+    save(l, file = "l.RData")
+    
     # extract the abstract ('text') element to get a list of abstracts
     abstracts = sapply(l, function(x)x$text)
     
@@ -147,8 +163,8 @@ shinyServer(function(input, output) {
     cluster1 = groups[groups == 1]
     cluster2 = groups[groups == 2]
     
-    m1 = m[names(cluster1),]
-    m2 = m[names(cluster2),]
+    m1 = m[names(cluster1), , drop = FALSE]
+    m2 = m[names(cluster2), , drop = FALSE]
     
     
     save(m1, m2, file = "results.RData")
@@ -199,9 +215,23 @@ shinyServer(function(input, output) {
   #reactive value to grab return value from event observer
   processedFiles = reactiveValues(dat = NULL)
   #event observer listening to fileInput state change, calls processing function
-  observeEvent(input$fileSelect, processedFiles$dat <- processFiles(input$fileSelect))
-  #event observer listening to "Analyze" button, calls analysis function
-  observeEvent(input$analyzeFiles, analyzeFiles(processedFiles$dat))
+  
+  observe({
+  
+    if (!is.null(AUTO.READ)) {
+      files = list(datapath = Sys.glob(paste0(AUTO.READ, "/*")))
+      processedFiles$dat <- processFiles(files)
+    }  
+    
+  })
+  
+    observeEvent(input$fileSelect, {
+      processedFiles$dat <- processFiles(input$fileSelect)
+        AUTO.READ = NULL
+    })
+    
+    #event observer listening to "Analyze" button, calls analysis function
+    observeEvent(input$analyzeFiles, analyzeFiles())
   
   
 })
