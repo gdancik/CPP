@@ -3,8 +3,7 @@ library(jsonlite)
 library(tm)
 library(wordcloud2)
 
-AUTO.READ <- "/Users/dancikg/RESEARCH/research_easternct/work/GenePubViewer/DCAST/Github/DCAST/doc/"
-#AUTO.READ = NULL
+AUTO.READ = NULL
 
 if (!exists("AUTO.READ")) {
   AUTO.READ = NULL
