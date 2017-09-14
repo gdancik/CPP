@@ -5,7 +5,7 @@ library(wordcloud2)
 
 shinyServer(function(input, output) {
 
-  
+
   ######################################
   # Error message function
   ######################################
@@ -91,24 +91,29 @@ shinyServer(function(input, output) {
     words = strsplit(words, " ")
     words = lapply(words, unlist)
     words = lapply(words, removePureNumbers)
-    
+   
+    print ("got words") 
     # get a list, with each element a vector of stem words for each abstract
     #stems = lapply(words, hunspell_stem)
     stems = lapply(words, stemDocument)
     stems = lapply(stems, unique) 
     
+    print ("got stems")
     # summarize the stem words across all abstracts via a frequency table
     stem.summary = sort(table(unlist(stems)), decreasing = TRUE)
     head(stem.summary) # this includes 'stop words'
     
+    print("read stop words")
     # read in stop words, and remove these from the results #
     stopwords = as.character(read.delim("stopwords.txt")[[1]])
     keep = !names(stem.summary)%in%stopwords
     
     # label and display results
     results <- as.data.frame(stem.summary[keep])
+    save(results,stems, stopwords, file = "results.RData")
+
     colnames(results) <- c("word", "freq")
-    head(results)
+    print(head(results))
     
     # generate wordcloud, using top 30 results
     m = min(30, nrow(results))
@@ -145,19 +150,42 @@ shinyServer(function(input, output) {
     m1 = m[names(cluster1),]
     m2 = m[names(cluster2),]
     
-    topwords1 = apply(m1, 1, which.max)
-    topwords1 = sort(topwords1, decreasing = TRUE)
-    topwords2 = apply(m2, 1, which.max)
-    topwords2 = sort(topwords2, decreasing = TRUE)
-    names(topwords1) = colnames(m1[names(topwords1), topwords1])
-    names(topwords2) = colnames(m2[names(topwords2), topwords2])
     
-    topwords1 = as.table(topwords1)
-    topwords2 = as.table(topwords2)
+    save(m1, m2, file = "results.RData")
     
+    # documents are in rows, and terms are in columns, so count up column by column to get the
+    # frequency for each word
+    get.top.words <-function(x) {
+      counts = colSums(x)
+      counts = sort(counts, decreasing = TRUE)
+      counts
+    }
+    
+    topwords1 = get.top.words(m1)
+    topwords2 = get.top.words(m2)
+    
+    topwords1 = data.frame(topwords1)
+    topwords2 = data.frame(topwords2)
+    
+    ###################################################
+    ## old code
+    #topwords1 = apply(m1, 1, which.max)
+    #topwords1 = sort(topwords1, decreasing = TRUE)
+    #topwords2 = apply(m2, 1, which.max)
+    #topwords2 = sort(topwords2, decreasing = TRUE)
+    #names(topwords1) = colnames(m1[names(topwords1), topwords1])
+    #names(topwords2) = colnames(m2[names(topwords2), topwords2])
+    
+    #topwords1 = as.table(topwords1)
+    #topwords2 = as.table(topwords2)
+    ###################################################
+    
+    print("got topwords 1 and 2")
+  
+      
     #plot cluster tables
-    output$cluster1Table <- renderTable(topwords1)
-    output$cluster2Table <- renderTable(topwords2)
+    output$cluster1Table <- renderTable(topwords1, rownames = TRUE)
+    output$cluster2Table <- renderTable(topwords2, rownames = TRUE)
     
     #plot hclust with cutree borders
     output$clusters <- renderPlot({
@@ -166,8 +194,6 @@ shinyServer(function(input, output) {
       rect.hclust(hc_m, k=2, border="red")
     })
     
-
-      
   }
   
   #reactive value to grab return value from event observer

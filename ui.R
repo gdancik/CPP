@@ -8,6 +8,7 @@ shinyUI(fluidPage(
   ))),
   hr(),
   
+  
   fluidRow(
     
     column(6, align="center",
@@ -23,10 +24,10 @@ shinyUI(fluidPage(
   fluidRow(
     
     column(6,
-           dataTableOutput("cluster1Table")
+           tableOutput("cluster1Table")
            ),
     column(6,
-           dataTableOutput("cluster2Table")
+           tableOutput("cluster2Table")
            )
     
   )
