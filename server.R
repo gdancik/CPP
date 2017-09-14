@@ -10,8 +10,7 @@ if (!exists("AUTO.READ")) {
   AUTO.READ = NULL
 }
 
-shinyServer(function(input, output) {
-
+shinyServer(function(input, output, session) {
 
   ######################################
   # Error message function
@@ -210,6 +209,9 @@ shinyServer(function(input, output) {
       groups = cutree(hc_m, k=2)
       rect.hclust(hc_m, k=2, border="red")
     })
+    
+    shinyjs::enable("btnViewClusters")
+    toggleModal(session, "clusterModal")
     
   }
   

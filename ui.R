@@ -1,34 +1,41 @@
 library(shiny)
+library(shinyBS)
 library(wordcloud2)
+library(shinydashboard)
+library(shinyjs)
 
 shinyUI(
   
-  fluidPage(
+  dashboardPage(
     
-  title = "DCAST",
-  sidebarLayout(
+    
+    
+    dashboardHeader(title = "DCAST"),
  
-    sidebarPanel(
+    dashboardSidebar(width = 350,
+       includeCSS('ecsu.css'),
       tags$head(tags$style(HTML(
         "#console { max-height:15vh; max-width:50vh; overflow:auto; }"
       ))),
-      
+    
+      useShinyjs(),  
       fileInput("fileSelect", "Select Files", multiple=TRUE),
       verbatimTextOutput("console"),
-      actionButton("analyzeFiles", "Analyze Files")
+      actionButton("analyzeFiles", "Analyze Files"),
+      hr(),
+      actionButton("btnViewClusters", "View Clusters", disabled = "disabled")
+      
     ), 
     
-    mainPanel(
+    dashboardBody(
     
-  hr(),
-  
-
   fluidRow(
     
-    column(12, align="center",
-           plotOutput("clusters")
-    )
-
+    bsModal("clusterModal", "Document clustering", "btnViewClusters", 
+            plotOutput("clusters"),
+            size = "large"
+    )      
+  
   ),
  
     fluidRow(
@@ -36,6 +43,5 @@ shinyUI(
       column(6, tableOutput("cluster2Table"))
     )
   )
-)
 )
 )
