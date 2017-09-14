@@ -21,7 +21,7 @@ shinyUI(
       useShinyjs(),  
       fileInput("fileSelect", "Select Files", multiple=TRUE),
       verbatimTextOutput("console"),
-      actionButton("analyzeFiles", "Analyze Files"),
+      actionButton("btnAnalyzeFiles", "Analyze Files", disabled = "disabled"),
       hr(),
       actionButton("btnViewClusters", "View Clusters", disabled = "disabled")
       

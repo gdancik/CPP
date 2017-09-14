@@ -84,6 +84,8 @@ shinyServer(function(input, output, session) {
         cat(procnames, sep='\n')
       }
     })
+    
+    shinyjs::enable("btnAnalyzeFiles")
     return(l)
   }
   
@@ -233,7 +235,7 @@ shinyServer(function(input, output, session) {
     })
     
     #event observer listening to "Analyze" button, calls analysis function
-    observeEvent(input$analyzeFiles, analyzeFiles())
+    observeEvent(input$btnAnalyzeFiles, analyzeFiles())
   
   
 })
