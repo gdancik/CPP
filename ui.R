@@ -2,8 +2,7 @@ library(shiny)
 library(wordcloud2)
 
 shinyUI(fluidPage(
-  title = "Abstract WordCloud",
-  wordcloud2Output('wordCloud'),
+  title = "DCAST",
   tags$head(tags$style(HTML(
     "#console { max-height:15vh; max-width:50vh; overflow:auto; }"
   ))),
@@ -17,10 +16,19 @@ shinyUI(fluidPage(
            actionButton("analyzeFiles", "Analyze Files")
            ),
     column(6, align="center",
-           sliderInput('size', "Size",
-                       min=0.0, max=1, value = 0.5,
-                       step=0.1))
+           plotOutput("clusters")
+           )
 
+  ),
+  fluidRow(
+    
+    column(6,
+           dataTableOutput("cluster1Table")
+           ),
+    column(6,
+           dataTableOutput("cluster2Table")
+           )
+    
   )
 
 ))
