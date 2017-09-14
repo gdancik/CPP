@@ -113,10 +113,61 @@ shinyServer(function(input, output) {
     # generate wordcloud, using top 30 results
     m = min(30, nrow(results))
     
-    output$wordCloud <- renderWordcloud2({
-      wordcloud2(results[1:m,], size = input$size)
-      
+    # create term document matrix, after getting stems
+    x = sapply(stems, paste0, collapse = " ")
+    v = VectorSource(x)
+    corpus = SimpleCorpus(v)
+    
+    dm = DocumentTermMatrix(corpus, control = list(stopwords = stopwords))
+    
+    # keep terms appearing in <10% of documents (we don't care about rare words)
+    dm = removeSparseTerms(dm, 0.9)
+    
+    # convert to matrix to display top results
+    m = as.matrix(dm)
+    
+    # find the top words
+    counts = colSums(m)
+    topwords = sort(counts, decreasing =  TRUE)
+    topwords[1:3]
+    
+    # generate distance matrix
+    d_m = dist(m, method = "euclidean")
+    
+    #convert dist matrix to hierarchical cluster
+    hc_m = hclust(d_m, method = "complete")
+    groups = cutree(hc_m, k=2)
+    
+    #find top words for each cluster
+    cluster1 = groups[groups == 1]
+    cluster2 = groups[groups == 2]
+    
+    m1 = m[names(cluster1),]
+    m2 = m[names(cluster2),]
+    
+    topwords1 = apply(m1, 1, which.max)
+    topwords1 = sort(topwords1, decreasing = TRUE)
+    topwords2 = apply(m2, 1, which.max)
+    topwords2 = sort(topwords2, decreasing = TRUE)
+    names(topwords1) = colnames(m1[names(topwords1), topwords1])
+    names(topwords2) = colnames(m2[names(topwords2), topwords2])
+    
+    topwords1 = as.table(topwords1)
+    topwords2 = as.table(topwords2)
+    
+    #plot cluster tables
+    output$cluster1Table <- renderTable(topwords1)
+    output$cluster2Table <- renderTable(topwords2)
+    
+    #plot hclust with cutree borders
+    output$clusters <- renderPlot({
+      plot(hc_m, labels = FALSE)
+      groups = cutree(hc_m, k=2)
+      rect.hclust(hc_m, k=2, border="red")
     })
+    
+
+      
   }
   
   #reactive value to grab return value from event observer
