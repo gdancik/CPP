@@ -2,6 +2,8 @@ library(shiny)
 library(jsonlite)
 library(tm)
 library(wordcloud2)
+library(data.table)
+library(DT)
 
 AUTO.READ = NULL
 
@@ -198,11 +200,27 @@ shinyServer(function(input, output, session) {
     ###################################################
     
     print("got topwords 1 and 2")
+    
+    #plot global topwords
+    output$globalTable = DT::renderDataTable(
+      DT::datatable(
+        t(topwords),
+        options = list(scrollX = TRUE, dom = 't')
+        )
+    )
   
       
     #plot cluster tables
-    output$cluster1Table <- renderTable(topwords1, rownames = TRUE)
-    output$cluster2Table <- renderTable(topwords2, rownames = TRUE)
+    output$cluster1Table <- DT::renderDataTable({
+      DT::datatable(topwords1)
+      })
+    output$cluster2Table <- DT::renderDataTable({
+      DT::datatable(topwords2)
+    })
+    
+    #set div and titles to visible
+    shinyjs::show("datatables")
+    shinyjs::show("globalTitle")
     
     #plot hclust with cutree borders
     output$clusters <- renderPlot({

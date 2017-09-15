@@ -28,20 +28,41 @@ shinyUI(
     ), 
     
     dashboardBody(
-    
-  fluidRow(
-    
-    bsModal("clusterModal", "Document clustering", "btnViewClusters", 
-            plotOutput("clusters"),
-            size = "large"
-    )      
-  
-  ),
- 
-    fluidRow(
-      column(6, tableOutput("cluster1Table")),
-      column(6, tableOutput("cluster2Table"))
+      
+      fluidRow(
+        
+        bsModal("clusterModal", "Document clustering", "btnViewClusters", 
+                plotOutput("clusters"),
+                size = "large"
+        )      
+        
+      ),
+      
+      fluidRow(
+        hidden(
+          div(
+            id = "globalTitle",
+            h2("Global Term Frequency")
+          )
+        ),
+        DT::dataTableOutput("globalTable")
+      ),
+      
+      fluidRow(
+        hidden(
+          div(
+            id = "datatables",
+            br(),
+            h2("Cluster Term Frequency"),
+            tabsetPanel(
+              useShinyjs(),
+              selected = "Cluster 1",
+              tabPanel("Cluster 1", DT::dataTableOutput("cluster1Table")),
+              tabPanel("Cluster 2", DT::dataTableOutput("cluster2Table"))
+            )
+          )
+        )
+      )
     )
   )
-)
 )
