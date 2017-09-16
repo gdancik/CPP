@@ -8,8 +8,6 @@ shinyUI(
   
   dashboardPage(
     
-    
-    
     dashboardHeader(title = "DCAST"),
  
     dashboardSidebar(width = 350,
@@ -19,11 +17,18 @@ shinyUI(
       ))),
     
       useShinyjs(),  
-      fileInput("fileSelect", "Select Files", multiple=TRUE),
-      verbatimTextOutput("console"),
-      actionButton("btnAnalyzeFiles", "Analyze Files", disabled = "disabled"),
+      fileInput("fileSelect", "Select Files", multiple=TRUE, width = "100%"),
+      
+      div(style="display:inline-block; width: 45%",
+        actionButton("btnAnalyzeFiles", "Analyze Files", disabled = "disabled", width = "100%")
+      ),
+      div(style="display:inline-block; width: 45%",
+        actionButton("btnViewClusters", "View Clusters", disabled = "disabled", width = "100%")
+      ), 
+
       hr(),
-      actionButton("btnViewClusters", "View Clusters", disabled = "disabled")
+      
+      verbatimTextOutput("console")
       
     ), 
     

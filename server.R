@@ -5,6 +5,8 @@ library(wordcloud2)
 library(data.table)
 library(DT)
 
+source("functions.R", local = TRUE)
+
 AUTO.READ = NULL
 
 if (!exists("AUTO.READ")) {
@@ -169,9 +171,6 @@ shinyServer(function(input, output, session) {
     m1 = m[names(cluster1), , drop = FALSE]
     m2 = m[names(cluster2), , drop = FALSE]
     
-    
-    save(m1, m2, file = "results.RData")
-    
     # documents are in rows, and terms are in columns, so count up column by column to get the
     # frequency for each word
     get.top.words <-function(x) {
@@ -186,6 +185,11 @@ shinyServer(function(input, output, session) {
     topwords1 = data.frame(topwords1)
     topwords2 = data.frame(topwords2)
     
+    ## TO DO: use associations to get the topwords, and display these in the 
+    ## tables
+    associations = getAssociations(dm, groups)
+    print(head(associations))
+    
     ###################################################
     ## old code
     #topwords1 = apply(m1, 1, which.max)
@@ -198,8 +202,6 @@ shinyServer(function(input, output, session) {
     #topwords1 = as.table(topwords1)
     #topwords2 = as.table(topwords2)
     ###################################################
-    
-    print("got topwords 1 and 2")
     
     #plot global topwords
     output$globalTable = DT::renderDataTable(
