@@ -67,6 +67,10 @@ shinyUI(
             )
           )
         )
+      ),
+      
+      fluidRow(
+        shiny::verbatimTextOutput("articleTitles")
       )
     )
   )

@@ -104,6 +104,10 @@ shinyServer(function(input, output, session) {
     # extract the abstract ('text') element to get a list of abstracts
     abstracts = sapply(l, function(x)x$text)
     
+    # extract article titles
+    titles = sapply(abstracts, function(x) gsub("[\\.\\?].*", "", x))
+    titles = unname(titles)
+    
     # get a list, with each element a vector of words from an abstract
     words = lapply(abstracts, removePunctuation,preserve_intra_word_dashes = TRUE )
     words = lapply(words, stripWhitespace)
@@ -179,16 +183,26 @@ shinyServer(function(input, output, session) {
       counts
     }
     
-    topwords1 = get.top.words(m1)
-    topwords2 = get.top.words(m2)
-    
-    topwords1 = data.frame(topwords1)
-    topwords2 = data.frame(topwords2)
+    # Old topwords
+    # topwords1 = get.top.words(m1)
+    # topwords2 = get.top.words(m2)
+    # 
+    # topwords1 = data.frame(topwords1)
+    # topwords2 = data.frame(topwords2)
     
     ## TO DO: use associations to get the topwords, and display these in the 
     ## tables
     associations = getAssociations(dm, groups)
+    
+    #associations sorted by p-value and proportion(descending)
+    associations = associations[with(associations, order(p.value, -proportion)),]
+    
+    #get topwords per cluster
+    topwords1 = associations[associations$cluster == 1,]
+    topwords2 = associations[associations$cluster == 2,]
     print(head(associations))
+    
+    
     
     ###################################################
     ## old code
@@ -218,6 +232,11 @@ shinyServer(function(input, output, session) {
       })
     output$cluster2Table <- DT::renderDataTable({
       DT::datatable(topwords2)
+    })
+    
+    #plot article title output
+    output$articleTitles <- renderPrint({
+      print(titles[1:5])
     })
     
     #set div and titles to visible
