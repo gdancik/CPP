@@ -295,6 +295,7 @@ shinyServer(function(input, output, session) {
                     " GROUP BY PubMesh.MeshID ORDER BY count(PubMesh.MeshID)")
       meshSummary$dat <- dbSendQuery(con, query)
       output$queryResults <- renderDataTable(fetch(meshSummary$dat))
+      dbDisconnect(con)
       }
     )
   
