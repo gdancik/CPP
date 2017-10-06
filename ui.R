@@ -28,7 +28,10 @@ shinyUI(
 
       hr(),
       
-      verbatimTextOutput("console")
+      verbatimTextOutput("console"),
+      
+      selectizeInput("geneInput", label = "Enter a Gene ID", choices = NULL),
+      actionButton("btnGeneSearch", "Search")
       
     ), 
     
@@ -67,6 +70,10 @@ shinyUI(
             )
           )
         )
+      ),
+      
+      fluidRow(
+        dataTableOutput("queryResults")
       ),
       
       fluidRow(

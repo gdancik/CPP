@@ -4,6 +4,8 @@ library(tm)
 library(wordcloud2)
 library(data.table)
 library(DT)
+library(DBI)
+library(RMySQL)
 
 source("functions.R", local = TRUE)
 
@@ -255,6 +257,12 @@ shinyServer(function(input, output, session) {
     
   }
   
+  #connect to DB
+  con = dbConnect(MySQL(), dbname = "gpv", user = "root", password = "password")
+  
+  #reactive value to grab query results
+  meshSummary = reactiveValues(dat = NULL)
+  
   #reactive value to grab return value from event observer
   processedFiles = reactiveValues(dat = NULL)
   #event observer listening to fileInput state change, calls processing function
@@ -275,6 +283,20 @@ shinyServer(function(input, output, session) {
     
     #event observer listening to "Analyze" button, calls analysis function
     observeEvent(input$btnAnalyzeFiles, analyzeFiles())
+    
+    geneIDs = c(1, 2, 3, 9, 2261, 178)
+    
+    updateSelectizeInput(session, "geneInput", choices = geneIDs, server = TRUE)
+    
+    observeEvent(input$btnGeneSearch, {
+      query = paste("select PubMesh.MeshID, count(PubMesh.MeshID) from PubMesh", 
+                    "INNER JOIN PubGene ON PubMesh.PMID = PubGene.PMID ",
+                    "WHERE PubGene.NCBI_Gene = ", input$geneInput, 
+                    " GROUP BY PubMesh.MeshID ORDER BY count(PubMesh.MeshID)")
+      meshSummary$dat <- dbSendQuery(con, query)
+      output$queryResults <- renderDataTable(fetch(meshSummary$dat))
+      }
+    )
   
   
 })
