@@ -300,9 +300,29 @@ shinyServer(function(input, output, session) {
       meshSummary$dat <- dbGetQuery(con, query)
       output$queryResults <- renderDataTable(meshSummary$dat)
       
-      truncID = strsplit(as.character(meshSummary$dat$TreeID), "\\.")
-      print(truncID)
+      #Format MeshIDs for SQL 'IN' query
+      meshIDs = toString(shQuote(meshSummary$dat$MeshID))
       
+      #Perform query, retrieve relevant TreeIDs
+      query = paste("SELECT TreeID FROM MeshTerms WHERE MeshID IN (",
+                    paste(meshIDs), ") AND TreeID LIKE 'C04%'")
+      TreeIDs = dbGetQuery(con, query)
+      
+      #Format TreeIDs to retrieve neoplasms from first three branches
+      truncID = strsplit(TreeIDs$TreeID, "\\.")
+      truncID = lapply(truncID, flattenTree)
+      truncID = toString(shQuote(unlist(truncID)))
+      
+      #Query newly formatted TreeIDs to get MeSH Terms
+      query = paste("SELECT TreeID, MeshID, Term FROM MeshTerms WHERE TreeID IN (",
+                    paste(truncID), ")")
+      neoplasms = dbGetQuery(con, query)
+      
+      #Disconnect to prevent too many connections
+      dbDisconnect(con)
+      
+      #Render results
+      output$neoplasmResults <- renderDataTable(neoplasms)
       
       
       }
