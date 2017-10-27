@@ -291,10 +291,12 @@ shinyServer(function(input, output, session) {
     observeEvent(input$btnGeneSearch, {
       #connect to DB
       con = dbConnect(MySQL(), dbname = "gpv", user = "root", password = "password")
-      query = paste("SELECT DISTINCT PubMesh.MeshID, MeshTerms.Term, MeshTerms.TreeID from PubMesh", 
-                    "INNER JOIN MeshTerms ON MeshTerms.MeshID = PubMesh.MeshID",
+      query = paste("SELECT count(MeshTerms.MeshID), MeshTerms.MeshID, MeshTerms.Term from MeshTerms",
+                    "INNER JOIN PubMesh ON MeshTerms.MeshID = PubMesh.MeshID",
                     "INNER JOIN PubGene ON PubMesh.PMID = PubGene.PMID",
-                    "WHERE PubGene.NCBI_Gene =", input$geneInput)
+                    "WHERE PubGene.NCBI_Gene = ", input$geneInput,
+                    "GROUP BY MeshTerms.MeshID, MeshTerms.Term",
+                    "ORDER BY count(MeshTerms.MeshID);")
       meshSummary$dat <- dbGetQuery(con, query)
       output$queryResults <- renderDataTable(meshSummary$dat)
       
