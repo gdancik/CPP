@@ -73,3 +73,16 @@ clusterAssociation <- function(x, n) {
 }
 
 
+######################################################################################
+# Small function to return a list of flattened TreeIDs for retrieving neoplasms by site.
+# It accepts a list of lists of TreeIDs strsplit by ".", and returns a list of the first
+# three elements joined by ".".
+######################################################################################
+flattenTree <- function(x){
+  if(length(x) > 2){
+    x = paste(x[1:3], collapse = ".")
+  }
+  return(x)
+}
+
+

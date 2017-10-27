@@ -83,6 +83,10 @@ shinyUI(
       ),
       
       fluidRow(
+        dataTableOutput("neoplasmResults")
+      ),
+      
+      fluidRow(
         shiny::verbatimTextOutput("articleTitles")
       )
     )
