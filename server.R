@@ -296,7 +296,7 @@ shinyServer(function(input, output, session) {
                     "INNER JOIN PubGene ON PubMesh.PMID = PubGene.PMID",
                     "WHERE PubGene.NCBI_Gene = ", input$geneInput,
                     "GROUP BY MeshTerms.MeshID, MeshTerms.Term",
-                    "ORDER BY count(MeshTerms.MeshID);")
+                    "ORDER BY count(MeshTerms.MeshID)")
       meshSummary$dat <- dbGetQuery(con, query)
       output$queryResults <- renderDataTable(meshSummary$dat)
       
