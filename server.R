@@ -4,6 +4,8 @@ library(tm)
 library(wordcloud2)
 library(data.table)
 library(DT)
+library(DBI)
+library(RMySQL)
 
 source("functions.R", local = TRUE)
 
@@ -104,6 +106,10 @@ shinyServer(function(input, output, session) {
     # extract the abstract ('text') element to get a list of abstracts
     abstracts = sapply(l, function(x)x$text)
     
+    # extract article titles
+    titles = sapply(abstracts, function(x) gsub("[\\.\\?].*", "", x))
+    titles = unname(titles)
+    
     # get a list, with each element a vector of words from an abstract
     words = lapply(abstracts, removePunctuation,preserve_intra_word_dashes = TRUE )
     words = lapply(words, stripWhitespace)
@@ -179,16 +185,26 @@ shinyServer(function(input, output, session) {
       counts
     }
     
-    topwords1 = get.top.words(m1)
-    topwords2 = get.top.words(m2)
-    
-    topwords1 = data.frame(topwords1)
-    topwords2 = data.frame(topwords2)
+    # Old topwords
+    # topwords1 = get.top.words(m1)
+    # topwords2 = get.top.words(m2)
+    # 
+    # topwords1 = data.frame(topwords1)
+    # topwords2 = data.frame(topwords2)
     
     ## TO DO: use associations to get the topwords, and display these in the 
     ## tables
     associations = getAssociations(dm, groups)
+    
+    #associations sorted by p-value and proportion(descending)
+    associations = associations[with(associations, order(p.value, -proportion)),]
+    
+    #get topwords per cluster
+    topwords1 = associations[associations$cluster == 1,]
+    topwords2 = associations[associations$cluster == 2,]
     print(head(associations))
+    
+    
     
     ###################################################
     ## old code
@@ -220,6 +236,11 @@ shinyServer(function(input, output, session) {
       DT::datatable(topwords2)
     })
     
+    #plot article title output
+    output$articleTitles <- renderPrint({
+      print(titles[1:5])
+    })
+    
     #set div and titles to visible
     shinyjs::show("datatables")
     shinyjs::show("globalTitle")
@@ -235,6 +256,12 @@ shinyServer(function(input, output, session) {
     toggleModal(session, "clusterModal")
     
   }
+  
+  #connect to DB
+
+  
+  #reactive value to grab query results
+  meshSummary = reactiveValues(dat = NULL)
   
   #reactive value to grab return value from event observer
   processedFiles = reactiveValues(dat = NULL)
@@ -256,6 +283,30 @@ shinyServer(function(input, output, session) {
     
     #event observer listening to "Analyze" button, calls analysis function
     observeEvent(input$btnAnalyzeFiles, analyzeFiles())
+    
+    geneIDs = c(1, 2, 3, 9, 2261, 178)
+    
+    updateSelectizeInput(session, "geneInput", choices = geneIDs, server = TRUE)
+    
+    observeEvent(input$btnGeneSearch, {
+      #connect to DB
+      con = dbConnect(MySQL(), dbname = "gpv", user = "root", password = "password")
+      query = paste("SELECT count(MeshTerms.MeshID), MeshTerms.MeshID, MeshTerms.Term from MeshTerms",
+                    "INNER JOIN PubMesh ON MeshTerms.MeshID = PubMesh.MeshID",
+                    "INNER JOIN PubGene ON PubMesh.PMID = PubGene.PMID",
+                    "WHERE PubGene.NCBI_Gene = ", input$geneInput,
+                    "GROUP BY MeshTerms.MeshID, MeshTerms.Term",
+                    "ORDER BY count(MeshTerms.MeshID)")
+      meshSummary$dat <- dbGetQuery(con, query)
+      output$queryResults <- renderDataTable(meshSummary$dat)
+      
+      truncID = strsplit(as.character(meshSummary$dat$TreeID), "\\.")
+      print(truncID)
+      
+      
+      
+      }
+    )
   
   
 })
