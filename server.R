@@ -258,7 +258,7 @@ shinyServer(function(input, output, session) {
   }
   
   #connect to DB
-  con = dbConnect(MySQL(), dbname = "gpv", user = "root", password = "password")
+
   
   #reactive value to grab query results
   meshSummary = reactiveValues(dat = NULL)
@@ -289,13 +289,20 @@ shinyServer(function(input, output, session) {
     updateSelectizeInput(session, "geneInput", choices = geneIDs, server = TRUE)
     
     observeEvent(input$btnGeneSearch, {
-      query = paste("select PubMesh.MeshID, count(PubMesh.MeshID) from PubMesh", 
-                    "INNER JOIN PubGene ON PubMesh.PMID = PubGene.PMID ",
-                    "WHERE PubGene.NCBI_Gene = ", input$geneInput, 
-                    " GROUP BY PubMesh.MeshID ORDER BY count(PubMesh.MeshID)")
-      meshSummary$dat <- dbSendQuery(con, query)
-      output$queryResults <- renderDataTable(fetch(meshSummary$dat))
-      dbDisconnect(con)
+      #connect to DB
+      con = dbConnect(MySQL(), dbname = "gpv", user = "root", password = "password")
+      query = paste("SELECT DISTINCT PubMesh.MeshID, MeshTerms.Term, MeshTerms.TreeID from PubMesh", 
+                    "INNER JOIN MeshTerms ON MeshTerms.MeshID = PubMesh.MeshID",
+                    "INNER JOIN PubGene ON PubMesh.PMID = PubGene.PMID",
+                    "WHERE PubGene.NCBI_Gene =", input$geneInput)
+      meshSummary$dat <- dbGetQuery(con, query)
+      output$queryResults <- renderDataTable(meshSummary$dat)
+      
+      truncID = strsplit(as.character(meshSummary$dat$TreeID), "\\.")
+      print(truncID)
+      
+      
+      
       }
     )
   
