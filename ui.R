@@ -17,21 +17,10 @@ shinyUI(
       ))),
     
       useShinyjs(),  
-      fileInput("fileSelect", "Select Files", multiple=TRUE, width = "100%"),
-      
-      div(style="display:inline-block; width: 45%",
-        actionButton("btnAnalyzeFiles", "Analyze Files", disabled = "disabled", width = "100%")
-      ),
-      div(style="display:inline-block; width: 45%",
-        actionButton("btnViewClusters", "View Clusters", disabled = "disabled", width = "100%")
-      ), 
-
-      hr(),
-      
-      verbatimTextOutput("console"),
       
       selectizeInput("geneInput", label = "Enter a Gene ID", choices = NULL),
-      actionButton("btnGeneSearch", "Search")
+      actionButton("btnGeneSearch", "Search"), 
+      actionButton("btnMeshFilter", "Filter")
       
     ), 
     
@@ -53,41 +42,19 @@ shinyUI(
       ),
       
       fluidRow(
-        hidden(
-          div(
-            id = "globalTitle",
-            h2("Global Term Frequency")
+        shiny::column(width = 6,
+          tabsetPanel(
+            tabPanel("MeSH Summary", dataTableOutput("queryResults")),
+            tabPanel("MeSH Tree", htmlOutput("meshHierarchy"))
           )
         ),
-        DT::dataTableOutput("globalTable")
+        shiny::column(width = 6)
       ),
       
-      fluidRow(
-        hidden(
-          div(
-            id = "datatables",
-            br(),
-            h2("Cluster Term Frequency"),
-            tabsetPanel(
-              useShinyjs(),
-              selected = "Cluster 1",
-              tabPanel("Cluster 1", DT::dataTableOutput("cluster1Table")),
-              tabPanel("Cluster 2", DT::dataTableOutput("cluster2Table"))
-            )
-          )
-        )
-      ),
       
       fluidRow(
-        dataTableOutput("queryResults")
-      ),
-      
-      fluidRow(
-        dataTableOutput("neoplasmResults")
-      ),
-      
-      fluidRow(
-        shiny::verbatimTextOutput("articleTitles")
+        shiny::column(width = 6),
+        shiny::column(width = 6)
       )
     )
   )
