@@ -1,4 +1,3 @@
-
 ######################################################################################
 # gets the associations between terms and clusters for given document-term 
 # matrix (dm) and cluster vector containing cluster numbers
@@ -58,18 +57,18 @@ getAssociations <- function(dm, groups) {
 #      proportion - the proportion of documents in this cluster containing the term
 ######################################################################################
 clusterAssociation <- function(x, n) {
-
+  
   x=rbind(x,n-x)
-
+  
   props = prop.table(x, 2)[1,]
-
-    # get the p-value from chi-square test
-    p.value = fisher.test(x)$p.value
-
-    # which cluster is the term associated with?
-    w = which.max(props)
-      maxCluster = as.character(names(w))
-      data.frame(p.value = p.value, cluster = maxCluster, proportion = props[w], stringsAsFactors = FALSE)
+  
+  # get the p-value from chi-square test
+  p.value = fisher.test(x)$p.value
+  
+  # which cluster is the term associated with?
+  w = which.max(props)
+  maxCluster = as.character(names(w))
+  data.frame(p.value = p.value, cluster = maxCluster, proportion = props[w], stringsAsFactors = FALSE)
 }
 
 
@@ -85,4 +84,71 @@ flattenTree <- function(x){
   return(x)
 }
 
+######################################################################################
+# Function to FOIL (generate each branch combination) MeSH Tree IDs. This ensures that
+# all Tree IDs are enumerated if there are orphan branches. Accepts a vector.
+######################################################################################
+foilID <- function(x){
+  v = NULL
+  for(i in 1:length(x)){
+    id = paste0(x[1:i], collapse = ".")
+    v = c(v, id)
+  }
+  return(v)
+}
 
+######################################################################################
+# Function that accepts a vector of pre-formatted MeSH Tree IDs from formatMesh() and
+# returns each vector indented with a non-blank-space for each branch.
+######################################################################################
+indentMesh <- function(x){
+  indent = rep("&nbsp;&nbsp;", length(x)-1) %>% paste0(collapse = " ")
+  
+  litem = paste0(x, collapse = ".")
+  litem = paste0(indent, litem, collapse="")
+  
+  return(litem)
+}
+
+######################################################################################
+# Function that accepts a vector of list items and formats them into an HTML unordered
+# list. Returns an HTML string.
+######################################################################################
+listMesh <- function(x){
+  litems = paste0("<li>", x, "</li>", collapse = "")
+  ulist = paste0("<ul>", litems, "</ul>")
+  
+  return(ulist)
+}
+
+
+######################################################################################
+# Function to format MeSH Tree IDs for display. Accepts a vector of Tree IDs, and their count, returns
+# a vector of Tree IDs by count.
+# Behavior: split list by period, generate each possible branch combination, append to
+#           vector, generate table, format with count for each branch.
+######################################################################################
+displayMesh <- function(x, y){
+  
+  # Add correct amount of TreeID strings specified by the count in the MeSH
+  # table.
+  x = mapply(rep, x, y) %>% unlist()
+  
+  splitIDs = strsplit(x, "\\.")
+  
+  idTable = lapply(splitIDs, foilID) %>%
+    unlist() %>% table()
+  
+  # query the Tree IDs (columns of idTable) to get the MesH terms and
+  # add terms to the output
+  
+  idCount = paste0("(", idTable, ") ", names(idTable))
+  
+  idIndent = strsplit(idCount, "\\.") %>% 
+    lapply(indentMesh) %>% unlist()
+  
+  idDisplay = listMesh(idIndent)
+  
+  return(idDisplay)
+  
+}

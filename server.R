@@ -17,6 +17,17 @@ if (!exists("AUTO.READ")) {
 
 shinyServer(function(input, output, session) {
 
+  output$testing <- renderUI({
+       x <- c(17,18,19)
+       s1 <- paste0("<li>", x, "</li>")
+       newList <- "<li><ul><li>A</li><li>B</li></ul></li>"
+       s1 = paste0(s1, newList)
+       s1 <- paste0(s1, collapse = "")
+       string <- paste0("<ul>", s1, "</ul>")
+      
+        HTML(string)
+  })
+  
   ######################################
   # Error message function
   ######################################
@@ -261,11 +272,13 @@ shinyServer(function(input, output, session) {
 
   
   #reactive value to grab query results
-  meshSummary = reactiveValues(dat = NULL)
+  meshSummary = reactiveValues(dat = NULL, uniqueDat = NULL)
   
   #reactive value to grab return value from event observer
   processedFiles = reactiveValues(dat = NULL)
   #event observer listening to fileInput state change, calls processing function
+  
+  
   
   observe({
   
@@ -275,6 +288,7 @@ shinyServer(function(input, output, session) {
     }  
     
   })
+  displayMesh
   
     observeEvent(input$fileSelect, {
       processedFiles$dat <- processFiles(input$fileSelect)
@@ -291,42 +305,61 @@ shinyServer(function(input, output, session) {
     observeEvent(input$btnGeneSearch, {
       #connect to DB
       con = dbConnect(MySQL(), dbname = "gpv", user = "root", password = "password")
-      query = paste("SELECT count(MeshTerms.MeshID), MeshTerms.MeshID, MeshTerms.Term from MeshTerms",
+      query = paste("SELECT count(MeshTerms.MeshID), MeshTerms.MeshID, MeshTerms.Term, MeshTerms.TreeID from MeshTerms",
                     "INNER JOIN PubMesh ON MeshTerms.MeshID = PubMesh.MeshID",
                     "INNER JOIN PubGene ON PubMesh.PMID = PubGene.PMID",
                     "WHERE PubGene.NCBI_Gene = ", input$geneInput,
-                    "GROUP BY MeshTerms.MeshID, MeshTerms.Term",
+                    "AND TreeID LIKE 'C04.%' GROUP BY MeshTerms.MeshID, MeshTerms.Term, MeshTerms.TreeID",
                     "ORDER BY count(MeshTerms.MeshID) desc")
       meshSummary$dat <- dbGetQuery(con, query)
-      output$queryResults <- renderDataTable(meshSummary$dat)
       
-      #Format MeshIDs for SQL 'IN' query
-      meshIDs = toString(shQuote(meshSummary$dat$MeshID))
+      if (!is.null(meshSummary$dat)) {
+        colnames(meshSummary$dat)[1] = "Frequency"
+      }
       
-      #Perform query, retrieve relevant TreeIDs
-      query = paste("SELECT TreeID FROM MeshTerms WHERE MeshID IN (",
-                    paste(meshIDs), ") AND TreeID LIKE 'C04%'")
-      TreeIDs = dbGetQuery(con, query)
+      rownames(meshSummary$dat) = NULL
       
-      #Format TreeIDs to retrieve neoplasms from first three branches
-      truncID = strsplit(TreeIDs$TreeID, "\\.")
-      truncID = lapply(truncID, flattenTree)
-      truncID = toString(shQuote(unlist(truncID)))
+      meshSummary$uniqueDat <- unique(meshSummary$dat[,1:3])
+      output$queryResults <- renderDataTable(meshSummary$uniqueDat, selection = "single")
       
-      #Query newly formatted TreeIDs to get MeSH Terms
-      query = paste("SELECT TreeID, MeshID, Term FROM MeshTerms WHERE TreeID IN (",
-                    paste(truncID), ")")
-      neoplasms = dbGetQuery(con, query)
+    
       
-      #Disconnect to prevent too many connections
+      output$meshHierarchy <- renderUI(HTML(displayMesh(meshSummary$dat$TreeID,
+                                                        meshSummary$dat$Frequency)))
+      
       dbDisconnect(con)
       
-      #Render results
-      output$neoplasmResults <- renderDataTable(neoplasms)
-      
-      
+      })
+
+    observe({
+      s = input$queryResults_rows_selected
+      cat("selected: ", s, "\n")
+      if (length(s) > 0) {
+        print(unique(meshSummary$uniqueDat)[s,])
       }
-    )
-  
-  
+    })
+    
+    
+    observeEvent(input$btnMeshFilter, {
+      #connect to DB
+      con = dbConnect(MySQL(), dbname = "gpv", user = "root", password = "password")
+      
+      meshID = shQuote(meshSummary$uniqueDat[input$queryResults_rows_selected,]$MeshID)
+      query = paste("SELECT PubGene.PMID from PubGene", 
+              "INNER JOIN PubMesh ON PubGene.PMID = PubMesh.PMID",
+              "WHERE PubGene.NCBI_Gene = ", input$geneInput, 
+              "AND MeshID = ", meshID)
+      meshSummary$dat <- dbGetQuery(con, query)
+      output$queryResults <- renderDataTable(meshSummary$dat, selection = "single")
+      
+      
+      rownames(meshSummary$dat) = NULL
+      
+      dbDisconnect(con)
+      
+    })
+      
+    
+    
+    
 })
