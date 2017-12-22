@@ -7,14 +7,20 @@ library(ggplot2)
 
 source("functions.R", local = TRUE)
 
-AUTO.READ = NULL
 
-if (!exists("AUTO.READ")) {
-  AUTO.READ = NULL
-}
 
 shinyServer(function(input, output, session) {
 
+  
+  # clear hover on mouse out of Mesh Graph
+  onevent("mouseout", "MeshGraph", {
+    meshSummary$hoverID <- NULL
+  })
+  
+  observeEvent( input$btnMeshFilter,{
+    cat("current hover = ", input$MeshGraph_hover$y)
+  })
+  
   observe ({
   if (!is.null(pmidList$pmids)) {
   output$articles <- renderUI({
@@ -44,34 +50,36 @@ shinyServer(function(input, output, session) {
   # Analyze processed files and display wordcloud
   #############################################################
 
-  
-  #reactive values to store query results
   meshSummary <- reactiveValues(dat = NULL, uniqueDat = NULL, selectedID = NULL, 
-                                selectedTerm = NULL, hoverID = NULL)
+                                 selectedTerm = NULL, hoverID = NULL)
   pmidList <- reactiveValues(pmids = NULL)
   
-  #reactive value to grab return value from event observer
-  processedFiles = reactiveValues(dat = NULL)
-  #event observer listening to fileInput state change, calls processing function
+  resetReactiveValues <- function() {
+    meshSummary$dat = NULL
+    meshSummary$uniqueDat = NULL
+    meshSummary$selectedID = NULL 
+    meshSummary$selectedTerm = NULL
+    meshSummary$hoverID = NULL
+    pmidList$pmids <- NULL
+  }
   
   
   
+  # record hover from Mesh Graph (store in meshSummary reactive)
   observeEvent(input$MeshGraph_hover$x, {
+    cat("selected = ", input$MeshGraph_hover$x)
     # get Mesh from selected graph
     if (!is.null(input$MeshGraph_hover$x)) {
       lvls <- levels(meshSummary$uniqueDat$Term)
       name <- lvls[round(input$MeshGraph_hover$y)]
-      cat("You've selected <code>", name, "</code>\n")
       m <- match(name, meshSummary$uniqueDat$Term)
       meshSummary$hoverID <- meshSummary$uniqueDat$MeshID[m]
-      cat("update hoverID = ", meshSummary$hoverID, "\n")
     }
   })
   
   
-  
   # record click from Mesh Graph (store in meshSummary reactive)
-  observeEvent(input$MeshGraph_click$x, {
+  observeEvent(input$MeshGraph_click$y, {
     # get Mesh from selected graph
     if (!is.null(input$MeshGraph_click$x)) {
       lvls <- levels(meshSummary$uniqueDat$Term)
@@ -157,11 +165,12 @@ shinyServer(function(input, output, session) {
   
     geneIDs = c(1, 2, 3, 9, 153,2261, 178)
     
-    updateSelectizeInput(session, "geneInput", choices = geneIDs, server = TRUE)
+    updateSelectizeInput(session, "geneInput", choices = geneIDs, selected = 178, server = TRUE)
 
     
     # on initial search
     observeEvent(input$btnGeneSearch,{
+      resetReactiveValues()
       retrieveMeshTerms()
       retrieveArticles()
     })
@@ -183,7 +192,9 @@ shinyServer(function(input, output, session) {
     
     # update MeshTerms table and graph
     observe ({
-      output$meshResults <- renderDataTable(datatable(meshSummary$uniqueDat, rownames = FALSE, selection = "single"))
+      output$meshResults <- renderDataTable(datatable(meshSummary$uniqueDat, rownames = FALSE, 
+                                                      selection = "single",
+                                                      options = list(paging = FALSE, scrollY = 300)))
     
       output$meshHierarchy <- renderUI(HTML(displayMesh(meshSummary$dat$TreeID,
                                                       meshSummary$dat$Frequency)))
@@ -192,7 +203,7 @@ shinyServer(function(input, output, session) {
     observe({
     if (!is.null(meshSummary$uniqueDat)) {
       output$MeshGraph <- renderPlot({
-        cat("rendering plot...\n")
+        #cat("rendering plot...\n")
         
         meshSummary$uniqueDat$Term <- factor(meshSummary$uniqueDat$Term, levels = meshSummary$uniqueDat$Term[order(meshSummary$uniqueDat$Frequency)])
         colors <- rep("darkblue", nrow(meshSummary$uniqueDat))
@@ -214,16 +225,23 @@ shinyServer(function(input, output, session) {
         
         ggplot(meshSummary$uniqueDat, aes(Term, Frequency)) + geom_bar(fill = colors, stat = "identity") +
           coord_flip()
-      }, height = 500)
+      }, height = max(450, nrow(meshSummary$uniqueDat)*26))
     }
     })
     
+    
+    output$test <- renderText({
+        HTML("<h2> how are you? </h2>")
+    })
+    
+  
     #update selected display
     output$x_value <- renderText({
-      if (is.null(meshSummary$selectedID)) return(HTML("Filter by MeSH Term: (none)"))
+      if (is.null(meshSummary$selectedID)) return(HTML("<h4>Filter by MeSH Term: (none)</h4>"))
       else {
-        HTML("Filter by MeSH Term: <code>", meshSummary$selectedTerm, "</code>")
+        HTML("<h4>Filter by MeSH Term: <code>", meshSummary$selectedTerm, "</code></h4>")
       }
     })
+    
     
 })

@@ -7,6 +7,7 @@ library(shinyjs)
 shinyUI(
   
   dashboardPage(
+  
     
     dashboardHeader(title = "DCAST"),
  
@@ -16,7 +17,6 @@ shinyUI(
         "#console { max-height:15vh; max-width:50vh; overflow:auto; }"
       ))),
     
-      useShinyjs(),  
       
       selectizeInput("geneInput", label = "Enter a Gene ID", choices = NULL),
       actionButton("btnGeneSearch", "Search"), 
@@ -26,7 +26,8 @@ shinyUI(
     
     dashboardBody(
       
-
+      useShinyjs(),
+      
     #  fluidRow(
 
     #    conditionalPanel(condition="$('html').hasClass('shiny-busy')",
@@ -36,17 +37,20 @@ shinyUI(
     #    )
     #  ),
       
-      
+      tags$script(src = 'test.js'),
       htmlOutput("x_value"),
       
-      
       fluidRow(
-        shiny::column(width = 6,
+        shiny::column(width = 4,
           tabsetPanel(
-            tabPanel("Mesh Graph", plotOutput("MeshGraph", click = "MeshGraph_click", 
-                                              hover = hoverOpts(id = "MeshGraph_hover", 
-                                                                delay = 100,
-                                                                delayType = "debounce"))),
+            tabPanel("Mesh Graph", 
+                     div(style = "height: 450px; overflow-y: scroll",
+                          plotOutput("MeshGraph",  click = "MeshGraph_click", 
+                                  hover = hoverOpts(id = "MeshGraph_hover", 
+                                                                delay = 300,
+                                                                delayType = "throttle")
+                                 ))
+                     ),
             tabPanel("MeSH Summary", dataTableOutput("meshResults")),
             tabPanel("MeSH Tree", htmlOutput("meshHierarchy"))
           )
@@ -54,8 +58,8 @@ shinyUI(
         
         #shiny::column(width = 12,
                       #htmlOutput("articles"))
-        shiny::column(width = 3),
-        shiny::column(width = 3, dataTableOutput("articleTable"))
+        shiny::column(width = 1),
+        shiny::column(width = 7, dataTableOutput("articleTable"))
       ),
       
       fluidRow(
