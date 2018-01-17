@@ -1,5 +1,6 @@
+# Cancer Publication Portal
+
 library(shiny)
-library(data.table)
 library(DT) # requires development version for single row selection with datatables
 library(DBI)
 library(RMySQL)
@@ -7,39 +8,52 @@ library(ggplot2)
 
 source("functions.R", local = TRUE)
 
+GeneTable <- read.csv("data/human_genes.csv")
+GeneTable$SYMBOL <- as.character(GeneTable$SYMBOL)
+
+# some genes have duplicate IDs...we should combine, for now, remove
+library(dplyr)
+dups <- (GeneTable %>% count(SYMBOL) %>% filter(n > 1))$SYMBOL
+GeneTable <- GeneTable %>% filter(!SYMBOL %in% dups)
+rownames(GeneTable) <- GeneTable$SYMBOL
 
 
 shinyServer(function(input, output, session) {
 
+  observe( {
+    cat("selected = ", input$rbMeshLimits ,"\n")
+  })
   
   # clear hover on mouse out of Mesh Graph
-  onevent("mouseout", "MeshGraph", {
-    meshSummary$hoverID <- NULL
-  })
+#  onevent("mouseout", "MeshGraph", {
+#    meshSummary$hoverID <- NULL
+#  })
   
-  observeEvent( input$btnMeshFilter,{
-    cat("current hover = ", input$MeshGraph_hover$y)
-  })
   
   observe ({
-  if (!is.null(pmidList$pmids)) {
-  output$articles <- renderUI({
+    if (!is.null(pmidList$pmids)) {
+      num <- min(10,nrow(pmidList$pmids))
+      pmids <- pmidList$pmids$PMID[1:num]
+      print(pmids)
+      pmids <- paste0(pmids, "[uid]")
+      pmids <- paste0(pmids, collapse = " or ")
+      #src <- paste0("https://www.ncbi.nlm.nih.gov/pubmed/?term=", pmids)
+      src <- paste0("https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/PubTator/index.cgi?searchtype=PubMed_Search&query=", pmids)
+      #src <- paste0("https://www.livejournal.com/")    
+      output$articles <- renderUI({
+        my_test <- tags$html(tags$iframe(id = "iframeid", src=src, style = "width:100%;", height = 600))
+        print(my_test)
+        my_test
+      })
     
-    return(NULL)
-    num <- min(10,nrow(pmidList$pmids))
-    pmids <- pmidList$pmids$PMID[1:num]
-    print(pmids)
-    pmids <- paste0(pmids, "[uid]")
-    pmids <- paste0(pmids, collapse = " or ")
-    src <- paste0("https://www.ncbi.nlm.nih.gov/pubmed/?term=", pmids)
-    
-    #my_test <- tags$iframe(src="https://www.ncbi.nlm.nih.gov/pubmed/?term=1%5Buid%5D+or+10%5Buid%5D", height=600, width=535)
-   # my_test <- tags$iframe(src="https://www.ncbi.nlm.nih.gov/pubmed/", style = "width:100%", height = 600)
-    my_test <- tags$iframe(src=src, style = "width:100%", height = 600)
-    print(my_test)
-    my_test
-  })
-  }
+      output$articleHeader <- renderUI({
+        a("Go to Pubmed", href = src, target = "_blank")
+      })
+    } else {
+      
+      output$articleHeader <- renderUI({
+      })  
+    }
   
   })
   
@@ -52,6 +66,8 @@ shinyServer(function(input, output, session) {
 
   meshSummary <- reactiveValues(dat = NULL, uniqueDat = NULL, selectedID = NULL, 
                                  selectedTerm = NULL, hoverID = NULL)
+  geneSummary <- reactiveValues(dat = NULL, seletectedID = NULL, seletectedTerm = NULL)
+  
   pmidList <- reactiveValues(pmids = NULL)
   
   resetReactiveValues <- function() {
@@ -61,22 +77,20 @@ shinyServer(function(input, output, session) {
     meshSummary$selectedTerm = NULL
     meshSummary$hoverID = NULL
     pmidList$pmids <- NULL
+    geneSummary$dat = NULL
+    geneSummary$selectedID <- NULL
+    geneSummary$selectedTerm <- NULL
   }
   
+  clearSelectedGene <- function() {
+    geneSummary$selectedID <- NULL
+    geneSummary$selectedTerm <- NULL
+  }
   
-  
-  # record hover from Mesh Graph (store in meshSummary reactive)
-  observeEvent(input$MeshGraph_hover$x, {
-    cat("selected = ", input$MeshGraph_hover$x)
-    # get Mesh from selected graph
-    if (!is.null(input$MeshGraph_hover$x)) {
-      lvls <- levels(meshSummary$uniqueDat$Term)
-      name <- lvls[round(input$MeshGraph_hover$y)]
-      m <- match(name, meshSummary$uniqueDat$Term)
-      meshSummary$hoverID <- meshSummary$uniqueDat$MeshID[m]
-    }
-  })
-  
+  clearSelectedMesh <- function() {
+    meshSummary$selectedID <- NULL
+    meshSummary$selectedTerm <- NULL
+  }
   
   # record click from Mesh Graph (store in meshSummary reactive)
   observeEvent(input$MeshGraph_click$y, {
@@ -88,6 +102,7 @@ shinyServer(function(input, output, session) {
       m <- match(name, meshSummary$uniqueDat$Term)
       meshSummary$selectedID <- meshSummary$uniqueDat$MeshID[m]
       meshSummary$selectedTerm <- as.character(meshSummary$uniqueDat$Term)[m]
+      clearSelectedGene()
     }
   })
   
@@ -100,13 +115,33 @@ shinyServer(function(input, output, session) {
     }
     meshSummary$selectedID <- meshSummary$uniqueDat$MeshID[s]
     meshSummary$selectedTerm <- as.character(meshSummary$uniqueDat$Term)[s]
+    clearSelectedGene()
+  })
+  
+  # record click from geneSumary Table 
+  observeEvent(input$geneResults_rows_selected, {
+    s = input$geneResults_rows_selected
+    cat("selected gene: ", s, "\n")
+    if (length(s) > 0) {
+      print(geneSummary$dat[s,])
+    }
+    if (s== 1) {
+      return()
+    }
+    gene <- geneSummary$dat[s,1]
+    gene <- gsub("\r", "", gene)
+    cat("gene = ", gene, "\n")
+    m <- match(gene, GeneTable$SYMBOL)
+    geneSummary$selectedID <- GeneTable$GeneID[m]
+    geneSummary$selectedTerm <- gene
+    clearSelectedMesh()
   })
   
   
 
   # queries mesh terms - currently stores results in 
   # meshSummary$dat and meshSummary$uniqueDat
-  retrieveMeshTerms <- function(meshID = NULL) {
+  retrieveMeshTerms <- function(meshID, limit) {
     con = dbConnect(MySQL(), dbname = "dcast", user = "root", password = "password")
     
     # query MeSH terms
@@ -120,10 +155,14 @@ shinyServer(function(input, output, session) {
       query <- paste0(query, " AND MeshTerms.MeshID = ", meshID)
     }
     
-    query <- paste(query,  "AND TreeID LIKE 'C04.%' GROUP BY MeshTerms.MeshID, MeshTerms.Term, MeshTerms.TreeID",
+    if (limit == "cancer") {
+      query <- paste(query, "AND TreeID LIKE 'C04.%'")
+    } else if (limit != "none") {
+      stop("limit of ", limit, " is not implemented")
+    }
+    
+    query <- paste(query,  "GROUP BY MeshTerms.MeshID, MeshTerms.Term, MeshTerms.TreeID",
                    "ORDER BY count(MeshTerms.MeshID) desc")
-    
-    
     print(query)
     meshSummary$dat <- dbGetQuery(con, query)
     dbDisconnect(con)
@@ -138,22 +177,56 @@ shinyServer(function(input, output, session) {
     
   }
   
+  
+  # queries mesh terms - currently stores results in 
+  # geneSummary$dat 
+  retrieveGenes <- function(meshID, limit) {
+    con = dbConnect(MySQL(), dbname = "dcast", user = "root", password = "password")
+    
+    # query MeSH terms
+    query = paste("SELECT count(MeshTerms.MeshID), MeshTerms.MeshID, MeshTerms.Term, MeshTerms.TreeID from MeshTerms")
+    
+    query <- paste("select g.SYMBOL, count(g.SYMBOL) from Genes g",
+    "INNER JOIN PubGene p on g.GeneID = p.GeneID",
+    "INNER JOIN PubGene p2 ON p.PMID = p2.PMID",
+    "where p2.GeneID = ", input$geneInput, 
+    "group by g.SYMBOL",
+    "order by count(g.SYMBOL) desc;")
+    
+    print(query)
+    geneSummary$dat <- dbGetQuery(con, query)
+    colnames(geneSummary$dat) <- c("Symbol", "Frequency")
+    dbDisconnect(con)
+    
+  }
+  
+  
   # retreives articles for specific gene and (optional) meshID
-  retrieveArticles <- function(meshID = NULL) {
+  retrieveArticles <- function(meshID = NULL, geneID2 = NULL) {
     con = dbConnect(MySQL(), dbname = "dcast", user = "root", password = "password")
   
-    # query PMIDs
-    query = paste("SELECT distinct(PubGene.PMID) from PubGene", 
+    if (!is.null(geneID2)) {
+    
+      query <- paste("SELECT PMID from PubGene",
+                     "where GeneID= ", input$geneInput, " or GeneID = ", geneID2, 
+                     "GROUP BY PMID HAVING count(PMID) > 1;"
+      )
+    } else {
+    
+      # query PMIDs
+      query = paste("SELECT distinct(PubGene.PMID) from PubGene", 
                   "INNER JOIN PubMesh ON PubGene.PMID = PubMesh.PMID",
                   "WHERE PubGene.GeneID = ", input$geneInput)
     
-    # add MeSH filter if term is selected
-    if (!is.null(meshID)) {
-      query <- paste0(query, " AND MeshID = ", meshID)
+      # add MeSH filter if term is selected
+      if (!is.null(meshID)) {
+        query <- paste0(query, " AND MeshID = ", meshID)
+      }
+    
+      query <- paste(query, "ORDER BY PubGene.PMID DESC")
+    
     }
-    
-    query <- paste(query, "ORDER BY PubGene.PMID DESC")
-    
+
     print("pmid query: ")
     print(query)
     pmids <- dbGetQuery(con, query)
@@ -164,25 +237,51 @@ shinyServer(function(input, output, session) {
   }
   
     geneIDs = c(1, 2, 3, 9, 153,2261, 178)
+    geneIDs <- GeneTable$GeneID
+    names(geneIDs) <- GeneTable$SYMBOL
     
     updateSelectizeInput(session, "geneInput", choices = geneIDs, selected = 178, server = TRUE)
 
     
     # on initial search
-    observeEvent(input$btnGeneSearch,{
-      resetReactiveValues()
-      retrieveMeshTerms()
-      retrieveArticles()
+    observeEvent(
+      {input$btnGeneSearch
+      input$rbMeshLimits},{
+
+        if (is.null(input$geneInput) | input$geneInput == "") return()
+        
+        resetReactiveValues()
+        
+        shinyjs::html("bar-text", "Retreiving Articles, please wait...")
+        retrieveArticles()
+        
+        shinyjs::html("bar-text", "Retreiving MeSH terms, please wait...")
+        retrieveMeshTerms(NULL, input$rbMeshLimits)
+        
+        shinyjs::html("bar-text", "Retreiving related genes, please wait...")
+        retrieveGenes()
+        
+        
+        
+        shinyjs::html("bar-text", "Please wait...")
+        
     })
     
     # update PMID list when Selected Mesh Term changes
     observe( {
-      if (is.null(meshSummary$selectedID)) {
+      if (is.null(meshSummary$selectedID) & is.null(geneSummary$selectedID)) {
         return()
       }
-      retrieveArticles(paste0("'", meshSummary$selectedID, "'"))
+      retrieveArticles(paste0("'", meshSummary$selectedID, "'"), geneSummary$selectedID)
     })
     
+    
+    #update geneSummary
+    observe ({
+      output$geneResults <- renderDataTable(datatable(geneSummary$dat, rownames = FALSE,
+                                            selection = "single",
+                                            options = list(paging = FALSE, scrollY = 300)))
+    })
     
     # update PMID table
     observe ({
@@ -237,11 +336,12 @@ shinyServer(function(input, output, session) {
   
     #update selected display
     output$x_value <- renderText({
-      if (is.null(meshSummary$selectedID)) return(HTML("<h4>Filter by MeSH Term: (none)</h4>"))
-      else {
-        HTML("<h4>Filter by MeSH Term: <code>", meshSummary$selectedTerm, "</code></h4>")
+      if (is.null(meshSummary$selectedID) & is.null(geneSummary$selectedID)) return(HTML("<h4>Filters: (none)</h4>"))
+      else if (!is.null(meshSummary$selectedID)) {
+        HTML("<h4>Filter by MeSH Term: <span style = \"color:red\">", meshSummary$selectedTerm, "</span></h4>")
+      } else if (!is.null(geneSummary$selectedID)) {
+        HTML("<h4>Filter by additional gene: <span style = \"color:red\">", geneSummary$selectedTerm, "</span></h4>")
       }
     })
-    
     
 })
