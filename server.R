@@ -21,6 +21,11 @@ rownames(GeneTable) <- GeneTable$SYMBOL
 
 shinyServer(function(input, output, session) {
 
+  
+  shinyjs::toggleClass("x_value", "shiny-html-output")
+  shinyjs::toggleClass("x_value", "shiny-bound-output")
+  
+
   output$shinyTitle <- renderText("Cancer Publication Portal")
   
   observe( {
@@ -387,9 +392,9 @@ shinyServer(function(input, output, session) {
     output$x_value <- renderText({
       if (is.null(meshSummary$selectedID) & is.null(geneSummary$selectedID)) return(HTML("<h4>Filters: (none)</h4>"))
       else if (!is.null(meshSummary$selectedID)) {
-        HTML("<h4>Filter by MeSH Term: <span style = \"color:red\">", meshSummary$selectedTerm, "</span></h4>")
+        HTML("<h4>Filter by MeSH Term: <span style = \"color:maroon\">", meshSummary$selectedTerm, "</span></h4>")
       } else if (!is.null(geneSummary$selectedID)) {
-        HTML("<h4>Filter by additional gene: <span style = \"color:red\">", geneSummary$selectedTerm, "</span></h4>")
+        HTML("<h4>Filter by additional gene: <span style = \"color:maroon\">", geneSummary$selectedTerm, "</span></h4>")
       }
     })
     
