@@ -27,12 +27,7 @@ shinyServer(function(input, output, session) {
     cat("selected = ", input$rbMeshLimits ,"\n")
   })
   
-  # clear hover on mouse out of Mesh Graph
-#  onevent("mouseout", "MeshGraph", {
-#    meshSummary$hoverID <- NULL
-#  })
-  
-  
+
   observe ({
     if (!is.null(pmidList$pmids)) {
       num <- min(10,nrow(pmidList$pmids))
@@ -50,17 +45,24 @@ shinyServer(function(input, output, session) {
       })
     
       output$articleHeader <- renderUI({
-        a("Go to Pubmed", href = src, target = "_blank")
+        div(
+          shinyjs::hidden(div(id ="linkShowSummaries", style = "float: left",
+              a("(Show Summaries)", href = "#", id = "togglePubs", style = "color: maroon"),
+              " | ")
+          ),
+          div(style="display: in-line block; width = 50",
+            a("Go to PubTator", href = src, target = "_blank")
+          )
+        )
       })
     } else {
       
       output$articleHeader <- renderUI({
+       # a(href = "#", id = "togglePubs", "(expand)")
       })  
     }
   
   })
-  
-
   
   
   #############################################################
@@ -72,6 +74,8 @@ shinyServer(function(input, output, session) {
   geneSummary <- reactiveValues(dat = NULL, seletectedID = NULL, seletectedTerm = NULL)
   
   pmidList <- reactiveValues(pmids = NULL)
+  
+  lastTab <- reactiveValues(tab = NULL)
   
   resetReactiveValues <- function() {
     meshSummary$dat = NULL
@@ -108,6 +112,44 @@ shinyServer(function(input, output, session) {
       clearSelectedGene()
     }
   })
+  
+  
+  togglePubs <- function() {
+    shinyjs::toggle("colSummary", anim = TRUE)
+    shinyjs::toggleClass("colPubs", "col-sm-6")
+    shinyjs::toggleClass("colPubs", "col-sm-12")
+    
+    shinyjs::toggleClass("colSummary", "col-sm-6")
+    shinyjs::toggleClass("colSummary", "col-sm-12")
+    
+    
+    print("clicked")
+    
+    
+  }
+  
+  shinyjs::onclick("togglePubs", {
+    togglePubs()
+    shinyjs::toggle("linkShowSummaries")
+  })
+  
+  observeEvent(input$tspSummary, {
+    cat("clicked on: ", input$tspSummary, "\n")
+    if (input$tspSummary == "hide") {
+      togglePubs()
+      shinyjs::toggle("linkShowSummaries")
+      updateTabsetPanel(session, "tspSummary", lastTab$tab)
+    } else {
+      lastTab$tab = input$tspSummary
+    }
+    
+   
+    
+    
+  })
+  
+  
+  
   
   # record click from Mesh Table (store in meshSummary reactive)
   observeEvent(input$meshResults_rows_selected, {
@@ -206,6 +248,10 @@ shinyServer(function(input, output, session) {
   
   # retreives articles for specific gene and (optional) meshID
   retrieveArticles <- function(meshID = NULL, geneID2 = NULL) {
+    
+    if (is.null(input$geneInput) | input$geneInput=="") {
+      return()
+    }
     con = dbConnect(MySQL(), dbname = "dcast", user = "root", password = "password")
   
     if (!is.null(geneID2)) {

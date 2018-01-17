@@ -51,9 +51,15 @@ shinyUI(
                   htmlOutput("x_value"))
       ),
       
+      
+      tags$style(HTML("
+    
+    .tabbable > .nav > li > a[data-value='hide'] {color: maroon;}
+    
+  ")),
       fluidRow(
-        shiny::column(width = 6,
-          tabsetPanel(
+        shiny::column(id = "colSummary", width = 6,
+          tabsetPanel(id = "tspSummary",
             tabPanel("Mesh Graph", 
                      div(style = "height: 450px; overflow-y: scroll",
                           plotOutput("MeshGraph",  click = "MeshGraph_click"#, 
@@ -64,7 +70,8 @@ shinyUI(
                      ),
             tabPanel("MeSH Summary", dataTableOutput("meshResults")),
             tabPanel("MeSH Tree", htmlOutput("meshHierarchy")),
-            tabPanel("Gene Summary", dataTableOutput("geneResults"))
+            tabPanel("Gene Summary", dataTableOutput("geneResults")),
+            tabPanel("Hide", value = "hide")
           )
         ),
         
@@ -72,10 +79,12 @@ shinyUI(
                       #htmlOutput("articles"))
         
         if (!SHOW.PUBMED) {
-            shiny::column(width = 3)
-            shiny::column(width = 3, dataTableOutput("articleTable"))
+            #shiny::column(width = 3)
+            shiny::column(id = "colPubs", width = 6, 
+                          uiOutput("articleHeader"),
+                          dataTableOutput("articleTable"))
         } else {
-          shiny::column(width = 6, 
+          shiny::column(id = "colPubs", width = 6, 
                         uiOutput("articleHeader"),
                         uiOutput("articles"))
         }
