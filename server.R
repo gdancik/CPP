@@ -18,8 +18,11 @@ GeneTable <- GeneTable %>% filter(!SYMBOL %in% dups)
 rownames(GeneTable) <- GeneTable$SYMBOL
 
 
+
 shinyServer(function(input, output, session) {
 
+  output$shinyTitle <- renderText("Cancer Publication Portal")
+  
   observe( {
     cat("selected = ", input$rbMeshLimits ,"\n")
   })

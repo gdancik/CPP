@@ -7,15 +7,20 @@ library(shinyjs)
 
 SHOW.PUBMED <- FALSE
 
+source("addDeps.R")
+
 shinyUI(
   
   dashboardPage(
 
-    dashboardHeader(title = "Cancer Publication Portal", titleWidth = 250),
- 
+    dashboardHeader(title = uiOutput("shinyTitle"), titleWidth = 350),
+
+     
     dashboardSidebar(width = 250,
-       includeCSS('ecsu.css'),
-       HTML("<link href='https://fonts.googleapis.com/css?family=Courgette' rel='stylesheet' type='text/css'>"),
+ 
+      includeCSS('www/ecsu.css'),
+      HTML("<link href='https://fonts.googleapis.com/css?family=Courgette' rel='stylesheet' type='text/css'>"),
+                     
       tags$head(tags$style(HTML(
         "#console { max-height:15vh; max-width:50vh; overflow:auto; }"
       ))),
