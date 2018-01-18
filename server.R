@@ -25,7 +25,9 @@ shinyServer(function(input, output, session) {
   shinyjs::toggleClass("x_value", "shiny-html-output")
   shinyjs::toggleClass("x_value", "shiny-bound-output")
   
-
+  shinyjs::toggle("tspSummary")
+  shinyjs::toggle("x_value")
+  
   output$shinyTitle <- renderText("Cancer Publication Portal")
   
   observe( {
@@ -51,13 +53,13 @@ shinyServer(function(input, output, session) {
     
       output$articleHeader <- renderUI({
         div(
-          shinyjs::hidden(div(id ="linkShowSummaries", style = "float: left",
-              a("(Show Summaries)", href = "#", id = "togglePubs", style = "color: maroon"),
-              " | ")
-          ),
-          div(style="display: in-line block; width = 50",
-            a("Go to PubTator", href = src, target = "_blank")
-          )
+          div(style="float: left; width = 50",
+              a("Go to PubTator", href = src, target = "_blank")
+          ), 
+          shinyjs::hidden(div(id ="linkShowSummaries", style = "display: in-line block", 
+                              HTML("&nbsp; | &nbsp;"),
+                a("(Show Summaries)", href = "#", id = "togglePubs", style = "color: maroon")
+          ))
         )
       })
     } else {
@@ -304,7 +306,11 @@ shinyServer(function(input, output, session) {
 
         if (is.null(input$geneInput) | input$geneInput == "") return()
         
+        
         resetReactiveValues()
+        
+        shinyjs::show("tspSummary")
+        shinyjs::show("x_value")
         
         shinyjs::html("bar-text", "Retreiving Articles, please wait...")
         retrieveArticles()
@@ -314,8 +320,6 @@ shinyServer(function(input, output, session) {
         
         shinyjs::html("bar-text", "Retreiving related genes, please wait...")
         retrieveGenes()
-        
-        
         
         shinyjs::html("bar-text", "Please wait...")
         

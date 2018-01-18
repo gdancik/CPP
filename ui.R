@@ -49,33 +49,74 @@ shinyUI(
         ),
       
       
-      tags$style(HTML("
-    .tabbable > .nav > li[class=active] > a {
-           background-color: maroon;
-                      color: white;
-    }
-    .tabbable > .nav > li > a[data-value='hide'] {color: maroon;}
-    
-    
-  ")),
+      
       fluidRow(
         shiny::column(id = "colSummary", width = 6,
-          tabsetPanel(id = "tspSummary",
-            tabPanel("Mesh Graph", 
-                     div(style = "height: 450px; overflow-y: scroll",
+          navbarPage(" ",id = "tspSummary",
+                navbarMenu("Mesh Terms",
+                        tabPanel("Mesh Graph", id = "tabMeshGraph", 
+                          div(style = "height: 450px; overflow-y: scroll",
                           plotOutput("MeshGraph",  click = "MeshGraph_click"#, 
                                   #hover = hoverOpts(id = "MeshGraph_hover", 
                                   #                              delay = 300,
                                   #                              delayType = "throttle")
                                  ))
-                     ),
-            tabPanel("MeSH Summary", dataTableOutput("meshResults")),
-            tabPanel("MeSH Tree", htmlOutput("meshHierarchy")),
-            tabPanel("Gene Summary", dataTableOutput("geneResults")),
-            tabPanel("Hide", value = "hide")
+                        ),
+                        tabPanel("MeSH Summary", dataTableOutput("meshResults")),
+                        tabPanel("MeSH Tree", htmlOutput("meshHierarchy"))
+                  ),
+                
+                tabPanel("Gene Co-occurrences", dataTableOutput("geneResults")),
+                tabPanel("Hide Summaries", value = "hide")
           )
         ),
+
+        tags$style(HTML("
+
+              /* 'hide' tab */
+              .navbar-nav > li > a[data-value='hide'] {color: maroon !important;}
+                        
+              /* Top level tabs */
+              .navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > .active > a:focus, .navbar-default .navbar-nav > .active > a:hover {
+                        color: white;
+                        background-color: maroon
+              }
+                        
+                        
+                        
+              .navbar-default .navbar-nav > li > a:hover {
+                        color: darkred;
+              }
+                        
+                        
+              .navbar-default .navbar-nav > li > a {
+                        color: darkblue;
+              }
+                        
+                        
+              /* 2nd level (Mesh menu) tabs */
+              .navbar-default .navbar-nav > li > ul > li[class='active'] > a {
+                        color: white;
+                        background-color: maroon
+              }
+                        
+              .navbar-default .navbar-nav > li > ul > li > a {
+                        color: darkblue;
+              }
+                        
+                        
+              .navbar-default .navbar-nav > .active > li > ul > li > a, .navbar-default .navbar-nav > .active > li > ul > li > a:focus, .navbar-default .navbar-nav > .active > li > ul > li > a:hover {
+                        color: white;
+                        background-color: maroon
+              }
+                        
+              .navbar-default .navbar-nav > li >ul > li > a:hover {
+                        color: darkred;
+              }
+                        
+")),
         
+                
         #shiny::column(width = 12,
                       #htmlOutput("articles"))
         
