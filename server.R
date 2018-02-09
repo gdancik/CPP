@@ -31,7 +31,7 @@ shinyServer(function(input, output, session) {
   output$shinyTitle <- renderText("Cancer Publication Portal")
   
   observe( {
-    cat("selected = ", input$rbMeshLimits ,"\n")
+    cat("selected = ", input$rbDiseaseLimits ,"\n")
   })
   
 
@@ -76,8 +76,10 @@ shinyServer(function(input, output, session) {
   # Analyze processed files and display wordcloud
   #############################################################
 
-  meshSummary <- reactiveValues(dat = NULL, uniqueDat = NULL, selectedID = NULL, 
+  diseaseSummary <- reactiveValues(dat = NULL, uniqueDat = NULL, selectedID = NULL, 
                                  selectedTerm = NULL, hoverID = NULL)
+  chemSummary <- reactiveValues(dat = NULL, uniqueDat = NULL, selectedID = NULL, 
+                                   selectedTerm = NULL, hoverID = NULL)
   geneSummary <- reactiveValues(dat = NULL, seletectedID = NULL, seletectedTerm = NULL)
   
   pmidList <- reactiveValues(pmids = NULL)
@@ -85,15 +87,19 @@ shinyServer(function(input, output, session) {
   lastTab <- reactiveValues(tab = NULL)
   
   resetReactiveValues <- function() {
-    meshSummary$dat = NULL
-    meshSummary$uniqueDat = NULL
-    meshSummary$selectedID = NULL 
-    meshSummary$selectedTerm = NULL
-    meshSummary$hoverID = NULL
+    diseaseSummary$dat = NULL
+    diseaseSummary$uniqueDat = NULL
+    diseaseSummary$selectedID = NULL 
+    diseaseSummary$selectedTerm = NULL
+    diseaseSummary$hoverID = NULL
     pmidList$pmids <- NULL
-    geneSummary$dat = NULL
+    geneSummary$dat <- NULL
     geneSummary$selectedID <- NULL
     geneSummary$selectedTerm <- NULL
+    chemSummary$dat <- NULL
+    chemSummary$selectedID <- NULL
+    chemSummary$selectedTerm <- NULL
+    
   }
   
   clearSelectedGene <- function() {
@@ -101,22 +107,28 @@ shinyServer(function(input, output, session) {
     geneSummary$selectedTerm <- NULL
   }
   
-  clearSelectedMesh <- function() {
-    meshSummary$selectedID <- NULL
-    meshSummary$selectedTerm <- NULL
+  clearSelectedDisease <- function() {
+    diseaseSummary$selectedID <- NULL
+    diseaseSummary$selectedTerm <- NULL
   }
   
-  # record click from Mesh Graph (store in meshSummary reactive)
-  observeEvent(input$MeshGraph_click$y, {
-    # get Mesh from selected graph
-    if (!is.null(input$MeshGraph_click$x)) {
-      lvls <- levels(meshSummary$uniqueDat$Term)
-      name <- lvls[round(input$MeshGraph_click$y)]
+  clearSelectedChem <- function() {
+    chemSummary$selectedID <- NULL
+    chemSummary$selectedTerm <- NULL
+  }
+  
+  # record click from Disease Graph (store in diseaseSummary reactive)
+  observeEvent(input$DiseaseGraph_click$y, {
+    # get Disease from selected graph
+    if (!is.null(input$DiseaseGraph_click$x)) {
+      lvls <- levels(diseaseSummary$uniqueDat$Term)
+      name <- lvls[round(input$DiseaseGraph_click$y)]
       cat("You've selected <code>", name, "</code>\n")
-      m <- match(name, meshSummary$uniqueDat$Term)
-      meshSummary$selectedID <- meshSummary$uniqueDat$MeshID[m]
-      meshSummary$selectedTerm <- as.character(meshSummary$uniqueDat$Term)[m]
+      m <- match(name, diseaseSummary$uniqueDat$Term)
+      diseaseSummary$selectedID <- diseaseSummary$uniqueDat$MeshID[m]
+      diseaseSummary$selectedTerm <- as.character(diseaseSummary$uniqueDat$Term)[m]
       clearSelectedGene()
+      clearSelectedChem()
     }
   })
   
@@ -149,26 +161,36 @@ shinyServer(function(input, output, session) {
     } else {
       lastTab$tab = input$tspSummary
     }
-    
-   
-    
-    
   })
   
   
-  
-  
-  # record click from Mesh Table (store in meshSummary reactive)
-  observeEvent(input$meshResults_rows_selected, {
-    s = input$meshResults_rows_selected
+  # record click from Disease Table (store in diseaseSummary reactive)
+  observeEvent(input$diseaseResults_rows_selected, {
+    s = input$diseaseResults_rows_selected
     cat("selected: ", s, "\n")
     if (length(s) > 0) {
-      print(meshSummary$uniqueDat[s,])
+      print(diseaseSummary$uniqueDat[s,])
     }
-    meshSummary$selectedID <- meshSummary$uniqueDat$MeshID[s]
-    meshSummary$selectedTerm <- as.character(meshSummary$uniqueDat$Term)[s]
+    diseaseSummary$selectedID <- diseaseSummary$uniqueDat$MeshID[s]
+    diseaseSummary$selectedTerm <- as.character(diseaseSummary$uniqueDat$Term)[s]
     clearSelectedGene()
+    clearSelectedChem()
   })
+  
+  # record click from Chem Table (store in chemSummary reactive)
+  observeEvent(input$chemResults_rows_selected, {
+    s = input$chemResults_rows_selected
+    cat("selected: ", s, "\n")
+    if (length(s) > 0) {
+      print(chemSummary$uniqueDat[s,])
+    }
+    chemSummary$selectedID <- chemSummary$uniqueDat$MeshID[s]
+    chemSummary$selectedTerm <- as.character(chemSummary$uniqueDat$Term)[s]
+    clearSelectedGene()
+    clearSelectedDisease()
+  })
+  
+  
   
   # record click from geneSumary Table 
   observeEvent(input$geneResults_rows_selected, {
@@ -186,14 +208,14 @@ shinyServer(function(input, output, session) {
     m <- match(gene, GeneTable$SYMBOL)
     geneSummary$selectedID <- GeneTable$GeneID[m]
     geneSummary$selectedTerm <- gene
-    clearSelectedMesh()
+    clearSelectedDisease()
   })
-  
+
   
 
   # queries mesh terms - currently stores results in 
-  # meshSummary$dat and meshSummary$uniqueDat
-  retrieveMeshTerms <- function(meshID, limit) {
+  # diseaseSummary$dat and diseaseSummary$uniqueDat
+  retrieveDiseases <- function(meshID, limit) {
     con = dbConnect(MySQL(), dbname = "dcast", user = "root", password = "password")
     
     # query MeSH terms
@@ -216,23 +238,58 @@ shinyServer(function(input, output, session) {
     query <- paste(query,  "GROUP BY MeshTerms.MeshID, MeshTerms.Term, MeshTerms.TreeID",
                    "ORDER BY count(MeshTerms.MeshID) desc")
     print(query)
-    meshSummary$dat <- dbGetQuery(con, query)
+    diseaseSummary$dat <- dbGetQuery(con, query)
     dbDisconnect(con)
     
-    if (!is.null(meshSummary$dat)) {
-      colnames(meshSummary$dat)[1] = "Frequency"
+    if (!is.null(diseaseSummary$dat)) {
+      colnames(diseaseSummary$dat)[1] = "Frequency"
     }
     
-    rownames(meshSummary$dat) = NULL
+    rownames(diseaseSummary$dat) = NULL
     
-    meshSummary$uniqueDat <- unique(meshSummary$dat[,1:3])
+    diseaseSummary$uniqueDat <- unique(diseaseSummary$dat[,1:3])
     
   }
   
+  retrieveChemicals <- function(meshID) {
+    
+    cat("\n\nGETTING CHEMICALS!!\n\n")
+    con = dbConnect(MySQL(), dbname = "dcast", user = "root", password = "password")
+    
+    # query MeSH terms
+    query = paste("SELECT count(MeshTerms.MeshID), MeshTerms.MeshID, MeshTerms.Term, MeshTerms.TreeID from MeshTerms")
+    
+    query <- paste(query, "INNER JOIN PubChem ON MeshTerms.MeshID = PubChem.MeshID",
+                   "INNER JOIN PubGene ON PubChem.PMID = PubGene.PMID",
+                   "WHERE PubGene.GeneID = ", input$geneInput)
+    
+    if (!is.null(meshID)) {
+      query <- paste0(query, " AND MeshTerms.MeshID = ", meshID)
+    }
+    
+    query <- paste(query,  "GROUP BY MeshTerms.MeshID, MeshTerms.Term, MeshTerms.TreeID",
+                   "ORDER BY count(MeshTerms.MeshID) desc")
+    print(query)
+    chemSummary$dat <- dbGetQuery(con, query)
+    dbDisconnect(con)
+    
+    if (!is.null(chemSummary$dat)) {
+      colnames(chemSummary$dat)[1] = "Frequency"
+    }
+    
+    rownames(chemSummary$dat) = NULL
+    
+    chemSummary$uniqueDat <- unique(chemSummary$dat[,1:3])
+    #print(head(chemSummary$uniqueDat))
+    
+  } # end retrieveChemicals
   
+  
+  
+    
   # queries mesh terms - currently stores results in 
   # geneSummary$dat 
-  retrieveGenes <- function(meshID, limit) {
+  retrieveGenes <- function() {
     con = dbConnect(MySQL(), dbname = "dcast", user = "root", password = "password")
     
     # query MeSH terms
@@ -253,35 +310,48 @@ shinyServer(function(input, output, session) {
   }
   
   
-  # retreives articles for specific gene and (optional) meshID
-  retrieveArticles <- function(meshID = NULL, geneID2 = NULL) {
+
+  # retrieve articles based on diseaseMeshID OR chemMeshID OR geneID2 (only 1 will be applied)
+  # if no IDs are specified we do not retreive articles
+  retrieveArticles <- function(diseaseMeshID = NULL, chemMeshID = NULL, geneID2 = NULL) {
     
+  
     if (is.null(input$geneInput) | input$geneInput=="") {
       return()
     }
     con = dbConnect(MySQL(), dbname = "dcast", user = "root", password = "password")
   
+    # gene selection: retrieve articles containing both genes
     if (!is.null(geneID2)) {
     
       query <- paste("SELECT PMID from PubGene",
                      "where GeneID= ", input$geneInput, " or GeneID = ", geneID2, 
-                     "GROUP BY PMID HAVING count(PMID) > 1;"
+                     "GROUP BY PMID HAVING count(PMID) > 1"
       )
-    } else {
-    
+    } 
+    # if meshID selected, retreive all articles with selected gene and meshID
+    else if (!is.null(diseaseMeshID)) {
+      
       # query PMIDs
       query = paste("SELECT distinct(PubGene.PMID) from PubGene", 
                   "INNER JOIN PubMesh ON PubGene.PMID = PubMesh.PMID",
                   "WHERE PubGene.GeneID = ", input$geneInput)
-    
-      # add MeSH filter if term is selected
-      if (!is.null(meshID)) {
-        query <- paste0(query, " AND MeshID = ", meshID)
-      }
-    
-      query <- paste(query, "ORDER BY PubGene.PMID DESC")
-    
+      query <- paste0(query, " AND MeshID = ", diseaseMeshID)
     }
+    else if (!is.null(chemMeshID)) {
+
+      query = paste("SELECT distinct(PubGene.PMID) from PubGene", 
+                    "INNER JOIN PubChem ON PubGene.PMID = PubChem.PMID",
+                    "WHERE PubGene.GeneID = ", input$geneInput)
+      query <- paste0(query, " AND MeshID = ", chemMeshID)
+    } else {
+      
+      # return; but we could retrieve all articles with no filters
+      return()
+    }
+    
+    query <- paste(query, " ORDER BY PubGene.PMID DESC;")
+    
 
     print("pmid query: ")
     print(query)
@@ -302,10 +372,9 @@ shinyServer(function(input, output, session) {
     # on initial search
     observeEvent(
       {input$btnGeneSearch
-      input$rbMeshLimits},{
+      input$rbDiseaseLimits},{
 
         if (is.null(input$geneInput) | input$geneInput == "") return()
-        
         
         resetReactiveValues()
         
@@ -313,10 +382,13 @@ shinyServer(function(input, output, session) {
         shinyjs::show("x_value")
         
         shinyjs::html("bar-text", "Retreiving Articles, please wait...")
-        retrieveArticles()
+        retrieveArticles(NULL, NULL, NULL)
         
-        shinyjs::html("bar-text", "Retreiving MeSH terms, please wait...")
-        retrieveMeshTerms(NULL, input$rbMeshLimits)
+        shinyjs::html("bar-text", "Retreiving Diseases, please wait...")
+        retrieveDiseases(NULL, input$rbDiseaseLimits)
+        
+        shinyjs::html("bar-text", "Retreiving Chemicals, please wait...")
+        retrieveChemicals(NULL)
         
         shinyjs::html("bar-text", "Retreiving related genes, please wait...")
         retrieveGenes()
@@ -325,64 +397,83 @@ shinyServer(function(input, output, session) {
         
     })
     
-    # update PMID list when Selected Mesh Term changes
+    # TO DO: check for disease or chemical
+    # update PMID list when Selection changes
     observe( {
-      if (is.null(meshSummary$selectedID) & is.null(geneSummary$selectedID)) {
+      if (is.null(diseaseSummary$selectedID) & is.null(geneSummary$selectedID) & is.null(chemSummary$selectedID)) {
         return()
       }
-      retrieveArticles(paste0("'", meshSummary$selectedID, "'"), geneSummary$selectedID)
+      diseaseMeshID <- NULL
+      chemMeshID <- NULL
+      
+      if (!is.null(diseaseSummary$selectedID)) {
+        diseaseMeshID <- paste0("'", diseaseSummary$selectedID, "'")
+      } else if (!is.null(chemSummary$selectedID)) {
+        chemMeshID <- paste0("'", chemSummary$selectedID, "'")
+      }
+      
+      retrieveArticles(diseaseMeshID, chemMeshID, geneSummary$selectedID)
     })
     
     
     #update geneSummary
     observe ({
-      output$geneResults <- renderDataTable(datatable(geneSummary$dat, rownames = FALSE,
+      output$geneResults <- DT::renderDataTable(datatable(geneSummary$dat, rownames = FALSE,
                                             selection = "single",
                                             options = list(paging = FALSE, scrollY = 300)))
     })
     
     # update PMID table
     observe ({
-      output$articleTable <- renderDataTable(datatable(pmidList$pmids, rownames = FALSE))
+      output$articleTable <- DT::renderDataTable(DT::datatable(pmidList$pmids, rownames = FALSE))
     })
     
     
     # update MeshTerms table and graph
     observe ({
-      output$meshResults <- renderDataTable(datatable(meshSummary$uniqueDat, rownames = FALSE, 
+      output$diseaseResults <- DT::renderDataTable(datatable(diseaseSummary$uniqueDat, rownames = FALSE, 
                                                       selection = "single",
                                                       options = list(paging = FALSE, scrollY = 300)))
     
-      output$meshHierarchy <- renderUI(HTML(displayMesh(meshSummary$dat$TreeID,
-                                                      meshSummary$dat$Frequency)))
+      output$diseaseHierarchy <- renderUI(HTML(displayMesh(diseaseSummary$dat$TreeID,
+                                                      diseaseSummary$dat$Frequency)))
     })
 
+    
+    # update chem table
+    observe ({
+      output$chemResults <- DT::renderDataTable(datatable(chemSummary$uniqueDat, rownames = FALSE, 
+                                                             selection = "single",
+                                                             options = list(paging = FALSE, scrollY = 300)))
+    })
+    
+    
     observe({
-    if (!is.null(meshSummary$uniqueDat)) {
-      output$MeshGraph <- renderPlot({
+    if (!is.null(diseaseSummary$uniqueDat)) {
+      output$DiseaseGraph <- renderPlot({
         #cat("rendering plot...\n")
         
-        meshSummary$uniqueDat$Term <- factor(meshSummary$uniqueDat$Term, levels = meshSummary$uniqueDat$Term[order(meshSummary$uniqueDat$Frequency)])
-        colors <- rep("darkblue", nrow(meshSummary$uniqueDat))
-        print(meshSummary$selectedID)
+        diseaseSummary$uniqueDat$Term <- factor(diseaseSummary$uniqueDat$Term, levels = diseaseSummary$uniqueDat$Term[order(diseaseSummary$uniqueDat$Frequency)])
+        colors <- rep("darkblue", nrow(diseaseSummary$uniqueDat))
+        print(diseaseSummary$selectedID)
         
-        if (!is.null(meshSummary$hoverID)) {
-          m <- match(meshSummary$hoverID, meshSummary$uniqueDat$MeshID)
-          term <- meshSummary$uniqueDat$Term[m]
-          m <- match(term, levels(meshSummary$uniqueDat$Term))
+        if (!is.null(diseaseSummary$hoverID)) {
+          m <- match(diseaseSummary$hoverID, diseaseSummary$uniqueDat$MeshID)
+          term <- diseaseSummary$uniqueDat$Term[m]
+          m <- match(term, levels(diseaseSummary$uniqueDat$Term))
           colors[m] <- "yellow"
         }
         
-        if (!is.null(meshSummary$selectedID)) {
-          m <- match(meshSummary$selectedID, meshSummary$uniqueDat$MeshID)
-          term <- meshSummary$uniqueDat$Term[m]
-          m <- match(term, levels(meshSummary$uniqueDat$Term))
+        if (!is.null(diseaseSummary$selectedID)) {
+          m <- match(diseaseSummary$selectedID, diseaseSummary$uniqueDat$MeshID)
+          term <- diseaseSummary$uniqueDat$Term[m]
+          m <- match(term, levels(diseaseSummary$uniqueDat$Term))
           colors[m] <- "darkred"
         }
         
-        ggplot(meshSummary$uniqueDat, aes(Term, Frequency)) + geom_bar(fill = colors, stat = "identity") +
+        ggplot(diseaseSummary$uniqueDat, aes(Term, Frequency)) + geom_bar(fill = colors, stat = "identity") +
           coord_flip()
-      }, height = max(450, nrow(meshSummary$uniqueDat)*26))
+      }, height = max(450, nrow(diseaseSummary$uniqueDat)*26))
     }
     })
     
@@ -393,13 +484,21 @@ shinyServer(function(input, output, session) {
     
   
     #update selected display
+    observe({
+      diseaseSummary$selectedID
+      geneSummary$selectedID
+      chemSummary$selectedID
+      print("changing x_value")
     output$x_value <- renderText({
-      if (is.null(meshSummary$selectedID) & is.null(geneSummary$selectedID)) return(HTML("<h4>Filters: (none)</h4>"))
-      else if (!is.null(meshSummary$selectedID)) {
-        HTML("<h4>Filter by MeSH Term: <span style = \"color:maroon\">", meshSummary$selectedTerm, "</span></h4>")
+      print("NEED TO UPDATE output$x_value")
+      cat("selected disease: ", diseaseSummary$selectedID, "\n")
+      if (is.null(diseaseSummary$selectedID) & is.null(geneSummary$selectedID)) return(HTML("<h4>Filters: (none)</h4>"))
+      else if (!is.null(diseaseSummary$selectedID)) {
+        return(HTML("<h4>Filter by Disease Term: <span style = \"color:maroon\">", diseaseSummary$selectedTerm, "</span></h4>"))
       } else if (!is.null(geneSummary$selectedID)) {
-        HTML("<h4>Filter by additional gene: <span style = \"color:maroon\">", geneSummary$selectedTerm, "</span></h4>")
+        return(HTML("<h4>Filter by additional gene: <span style = \"color:maroon\">", geneSummary$selectedTerm, "</span></h4>"))
       }
     })
+})
     
 })

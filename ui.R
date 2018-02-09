@@ -1,6 +1,5 @@
 library(shiny)
 library(shinyBS)
-library(wordcloud2)
 library(shinydashboard)
 library(shinyjs)
 
@@ -11,11 +10,10 @@ source("addDeps.R")
 
 shinyUI(
   
-  dashboardPage(
+  dashboardPage(title = "Cancer Publication Portal",
 
     dashboardHeader(title = uiOutput("shinyTitle"), titleWidth = 350),
-
-     
+    
     dashboardSidebar(width = 250,
  
       includeCSS('www/ecsu.css'),
@@ -28,7 +26,7 @@ shinyUI(
       
       selectizeInput("geneInput", label = "Enter a Gene ID", choices = NULL),
       actionButton("btnGeneSearch", "Search"), 
-      radioButtons("rbMeshLimits", "Filters:",
+      radioButtons("rbDiseaseLimits", "Disease Filters:",
                    c("cancer-related" = "cancer",
                      "none" = "none"), selected = "cancer")
     ), 
@@ -53,20 +51,21 @@ shinyUI(
       fluidRow(
         shiny::column(id = "colSummary", width = 6,
           navbarPage(" ",id = "tspSummary",
-                navbarMenu("Mesh Terms",
-                        tabPanel("Mesh Graph", id = "tabMeshGraph", 
+                navbarMenu("Diseases",
+                        tabPanel("Disease Graph", id = "tabDiseaseGraph", 
                           div(style = "height: 450px; overflow-y: scroll",
-                          plotOutput("MeshGraph",  click = "MeshGraph_click"#, 
-                                  #hover = hoverOpts(id = "MeshGraph_hover", 
+                          plotOutput("DiseaseGraph",  click = "DiseaseGraph_click"#, 
+                                  #hover = hoverOpts(id = "DiseaseGraph_hover", 
                                   #                              delay = 300,
                                   #                              delayType = "throttle")
                                  ))
                         ),
-                        tabPanel("MeSH Summary", dataTableOutput("meshResults")),
-                        tabPanel("MeSH Tree", htmlOutput("meshHierarchy"))
+                        tabPanel("Disease Summary", DT::dataTableOutput("diseaseResults")),
+                        tabPanel("Disease Tree", htmlOutput("diseaseHierarchy"))
                   ),
                 
-                tabPanel("Gene Co-occurrences", dataTableOutput("geneResults")),
+                tabPanel("Chemicals", DT::dataTableOutput("chemResults")),
+                tabPanel("Gene Co-occurrences", DT::dataTableOutput("geneResults")),
                 tabPanel("Hide Summaries", value = "hide")
           )
         ),
@@ -94,7 +93,7 @@ shinyUI(
               }
                         
                         
-              /* 2nd level (Mesh menu) tabs */
+              /* 2nd level (Disease menu) tabs */
               .navbar-default .navbar-nav > li > ul > li[class='active'] > a {
                         color: white;
                         background-color: maroon
@@ -124,7 +123,7 @@ shinyUI(
             #shiny::column(width = 3)
             shiny::column(id = "colPubs", width = 6, 
                           uiOutput("articleHeader"),
-                          dataTableOutput("articleTable"))
+                          DT::dataTableOutput("articleTable"))
         } else {
           shiny::column(id = "colPubs", width = 6, 
                         uiOutput("articleHeader"),
