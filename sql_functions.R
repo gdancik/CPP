@@ -58,7 +58,7 @@ getGeneSummaryByPMIDs <- function(pmids, con) {
   
   pmids <- paste0("'",pmids,"'", collapse = ",")
   
-  str <- paste0("select TT.SYMBOL as SYMBOL, count(TT.GeneID) as Frequency  FROM\n",
+  str <- paste0("select count(TT.GeneID) as Frequency, TT.SYMBOL as Symbol FROM\n",
   "(select PubGene.PMID, Genes.GeneID, Genes.SYMBOL from Genes\n",
     "inner join PubGene ON PubGene.GeneID = Genes.GeneID\n",
     "where PubGene.PMID IN ", paste0("(", pmids, ")\n"),

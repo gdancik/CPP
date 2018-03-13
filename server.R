@@ -8,6 +8,7 @@ library(ggplot2)
 
 source("functions.R", local = TRUE)
 source("sql_functions.R", local = TRUE)
+source("setResults.R", local = TRUE)
 
 GeneTable <- read.csv("data/human_genes.csv")
 GeneTable$SYMBOL <- as.character(GeneTable$SYMBOL)
@@ -22,7 +23,6 @@ rownames(GeneTable) <- GeneTable$SYMBOL
 
 shinyServer(function(input, output, session) {
 
-  
   #shinyjs::toggleClass("x_value", "shiny-html-output")
   #shinyjs::toggleClass("x_value", "shiny-bound-output")
   
@@ -81,7 +81,7 @@ shinyServer(function(input, output, session) {
                                  selectedTerm = NULL, hoverID = NULL)
   chemSummary <- reactiveValues(dat = NULL, uniqueDat = NULL, selectedID = NULL, 
                                    selectedTerm = NULL, hoverID = NULL)
-  geneSummary <- reactiveValues(dat = NULL, seletectedID = NULL, selectedTerm = NULL)
+  geneSummary <- reactiveValues(dat = NULL, selectedID = NULL, selectedTerm = NULL)
   
   pmidList <- reactiveValues(pmids = NULL)
   
@@ -126,10 +126,11 @@ shinyServer(function(input, output, session) {
       name <- lvls[round(input$DiseaseGraph_click$y)]
       cat("You've selected <code>", name, "</code>\n")
       m <- match(name, diseaseSummary$uniqueDat$Term)
-      diseaseSummary$selectedID <- diseaseSummary$uniqueDat$MeshID[m]
-      diseaseSummary$selectedTerm <- as.character(diseaseSummary$uniqueDat$Term)[m]
-      clearSelectedGene()
-      clearSelectedChem()
+      diseaseSummary$selectedID <- append(diseaseSummary$selectedID, diseaseSummary$uniqueDat$MeshID[m])
+      diseaseSummary$selectedTerm <- append(diseaseSummary$selectedTerm, as.character(diseaseSummary$uniqueDat$Term)[m])
+
+#      clearSelectedGene()
+#      clearSelectedChem()
     }
   })
   
@@ -172,10 +173,11 @@ shinyServer(function(input, output, session) {
     if (length(s) > 0) {
       print(diseaseSummary$uniqueDat[s,])
     }
-    diseaseSummary$selectedID <- diseaseSummary$uniqueDat$MeshID[s]
-    diseaseSummary$selectedTerm <- as.character(diseaseSummary$uniqueDat$Term)[s]
-    clearSelectedGene()
-    clearSelectedChem()
+    diseaseSummary$selectedID <- append(diseaseSummary$selectedID, diseaseSummary$uniqueDat$MeshID[s])
+    diseaseSummary$selectedTerm <- append(diseaseSummary$selectedTerm, as.character(diseaseSummary$uniqueDat$Term)[s])
+
+    #clearSelectedGene()
+    #clearSelectedChem()
   })
   
   # record click from Chem Table (store in chemSummary reactive)
@@ -185,10 +187,10 @@ shinyServer(function(input, output, session) {
     if (length(s) > 0) {
       print(chemSummary$uniqueDat[s,])
     }
-    chemSummary$selectedID <- chemSummary$uniqueDat$MeshID[s]
-    chemSummary$selectedTerm <- as.character(chemSummary$uniqueDat$Term)[s]
-    clearSelectedGene()
-    clearSelectedDisease()
+    chemSummary$selectedID <- append(chemSummary$selectedID, chemSummary$uniqueDat$MeshID[s])
+    chemSummary$selectedTerm <- append(chemSummary$selectedTerm, s.character(chemSummary$uniqueDat$Term)[s])
+    #clearSelectedGene()
+    #clearSelectedDisease()
   })
   
   
@@ -203,18 +205,26 @@ shinyServer(function(input, output, session) {
     if (s== 1) {
       return()
     }
-    gene <- geneSummary$dat[s,1]
-    gene <- gsub("\r", "", gene)
+    gene <- geneSummary$dat[s,2]
     cat("gene = ", gene, "\n")
-    m <- match(gene, GeneTable$SYMBOL)
-    geneSummary$selectedID <- GeneTable$GeneID[m]
-    geneSummary$selectedTerm <- gene
-    clearSelectedDisease()
-    clearSelectedChem()
+    gg <- geneSymbolToID(gene, GeneTable)
+    geneSummary$selectedID <- append(geneSummary$selectedID, gg$ID)
+    geneSummary$selectedTerm <- append(geneSummary$selectedTerm, gg$Symbol)
+    cat("set selected term to: ", gg$Symbol,"\n")
+    
+    #clearSelectedDisease()
+    #clearSelectedChem()
   })
 
   
-
+  geneSymbolToID <- function(symbols, GeneTable) {
+    symbols <- gsub("\r", "", symbols)
+    m <- match(symbols, GeneTable$SYMBOL)
+    data.frame(Symbol = as.character(symbols), ID = as.character(GeneTable$GeneID)[m],
+               stringsAsFactors = FALSE)
+  }
+  
+  
   # queries mesh terms - currently stores results in 
   # diseaseSummary$dat and diseaseSummary$uniqueDat
   retrieveDiseases <- function(meshID, limit) {
@@ -249,7 +259,7 @@ shinyServer(function(input, output, session) {
     
     rownames(diseaseSummary$dat) = NULL
     
-    diseaseSummary$uniqueDat <- unique(diseaseSummary$dat[,1:3])
+    setDiseaseResults(session, unique(diseaseSummary$dat[,1:3]), diseaseSummary)
     
   }
   
@@ -281,8 +291,8 @@ shinyServer(function(input, output, session) {
     
     rownames(chemSummary$dat) = NULL
     
-    chemSummary$uniqueDat <- unique(chemSummary$dat[,1:3])
-    #print(head(chemSummary$uniqueDat))
+    setChemResults(session, unique(chemSummary$dat[,1:3]), chemSummary)
+    
     
   } # end retrieveChemicals
   
@@ -297,7 +307,7 @@ shinyServer(function(input, output, session) {
     # query MeSH terms
     query = paste("SELECT count(MeshTerms.MeshID), MeshTerms.MeshID, MeshTerms.Term, MeshTerms.TreeID from MeshTerms")
     
-    query <- paste("select g.SYMBOL, count(g.SYMBOL) from Genes g",
+    query <- paste("select count(g.SYMBOL) as Freqency, g.SYMBOL as Symbol from Genes g",
     "INNER JOIN PubGene p on g.GeneID = p.GeneID",
     "INNER JOIN PubGene p2 ON p.PMID = p2.PMID",
     "where p2.GeneID = ", input$geneInput, 
@@ -306,7 +316,8 @@ shinyServer(function(input, output, session) {
     
     print(query)
     geneSummary$dat <- dbGetQuery(con, query)
-    colnames(geneSummary$dat) <- c("Symbol", "Frequency")
+    setGeneResults(session, geneSummary$dat, geneSummary)
+    
     dbDisconnect(con)
     
   }
@@ -381,7 +392,6 @@ shinyServer(function(input, output, session) {
         resetReactiveValues()
         
         shinyjs::show("tspSummary")
-        shinyjs::show("x_value")
         
         shinyjs::html("bar-text", "Retreiving Articles, please wait...")
         retrieveArticles(NULL, NULL, NULL)
@@ -467,15 +477,17 @@ shinyServer(function(input, output, session) {
       
       # update MeshSummary
       diseaseSummary$dat <- getMeshSummaryByPMIDs(pmids, con)
-      diseaseSummary$uniqueDat <- diseaseSummary$dat
+      setDiseaseResults(session, diseaseSummary$dat, diseaseSummary)
       
       # update ChemSummary
       chemSummary$dat <- getChemSummaryByPMIDs(pmids, con)
-      chemSummary$uniqueDat <- chemSummary$dat
-      
+      setChemResults(session, chemSummary$dat, chemSummary)
       
       # update geneSummary
       geneSummary$dat <- getGeneSummaryByPMIDs(pmids, con)
+      setGeneResults(session, geneSummary$dat, geneSummary)
+      
+      
       dbDisconnect(con)
       
       #update PMIDs
@@ -494,14 +506,7 @@ shinyServer(function(input, output, session) {
       #respondToSelectionRefresh()
       respondToSelectionDrill()
       
-      output$x_value <- renderText({
 
-        filters <- c(diseaseSummary$selectedTerm, chemSummary$selectedTerm, geneSummary$selectedTerm)
-        filters <- paste0(filters, collapse = ", ")
-        paste("FILTERS: ", filters)
-        
-      })
-      
     })
     
     
@@ -573,17 +578,4 @@ shinyServer(function(input, output, session) {
         HTML("<h2> how are you? </h2>")
     })
 
- 
-
-        
-  
-    #update selected display
-#    observe({
-#      diseaseSummary$selectedID
-#      geneSummary$selectedID
-#      chemSummary$selectedID
-#      print("changing x_value")
-
-#})
-    
 })
