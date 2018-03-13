@@ -188,7 +188,7 @@ shinyServer(function(input, output, session) {
       print(chemSummary$uniqueDat[s,])
     }
     chemSummary$selectedID <- append(chemSummary$selectedID, chemSummary$uniqueDat$MeshID[s])
-    chemSummary$selectedTerm <- append(chemSummary$selectedTerm, s.character(chemSummary$uniqueDat$Term)[s])
+    chemSummary$selectedTerm <- append(chemSummary$selectedTerm, as.character(chemSummary$uniqueDat$Term)[s])
     #clearSelectedGene()
     #clearSelectedDisease()
   })
