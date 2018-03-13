@@ -7,6 +7,7 @@ library(RMySQL)
 library(ggplot2)
 
 source("functions.R", local = TRUE)
+source("sql_functions.R", local = TRUE)
 
 GeneTable <- read.csv("data/human_genes.csv")
 GeneTable$SYMBOL <- as.character(GeneTable$SYMBOL)
@@ -22,11 +23,11 @@ rownames(GeneTable) <- GeneTable$SYMBOL
 shinyServer(function(input, output, session) {
 
   
-  shinyjs::toggleClass("x_value", "shiny-html-output")
-  shinyjs::toggleClass("x_value", "shiny-bound-output")
+  #shinyjs::toggleClass("x_value", "shiny-html-output")
+  #shinyjs::toggleClass("x_value", "shiny-bound-output")
   
   shinyjs::toggle("tspSummary")
-  shinyjs::toggle("x_value")
+  #shinyjs::toggle("x_value")
   
   output$shinyTitle <- renderText("Cancer Publication Portal")
   
@@ -80,7 +81,7 @@ shinyServer(function(input, output, session) {
                                  selectedTerm = NULL, hoverID = NULL)
   chemSummary <- reactiveValues(dat = NULL, uniqueDat = NULL, selectedID = NULL, 
                                    selectedTerm = NULL, hoverID = NULL)
-  geneSummary <- reactiveValues(dat = NULL, seletectedID = NULL, seletectedTerm = NULL)
+  geneSummary <- reactiveValues(dat = NULL, seletectedID = NULL, selectedTerm = NULL)
   
   pmidList <- reactiveValues(pmids = NULL)
   
@@ -209,6 +210,7 @@ shinyServer(function(input, output, session) {
     geneSummary$selectedID <- GeneTable$GeneID[m]
     geneSummary$selectedTerm <- gene
     clearSelectedDisease()
+    clearSelectedChem()
   })
 
   
@@ -345,8 +347,8 @@ shinyServer(function(input, output, session) {
                     "WHERE PubGene.GeneID = ", input$geneInput)
       query <- paste0(query, " AND MeshID = ", chemMeshID)
     } else {
-      
       # return; but we could retrieve all articles with no filters
+      dbDisconnect(con)
       return()
     }
     
@@ -397,12 +399,9 @@ shinyServer(function(input, output, session) {
         
     })
     
-    # TO DO: check for disease or chemical
-    # update PMID list when Selection changes
-    observe( {
-      if (is.null(diseaseSummary$selectedID) & is.null(geneSummary$selectedID) & is.null(chemSummary$selectedID)) {
-        return()
-      }
+    
+    respondToSelectionRefresh <- function() {
+      
       diseaseMeshID <- NULL
       chemMeshID <- NULL
       
@@ -412,8 +411,100 @@ shinyServer(function(input, output, session) {
         chemMeshID <- paste0("'", chemSummary$selectedID, "'")
       }
       
+      cat("calling retrieveArticles...")
       retrieveArticles(diseaseMeshID, chemMeshID, geneSummary$selectedID)
+      cat("done")
+      
+      
+    }
+
+    respondToSelectionDrill <- function() {
+      
+      num <- 0
+      p1 <- list(PMID=NULL); p2 <- list(PMID=NULL); p3 <- list(PMID=NULL)
+      
+      con = dbConnect(MySQL(), dbname = "dcast", user = "root", password = "password")
+      
+      # get PMIDS for Mesh Selection
+      if (!is.null(diseaseSummary$selectedID)) {
+          cat("geting PMIDS for: ", diseaseSummary$selectedID, "\n")
+          p1 <- getPMIDs("PubMesh", "MeshID", diseaseSummary$selectedID, con)
+          num = num + 1
+      }
+      
+      # get PMIDs for Chem selection
+      if (!is.null(chemSummary$selectedID)) {
+        cat("geting PMIDS for: ", chemSummary$selectedID, "\n")
+        p2 <- getPMIDs("PubChem", "meshID", chemSummary$selectedID, con)
+        num = num + 1
+      }
+      
+      # get PMIDs for gene selection - add original geneInput
+      genes <- c(input$geneInput, geneSummary$selectedID)
+      cat("geting PMIDS for: ", genes, "\n")
+      p3 <- getPMIDs("PubGene", "GeneID", genes, con)
+      
+      
+      num = num + 1
+      
+      cat("all done, num = ", num, "\n")
+      
+      if (num == 0) {
+        dbDisconnect(con)
+        return()
+      }
+
+      p_all <- table(c(p1$PMID,p2$PMID,p3$PMID))
+      pmids <- names(p_all)[p_all>=num]
+      cat("final pmids are: ", pmids, "\n")
+      
+      if (length(pmids) == 0) {
+        dbDisconnect(con)
+        cat("NO RESULTS -- NEED TO UPDATE!")
+        return()
+      }
+      
+      
+      # update MeshSummary
+      diseaseSummary$dat <- getMeshSummaryByPMIDs(pmids, con)
+      diseaseSummary$uniqueDat <- diseaseSummary$dat
+      
+      # update ChemSummary
+      chemSummary$dat <- getChemSummaryByPMIDs(pmids, con)
+      chemSummary$uniqueDat <- chemSummary$dat
+      
+      
+      # update geneSummary
+      geneSummary$dat <- getGeneSummaryByPMIDs(pmids, con)
+      dbDisconnect(con)
+      
+      #update PMIDs
+      pmidList$pmids <- data.frame(PMID = pmids)
+      
+    }
+    
+    # TO DO: check for disease or chemical
+    # update PMID list when Selection changes
+    observe( {
+      
+      if (is.null(diseaseSummary$selectedID) & is.null(geneSummary$selectedID) & is.null(chemSummary$selectedID)) {
+        return()
+      }
+      
+      #respondToSelectionRefresh()
+      respondToSelectionDrill()
+      
+      output$x_value <- renderText({
+
+        filters <- c(diseaseSummary$selectedTerm, chemSummary$selectedTerm, geneSummary$selectedTerm)
+        filters <- paste0(filters, collapse = ", ")
+        paste("FILTERS: ", filters)
+        
+      })
+      
     })
+    
+    
     
     
     #update geneSummary
@@ -481,24 +572,18 @@ shinyServer(function(input, output, session) {
     output$test <- renderText({
         HTML("<h2> how are you? </h2>")
     })
-    
+
+ 
+
+        
   
     #update selected display
-    observe({
-      diseaseSummary$selectedID
-      geneSummary$selectedID
-      chemSummary$selectedID
-      print("changing x_value")
-    output$x_value <- renderText({
-      print("NEED TO UPDATE output$x_value")
-      cat("selected disease: ", diseaseSummary$selectedID, "\n")
-      if (is.null(diseaseSummary$selectedID) & is.null(geneSummary$selectedID)) return(HTML("<h4>Filters: (none)</h4>"))
-      else if (!is.null(diseaseSummary$selectedID)) {
-        return(HTML("<h4>Filter by Disease Term: <span style = \"color:maroon\">", diseaseSummary$selectedTerm, "</span></h4>"))
-      } else if (!is.null(geneSummary$selectedID)) {
-        return(HTML("<h4>Filter by additional gene: <span style = \"color:maroon\">", geneSummary$selectedTerm, "</span></h4>"))
-      }
-    })
-})
+#    observe({
+#      diseaseSummary$selectedID
+#      geneSummary$selectedID
+#      chemSummary$selectedID
+#      print("changing x_value")
+
+#})
     
 })
