@@ -34,7 +34,7 @@ shinyUI(
         ),
         shiny::column(width = 2,
           radioButtons("rbDiseaseLimits", "Article Limits:",
-          c("cancer-related articles" = "cancer", "none" = "all articles"), selected = "cancer")),
+          c("Cancer-related articles only" = "cancer", "All articles" = "none"), selected = "cancer")),
       
         shiny::column(width=2,
           selectInput("filterDisease", "Disease Filters", c("Choose one" = "", 1:5), multiple = TRUE, selectize = TRUE)
@@ -90,7 +90,22 @@ shinyUI(
                       
           tags$style(HTML("
                         
+                        /* color table selections */
+                        table.dataTable tr.selected td, table.dataTable td.selected {
+                            background-color: maroon !important;
+                            color: white
+                        }
+
                         /* 'hide' tab */
+                        .navbar {
+                          background-image: linear-gradient(#04519b,#044687 60%,#033769)
+                        }
+
+                        .navbar-header > .navbar-brand {
+                            font-family:Courgette;
+                            color:#FFF;
+                        }
+
                         .navbar-nav > li > a[data-value='hide'] {color: maroon !important;}
                         
                         /* Top level tabs */
@@ -107,7 +122,7 @@ shinyUI(
                         
                         
                         .navbar-default .navbar-nav > li > a {
-                        color: darkblue;
+                        color: white;
                         }
                         
                         
