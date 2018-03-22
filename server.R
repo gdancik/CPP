@@ -16,7 +16,6 @@ library(dplyr)
 
 shinyServer(function(input, output, session) {
 
-
   output$shinyTitle <- renderText("Cancer Publication Portal")
   
   source("server-reactives.R", local = TRUE)
@@ -25,6 +24,11 @@ shinyServer(function(input, output, session) {
   source("server-GeneTable.R", local = TRUE)
   source("server-updateTables.R", local = TRUE)
   source("server-tableClicks.R", local = TRUE)
+  
+  # disable drop downs on startup
+  shinyjs::disable("filterDisease")
+  shinyjs::disable("filterChem")
+  shinyjs::disable("filterGenes")
   
   # record click from Disease Graph (store in diseaseSummary reactive)
   observeEvent(input$DiseaseGraph_click$y, {
@@ -42,7 +46,6 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  
     # on initial search
     observeEvent(
       {input$btnGeneSearch
@@ -52,66 +55,55 @@ shinyServer(function(input, output, session) {
         
         resetReactiveValues()
         
-        shinyjs::html("bar-text", "Retreiving Articles, please wait...")
-        retrieveArticles(NULL, NULL, NULL)
-        
-        shinyjs::html("bar-text", "Retreiving Diseases, please wait...")
-        retrieveDiseases(NULL, input$rbDiseaseLimits)
-        
-        shinyjs::html("bar-text", "Retreiving Chemicals, please wait...")
-        retrieveChemicals(NULL)
-        
-        shinyjs::html("bar-text", "Retreiving related genes, please wait...")
-        retrieveGenes()
-        
-        shinyjs::html("bar-text", "Please wait...")
+        respondToSelectionDrill()
         
     })
     
-    
-    respondToSelectionRefresh <- function() {
-      
-      diseaseMeshID <- NULL
-      chemMeshID <- NULL
-      
-      if (!is.null(diseaseSummary$selectedID)) {
-        diseaseMeshID <- paste0("'", diseaseSummary$selectedID, "'")
-      } else if (!is.null(chemSummary$selectedID)) {
-        chemMeshID <- paste0("'", chemSummary$selectedID, "'")
-      }
-      
-      cat("calling retrieveArticles...")
-      retrieveArticles(diseaseMeshID, chemMeshID, geneSummary$selectedID)
-      cat("done")
-      
-      
-    }
-
+  
+  ###################################################################################################    
+  # This is the main function that drives db queries, and works as follows:
+  # 1) if cancer-specific, get list of cancer-specific PMIDS if not already set
+  # 2) get PMIDs based on Mesh selection (limited to current PMID list)
+  # 3) get PMIDs based on Chem selection (limited to current PMID list)
+  # 4) get PMIDs based on Gene selection (limited to current PMID list)
+  # 5) get intersection of (2) - (4) producing list of PMIDs matching search criteria
+  # 6) get summaries for Mesh terms, Chemicals, and Genes
+  ###################################################################################################    
     respondToSelectionDrill <- function() {
       
       num <- 0
       p1 <- list(PMID=NULL); p2 <- list(PMID=NULL); p3 <- list(PMID=NULL)
       
-      con = dbConnect(MySQL(), dbname = "dcast", user = "root", password = "password")
+      con = dbConnect(MySQL(), group = "CPP")
+      
+      # get cancer PMIDs if specified #
+      if (is.null(pmidList$pmids_initial) & input$rbDiseaseLimits == "cancer") {
+        cat("getting cancer IDs for ", input$geneInput, "\n")
+        pmidList$pmids_initial = getCancerPMIDs(con, input$geneInput)
+      }
       
       # get PMIDS for Mesh Selection
       if (!is.null(diseaseSummary$selectedID)) {
+          shinyjs::html("bar-text", "Retreiving Articles for Selected Diseases, please wait...")
           cat("Disease selection, geting PMIDS for: ", diseaseSummary$selectedID, "\n")
-          p1 <- getPMIDs("PubMesh", "MeshID", diseaseSummary$selectedID, con, pmidList$pmids$PMID)
+          p1 <- getPMIDs("PubMesh", "MeshID", diseaseSummary$selectedID, con, pmidList$pmids_initial$PMID)
           num = num + 1
       }
       
       # get PMIDs for Chem selection
       if (!is.null(chemSummary$selectedID)) {
+        shinyjs::html("bar-text", "Retreiving Articles for Selected Chemicals, please wait...")
         cat("Chem selection, getting PMIDS for: ", chemSummary$selectedID, "\n")
-        p2 <- getPMIDs("PubChem", "meshID", chemSummary$selectedID, con, pmidList$pmids$PMID)
+        p2 <- getPMIDs("PubChem", "meshID", chemSummary$selectedID, con, pmidList$pmids_initial$PMID)
         num = num + 1
       }
       
-      # get PMIDs for gene selection - add original geneInput
+      # get PMIDs for gene selection
       genes <- c(input$geneInput, geneSummary$selectedID)
       cat("Gene selection, getting PMIDS for: ", genes, "\n")
-      p3 <- getPMIDs("PubGene", "GeneID", genes, con, pmidList$pmids$PMID)
+      shinyjs::html("bar-text", "Retreiving Articles for Selected Genes, please wait...")
+      
+      p3 <- getPMIDs("PubGene", "GeneID", genes, con, pmidList$pmids_initial$PMID)
       
       a <- pmidList$pmids
       
@@ -134,24 +126,30 @@ shinyServer(function(input, output, session) {
         return()
       }
       
-      
       # update MeshSummary
+      shinyjs::html("bar-text", "Retreiving Related Diseases, please wait...")
       diseaseSummary$dat <- getMeshSummaryByPMIDs(pmids, con)
       setDiseaseResults(session, diseaseSummary$dat, diseaseSummary)
       
       # update ChemSummary
+      shinyjs::html("bar-text", "Retreiving Related Chemicals, please wait...")
       chemSummary$dat <- getChemSummaryByPMIDs(pmids, con)
       setChemResults(session, chemSummary$dat, chemSummary)
       
       # update geneSummary
+      shinyjs::html("bar-text", "Retreiving Related Genes, please wait...")
       geneSummary$dat <- getGeneSummaryByPMIDs(pmids, con)
       setGeneResults(session, geneSummary$dat, geneSummary)
       
-      
+  
       dbDisconnect(con)
       
       #update PMIDs
-      #pmidList$pmids <- data.frame(PMID = pmids)
+      pmidList$pmids <- data.frame(PMID = pmids)
+      
+      if (is.null(pmidList$pmids_initial)) {
+        pmidList$pmids_initial <- pmidList$pmids
+      }
       
     }
     
@@ -163,7 +161,7 @@ shinyServer(function(input, output, session) {
         return()
       }
       
-      #respondToSelectionRefresh()
+      
       respondToSelectionDrill()
       
 

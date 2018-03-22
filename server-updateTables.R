@@ -2,8 +2,19 @@
 
 #update geneSummary
 observe ({
+  
+  if (is.null(geneSummary$dat)) {
+    return()
+  }
+  geneSummary$dat$Symbol <- gsub("\r", "", geneSummary$dat$Symbol)
+  m <- match(geneSummary$selectedTerm, geneSummary$dat$Symbol)
+  
+  isolate({
+    selection = list(mode = "multiple", selected = m, target = "row")
+    cat("selected gene rows = ", m, "\n")
+  })
   output$geneResults <- DT::renderDataTable(datatable(geneSummary$dat, rownames = FALSE,
-                                                      selection = "single",
+                                                      selection = selection,
                                                       options = list(paging = FALSE, scrollY = 300)))
 })
 
@@ -17,16 +28,20 @@ observe ({
 observe ({
   
   m <- match(diseaseSummary$selectedID, diseaseSummary$uniqueDat$MeshID)
+  cat("click, m = ", m, "\n")
   isolate({
     selection = list(mode = "multiple", selected = m, target = "row")
-  })
   
-  output$diseaseResults <- DT::renderDataTable(datatable(diseaseSummary$uniqueDat, rownames = FALSE, 
+  
+    output$diseaseResults <- DT::renderDataTable(datatable(diseaseSummary$uniqueDat, rownames = FALSE, 
                                                          selection = selection,
                                                          options = list(paging = FALSE, scrollY = 300)))
   
-  output$diseaseHierarchy <- renderUI(HTML(displayMesh(diseaseSummary$dat$TreeID,
-                                                       diseaseSummary$dat$Frequency)))
+    #output$diseaseHierarchy <- renderUI(HTML(displayMesh(diseaseSummary$dat$TreeID,
+    #                                                   diseaseSummary$dat$Frequency)))
+  
+  })
+  
 })
 
 

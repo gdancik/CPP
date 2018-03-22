@@ -37,13 +37,13 @@ shinyUI(
           c("Cancer-related articles only" = "cancer", "All articles" = "none"), selected = "cancer")),
       
         shiny::column(width=2,
-          selectInput("filterDisease", "Disease Filters", c("Choose one" = "", 1:5), multiple = TRUE, selectize = TRUE)
+          selectInput("filterDisease", "Disease Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
         ),
         shiny::column(width=2,
-                      selectInput("filterChem", "Chem Filters", c("Choose one" = "", 1:5), multiple = TRUE, selectize = TRUE)
+                      selectInput("filterChem", "Chem Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
         ),
         shiny::column(width=2,
-                      selectInput("filterGenes", "Gene Filters", c("Choose one" = "", 1:5), multiple = TRUE, selectize = TRUE)
+                      selectInput("filterGenes", "Additional Gene Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
         )
       ),
         hr(),

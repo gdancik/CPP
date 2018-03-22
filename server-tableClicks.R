@@ -1,8 +1,8 @@
-# server-tableClicks.R
+# server-tableClicks.R (respond to table clicks and drop-down changes)
 
 # update current selections - compare current selections with previous, and return
 # updated vector (we may add or remove selections, but should not double count)
-updateCurrentSelections <- function(current, previous) {
+updateMeshSelections <- function(current, previous) {
   
   if (setequal(current, previous)) {
     return (NULL)
@@ -12,11 +12,7 @@ updateCurrentSelections <- function(current, previous) {
 }
 
 
-###########################################################################
-# click on diseaseSummary table or drop-down
-###########################################################################
-
-# update diseaseSummary reactive
+# update Mesh IDs for Disease (tblSummary = diseaseSummary) or Chemicals (tblSummary = ChemSummary)
 updateSelectedMeshIDs <- function(ids, tblSummary) {
   
   isolate({
@@ -24,36 +20,61 @@ updateSelectedMeshIDs <- function(ids, tblSummary) {
     cat("new ids = ", ids, "\n")
     cat("selected ids = ", tblSummary$selectedID, "\n")
     
-    selections <- updateCurrentSelections(ids, tblSummary$selectedID)
+    selections <- updateMeshSelections(ids, tblSummary$selectedID)
     cat("getting selections = ", selections ,"\n\n")
-    
-    if (!is.null(selections)) {
+  
+    if (!is.null(selections))  {
+      # if selections have changed, update
       tblSummary$selectedID <- selections
       m <- match(selections, tblSummary$uniqueDat$MeshID)
       tblSummary$selectedTerm <-as.character(tblSummary$uniqueDat$Term)[m]
+    } else if (is.null(ids) & !is.null(tblSummary$selectedID)) {
+      # the user has canceled all filters
+      tblSummary$selectedTerm <- NULL
+      tblSummary$selectedID <- NULL
+      respondToSelectionDrill()
     }
     
   })
 }
 
 
-# respond to drop down change
+
+
+###########################################################################
+# click on diseaseSummary table or drop-down
+###########################################################################
+
+# needed for table click resulting in no selection
 observe({
-  cat("dropdown selected: ", input$filterDisease, "\n")
-  updateSelectedMeshIDs(input$filterDisease, diseaseSummary)
+  selected <- input$diseaseResults_rows_selected
+  cat("on observe, selected = ", selected, "\n")
+  if (is.null(selected)) {
+    diseaseSummary$selectedID <- NULL
+    diseaseSummary$selectedTerm <- NULL
+    respondToSelectionDrill()
+  }
 })
 
+# respond to drop down change
+observe({
+  x <- input$filterDisease # need this for trigger
+  updateSelectedMeshIDs(input$filterDisease, diseaseSummary)
+})
 
 # respond to table selection (or deselection) 
 observeEvent(
   input$diseaseResults_rows_selected, {
-    
+
     s = input$diseaseResults_rows_selected
+    cat("table click, s = ", s, "\n")
     selectedMeshIDs <- diseaseSummary$uniqueDat$MeshID[s]
     cat("table click -- selected MeshIDs are: ", selectedMeshIDs, "\n")
     
+    cat("call updateSelectedMeshIDs\n")
     updateSelectedMeshIDs(selectedMeshIDs, diseaseSummary)
-    
+   # globalCount <<- globalCount + 1
+        
   })
 
 
@@ -62,14 +83,22 @@ observeEvent(
 # click on chemSummary table or drop-down
 ###########################################################################
 
+# needed for table click resulting in no selection
+observe({
+  selected <- input$chemResults_rows_selected
+  if (is.null(selected)) {
+    chemSummary$selectedID <- NULL
+    chemSummary$selectedTerm <- NULL
+    respondToSelectionDrill()
+  }
+})
 
 
 # respond to drop down change
 observe({
-  cat("dropdown selected: ", input$filterChem, "\n")
+  x <- input$filterChem # need this to trigger
   updateSelectedMeshIDs(input$filterChem, chemSummary)
 })
-
 
 
 # respond to table selection (or deselection) 
@@ -78,7 +107,7 @@ observeEvent(
     
     s = input$chemResults_rows_selected
     selectedMeshIDs <- chemSummary$uniqueDat$MeshID[s]
-    cat("table click -- selected MeshIDs are: ", selectedMeshIDs, "\n")
+  #  cat("table click -- selected MeshIDs are: ", selectedMeshIDs, "\n")
     
     updateSelectedMeshIDs(selectedMeshIDs, chemSummary)
     
@@ -88,6 +117,50 @@ observeEvent(
 # click on geneSummary table or drop-down (need to update)
 ###########################################################################
 
+# needed for table click resulting in no selection
+observe({
+  selected <- input$geneResults_rows_selected
+  if (is.null(selected)) {
+    geneSummary$selectedID <- NULL
+    geneSummary$selectedTerm <- NULL
+    respondToSelectionDrill()
+  }
+})
+
+
+
+updateGeneSelections <- function(gene, geneSummary, GeneTable) {
+
+  isolate({  
+    cat("current selection = ", gene, "\n")
+    cat("previous selection = ", geneSummary$selectedTerm, "\n")
+    selections <- updateMeshSelections(gene, geneSummary$selectedTerm)
+    cat("selections = ", selections, "\n")
+  
+   
+    if (!is.null(selections)) {
+      gg <- geneSymbolToID(selections, GeneTable)
+      gg$Symbol <- gsub("\r", "", gg$Symbol)
+      geneSummary$selectedID <- gg$ID
+      geneSummary$selectedTerm <- gg$Symbol
+      cat("set selected term to: ", gg$Symbol,"\n")
+    } else if (is.null(gene) & !is.null(geneSummary$selectedID)) {
+      # the user has canceled all filters
+      geneSummary$selectedTerm <- NULL
+      geneSummary$selectedID <- NULL
+      respondToSelectionDrill()
+    }
+    
+  })
+  
+}
+
+
+# respond to drop down change
+observe({
+    x <- input$filterGenes # need this for trigger
+    updateGeneSelections(input$filterGenes, geneSummary, GeneTable)
+})
 
 # record click from geneSumary Table 
 observeEvent(input$geneResults_rows_selected, {
@@ -100,11 +173,9 @@ observeEvent(input$geneResults_rows_selected, {
     return()
   }
   gene <- geneSummary$dat[s,2]
-  cat("gene = ", gene, "\n")
-  gg <- geneSymbolToID(gene, GeneTable)
-  geneSummary$selectedID <- append(geneSummary$selectedID, gg$ID)
-  geneSummary$selectedTerm <- append(geneSummary$selectedTerm, gg$Symbol)
-  cat("set selected term to: ", gg$Symbol,"\n")
+  gene <- gsub("\r", "", gene)
+  
+  updateGeneSelections(gene, geneSummary, GeneTable)
   
 })
 

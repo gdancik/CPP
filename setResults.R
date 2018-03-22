@@ -1,20 +1,35 @@
 
 
-
+# updates the selectInput with given id, choices, and selected;
+# ifi choices is NULL, disable and set choices to "NONE"
+setSelectInput <- function(session, id, choices, selected) {
+  if (is.null(choices)) {
+    updateSelectInput(session, id, choices = "NONE")
+    shinyjs::disable(id)
+  } else {
+    updateSelectInput(session, id, choices = choices,
+                      selected = selected)
+    shinyjs::enable(id)
+  }
+  
+}
 
 # sets unique disease results and updates drop down
 setDiseaseResults <-function(session, res, diseaseSummary) {
-  #cat("setting disease results...")
+  cat("setting disease results...")
+  cat("terms = ", diseaseSummary$selectedTerm, "\n")
  
   isolate({
   diseaseSummary$uniqueDat <- res
   #cat("done\n")
-  choices <- diseaseSummary$uniqueDat$MeshID
-  names(choices) <- diseaseSummary$uniqueDat$Term
   
-  cat("updating drop down with selected = ", diseaseSummary$selectedID, "\n")
-  updateSelectInput(session, "filterDisease", choices = choices,
-                    selected = diseaseSummary$selectedID)
+  choices <- diseaseSummary$selectedID
+  if (!is.null(choices)) {
+    names(choices) <- diseaseSummary$selectedTerm
+  }
+  cat("updating drop down with selected = ", diseaseSummary$selectedID, "and choices = ", choices, "\n")
+  
+  setSelectInput(session, "filterDisease", choices, diseaseSummary$selectedID)
   })
 }
 
@@ -26,11 +41,13 @@ setChemResults <-function(session, res, chemSummary) {
   isolate({
     chemSummary$uniqueDat <- res
    # cat("done\n")
-    choices <- chemSummary$uniqueDat$MeshID
-    names(choices) <- chemSummary$uniqueDat$Term
     
-    updateSelectInput(session, "filterChem", choices = choices,
-                      selected = chemSummary$selectedID)
+    choices <- chemSummary$selectedID
+    if (!is.null(choices)) {
+      names(choices) <- chemSummary$selectedTerm
+    }
+     
+    setSelectInput(session, "filterChem", choices, chemSummary$selectedID)
   })
 }
 
@@ -42,12 +59,12 @@ setGeneResults <-function(session, res, geneSummary) {
     geneSummary$dat <- res
    # cat("done\n")
   
-    choices <- geneSummary$dat$Symbol
-    choices <- gsub("\r", "", choices)
+    #choices <- geneSummary$dat$Symbol
+    #choices <- gsub("\r", "", choices)
     
   #  cat("selected genes = ", geneSummary$selectedTerm, "\n")
     
-    updateSelectInput(session, "filterGenes", choices = choices,
-                      selected = geneSummary$selectedTerm)
+    setSelectInput(session, "filterGenes", geneSummary$selectedTerm, geneSummary$selectedTerm)
+    
   })
 }
