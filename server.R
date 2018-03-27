@@ -60,6 +60,15 @@ shinyServer(function(input, output, session) {
     })
     
   
+    # returns intersection of x and y but if x is NULL return y
+    intersectIgnoreNULL <- function(x,y) {
+      if (is.null(x)) {
+        return(y)
+      }
+      intersect(x,y)
+    }
+    
+    
   ###################################################################################################    
   # This is the main function that drives db queries, and works as follows:
   # 1) if cancer-specific, get list of cancer-specific PMIDS if not already set
@@ -76,53 +85,41 @@ shinyServer(function(input, output, session) {
       
       con = dbConnect(MySQL(), group = "CPP")
       
-      # get cancer PMIDs if specified #
+      # get cancer PMIDs if specified, restrict to gene #
       if (is.null(pmidList$pmids_initial) & input$rbDiseaseLimits == "cancer") {
         cat("getting cancer IDs for ", input$geneInput, "\n")
         pmidList$pmids_initial = getCancerPMIDs(con, input$geneInput)
       }
       
+      pmids <- pmidList$pmids_initial$PMID
+      
+      # get PMIDs for gene selection
+      genes <- c(input$geneInput, geneSummary$selectedID)
+      shinyjs::html("bar-text", "Retreiving Articles for Selected Genes, please wait...")
+      p3 <- getPMIDs("PubGene", "GeneID", genes, con, pmids)
+      
+      pmids <- intersectIgnoreNULL(pmids, p3$PMID)
+      
       # get PMIDS for Mesh Selection
       if (!is.null(diseaseSummary$selectedID)) {
           shinyjs::html("bar-text", "Retreiving Articles for Selected Diseases, please wait...")
           cat("Disease selection, geting PMIDS for: ", diseaseSummary$selectedID, "\n")
-          p1 <- getPMIDs("PubMesh", "MeshID", diseaseSummary$selectedID, con, pmidList$pmids_initial$PMID)
-          num = num + 1
+          p1 <- getPMIDs("PubMesh", "MeshID", diseaseSummary$selectedID, con, pmids)
+          pmids <- intersectIgnoreNULL(pmids, p1$PMID)
       }
       
       # get PMIDs for Chem selection
       if (!is.null(chemSummary$selectedID)) {
         shinyjs::html("bar-text", "Retreiving Articles for Selected Chemicals, please wait...")
         cat("Chem selection, getting PMIDS for: ", chemSummary$selectedID, "\n")
-        p2 <- getPMIDs("PubChem", "meshID", chemSummary$selectedID, con, pmidList$pmids_initial$PMID)
-        num = num + 1
+        p2 <- getPMIDs("PubChem", "meshID", chemSummary$selectedID, con, pmids)
+        pmids <- intersectIgnoreNULL(pmids, p2$PMID)
       }
       
-      # get PMIDs for gene selection
-      genes <- c(input$geneInput, geneSummary$selectedID)
-      cat("Gene selection, getting PMIDS for: ", genes, "\n")
-      shinyjs::html("bar-text", "Retreiving Articles for Selected Genes, please wait...")
-      
-      p3 <- getPMIDs("PubGene", "GeneID", genes, con, pmidList$pmids_initial$PMID)
-      
-      a <- pmidList$pmids
-      
-      num = num + 1
-      
-      cat("all done, num = ", num, "\n")
-      
-      if (num == 0) {
-        dbDisconnect(con)
-        return()
-      }
 
-      p_all <- table(c(p1$PMID,p2$PMID,p3$PMID))
-      pmids <- names(p_all)[p_all>=num]
-      cat("final pmids are: ", pmids, "\n")
-      
       if (length(pmids) == 0) {
         dbDisconnect(con)
-        cat("NO RESULTS -- NEED TO UPDATE!")
+        cat("NO RESULTS -- SHOULD BE CHECKED!")
         return()
       }
       

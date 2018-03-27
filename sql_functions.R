@@ -1,4 +1,8 @@
 
+cleanse <-function(x) {
+  paste(sqlInterpolate(ANSI(), "?value", value = x))
+}
+
 
 # get PMIDs corresponding to cancer articles
 getCancerPMIDs <- function(con, GeneID) {
