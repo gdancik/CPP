@@ -79,22 +79,31 @@ shinyServer(function(input, output, session) {
   # 6) get summaries for Mesh terms, Chemicals, and Genes
   ###################################################################################################    
     respondToSelectionDrill <- function() {
+      cat("respondToSelectionDrill\n")
       
+      if (is.null(input$geneInput)) {
+        cat("NULL\n")
+      }
       num <- 0
       p1 <- list(PMID=NULL); p2 <- list(PMID=NULL); p3 <- list(PMID=NULL)
       
+      cat("getting connection...\n")
       con = dbConnect(MySQL(), group = "CPP")
+      
+      cat("got connection\n")
       
       # get cancer PMIDs if specified, restrict to gene #
       if (is.null(pmidList$pmids_initial) & input$rbDiseaseLimits == "cancer") {
         cat("getting cancer IDs for ", input$geneInput, "\n")
-        pmidList$pmids_initial = getCancerPMIDs(con, input$geneInput)
+        pmidList$pmids_initial = getCancerPMIDs(con, cleanse(input$geneInput))
       }
       
       pmids <- pmidList$pmids_initial$PMID
       
+      
       # get PMIDs for gene selection
       genes <- c(input$geneInput, geneSummary$selectedID)
+      
       shinyjs::html("bar-text", "Retreiving Articles for Selected Genes, please wait...")
       p3 <- getPMIDs("PubGene", "GeneID", genes, con, pmids)
       
@@ -122,6 +131,8 @@ shinyServer(function(input, output, session) {
         cat("NO RESULTS -- SHOULD BE CHECKED!")
         return()
       }
+      
+      cat("updating summaries...\n")
       
       # update MeshSummary
       shinyjs::html("bar-text", "Retreiving Related Diseases, please wait...")

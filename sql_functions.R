@@ -1,16 +1,16 @@
-
 cleanse <-function(x) {
   paste(sqlInterpolate(ANSI(), "?value", value = x))
 }
 
 
-# get PMIDs corresponding to cancer articles
+# get PMIDs corresponding to cancer articles, 
+# GeneID has been cleansed
 getCancerPMIDs <- function(con, GeneID) {
   
   str <- paste0("select distinct PubGene.PMID from PubGene\n",
                 "inner join PubMesh ON PubMesh.PMID = PubGene.PMID\n",
                 "inner join MeshTerms ON PubMesh.MeshID = MeshTerms.MeshID\n",
-                "where GeneID = '", GeneID, "' and MeshTerms.TreeID LIKE 'C04.%'");
+                "where GeneID = ", GeneID, " and MeshTerms.TreeID LIKE 'C04.%'");
   
   dbGetQuery(con, str)
   
@@ -18,7 +18,7 @@ getCancerPMIDs <- function(con, GeneID) {
 
 # returns a vector of PMIDs from tblName where table.idType matches ids.
 # optionally, we can constrain analysis to vector of pmids
-
+# ids are in SQL format, e.g., ('ID1', 'ID2', 'ID3')
 getPMIDs <- function(tblName, idType, ids, con, pmids) {
   
   tblPMID <- paste0(tblName,".PMID")
@@ -26,20 +26,23 @@ getPMIDs <- function(tblName, idType, ids, con, pmids) {
   str <- paste0("SELECT ", tblPMID, " FROM ", tblName, "\nWHERE ")
   if (!is.null(pmids)) {
     str <- paste0(str, tblName,".PMID IN ", 
-                  "(", paste0("'",pmids,"'", collapse = ","), ") AND ")
+                  "(", paste0("'",pmids,"'", collapse = ","), 
+                  ") AND ")
   }              
                 
   str <- paste0(str, tblName,".",idType)
 
   if (length(ids) == 1) {
-    str <- paste0(str, " = ", paste0("'",ids,"'"), ";")
+    #str <- paste0(str, " = ", paste0("'",ids,"'"), ";")
+    str <- paste0(str, " = ", cleanse(ids), ";")
   } else {
     str <- paste0(str, " IN ",
-         paste0("(",paste0("'",ids,"'", collapse = ","), ")\n"),
+         #paste0("(",paste0("'",ids,"'", collapse = ","), ")\n"),
+         cleanseList(ids), "\n",
          "GROUP BY ", tblPMID, " having COUNT(", tblPMID, ") >= ", length(ids), ";")
   }
   
-  #cat("submit the query: \n", str, "\n")
+  cat("submit the query: \n", str, "\n")
   
   dbGetQuery(con, str)
          
