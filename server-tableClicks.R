@@ -50,6 +50,9 @@ observe({
   selected <- input$diseaseResults_rows_selected
   cat("on observe, selected = ", selected, "\n")
   if (is.null(selected)) {
+    if (is.null(diseaseSummary$selectedID)) {
+      return()
+    }
     diseaseSummary$selectedID <- NULL
     diseaseSummary$selectedTerm <- NULL
     respondToSelectionDrill()
@@ -87,6 +90,9 @@ observeEvent(
 observe({
   selected <- input$chemResults_rows_selected
   if (is.null(selected)) {
+    if (is.null(chemSummary$selectedID)) {
+      return()
+    }
     chemSummary$selectedID <- NULL
     chemSummary$selectedTerm <- NULL
     respondToSelectionDrill()
@@ -121,6 +127,9 @@ observeEvent(
 observe({
   selected <- input$geneResults_rows_selected
   if (is.null(selected)) {
+    if (is.null(geneSummary$selectedID)) {
+      return()
+    }
     geneSummary$selectedID <- NULL
     geneSummary$selectedTerm <- NULL
     respondToSelectionDrill()
