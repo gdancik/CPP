@@ -2,6 +2,14 @@ cleanse <-function(x) {
   paste(sqlInterpolate(ANSI(), "?value", value = x))
 }
 
+# returns cleansed list of form ('1','2','3')
+cleanseList <-function(x) {
+  if (is.null(x)) {
+    return(NULL)
+  }
+  paste0("(", paste0(sapply(x, cleanse), collapse = ","), ")")
+}
+
 
 # get PMIDs corresponding to cancer articles, 
 # GeneID has been cleansed

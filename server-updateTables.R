@@ -20,7 +20,9 @@ observe ({
 
 # update PMID table
 observe ({
-  output$articleTable <- DT::renderDataTable(DT::datatable(pmidList$pmids, rownames = FALSE))
+  output$articleTable <- DT::renderDataTable(DT::datatable(pmidList$pmids, rownames = FALSE,
+                                                           selection = "none", 
+                                                           options = list(lengthChange = FALSE)))
 })
 
 

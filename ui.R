@@ -4,8 +4,6 @@ library(shinydashboard)
 library(shinyjs)
 
 
-SHOW.PUBMED <- FALSE
-
 source("addDeps.R")
 
 shinyUI(
@@ -151,16 +149,26 @@ shinyUI(
     
     tabPanel('Articles',        
              
-             if (!SHOW.PUBMED) {
                #shiny::column(width = 3)
-               shiny::column(id = "colPubs", width = 6, 
-                             uiOutput("articleHeader"),
-                             DT::dataTableOutput("articleTable"))
-             } else {
-               shiny::column(id = "colPubs", width = 6, 
-                             uiOutput("articleHeader"),
-                             uiOutput("articles"))
-             }
+             fluidRow(
+                  shiny::column(width = 6 
+                ),
+                shiny::column(width = 3,
+                    bsButton(inputId = "btnPubTator", label = "Refresh PubTator Results", style = "info")
+                ),
+                shiny::column(width = 3,
+                              bsButton("btnPubTatorGo", label = "View Results in PubTator", style = "danger")
+                )
+             ),
+             
+             fluidRow(
+               shiny::column(id = "colPubs", width = 4, 
+                             DT::dataTableOutput("articleTable")),
+                  shiny::column(id = "colPubs", width = 8, 
+                           uiOutput("articles")
+               )
+             )
+             
              
      )
     
