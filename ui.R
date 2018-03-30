@@ -27,7 +27,7 @@ shinyUI(
             selectizeInput("geneInput", label = "Select a Gene", choices = NULL)
           ),
           div (style = "display:inline-block; width: 20%",
-            actionButton("btnGeneSearch", "Search")
+            actionButton("btnGeneSearch", "Search", style="position:relative; bottom: 12px; height: 35px; width 66px;")
           )
         ),
         shiny::column(width = 2,
