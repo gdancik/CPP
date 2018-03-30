@@ -20,6 +20,7 @@ getCancerPMIDs <- function(con, GeneID) {
                 "inner join MeshTerms ON PubMesh.MeshID = MeshTerms.MeshID\n",
                 "where GeneID = ", GeneID, " and MeshTerms.TreeID LIKE 'C04.%'");
   
+  #cat("original query\n", str, "\n")
   dbGetQuery(con, str)
   
 }

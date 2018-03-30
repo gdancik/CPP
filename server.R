@@ -105,14 +105,14 @@ shinyServer(function(input, output, session) {
       # get PMIDs for gene selection
       genes <- c(input$geneInput, geneSummary$selectedID)
       
-      shinyjs::html("bar-text", "Retreiving Articles for Selected Genes, please wait...")
+      shinyjs::html("bar-text", "Retrieving Articles for Selected Genes, please wait...")
       p3 <- getPMIDs("PubGene", "GeneID", genes, con, pmids)
       
       pmids <- intersectIgnoreNULL(pmids, p3$PMID)
       
       # get PMIDS for Mesh Selection
       if (!is.null(diseaseSummary$selectedID)) {
-          shinyjs::html("bar-text", "Retreiving Articles for Selected Diseases, please wait...")
+          shinyjs::html("bar-text", "Retrieving Articles for Selected Diseases, please wait...")
           cat("Disease selection, geting PMIDS for: ", diseaseSummary$selectedID, "\n")
           p1 <- getPMIDs("PubMesh", "MeshID", diseaseSummary$selectedID, con, pmids)
           pmids <- intersectIgnoreNULL(pmids, p1$PMID)
@@ -120,7 +120,7 @@ shinyServer(function(input, output, session) {
       
       # get PMIDs for Chem selection
       if (!is.null(chemSummary$selectedID)) {
-        shinyjs::html("bar-text", "Retreiving Articles for Selected Chemicals, please wait...")
+        shinyjs::html("bar-text", "Retrieving Articles for Selected Chemicals, please wait...")
         cat("Chem selection, getting PMIDS for: ", chemSummary$selectedID, "\n")
         p2 <- getPMIDs("PubChem", "meshID", chemSummary$selectedID, con, pmids)
         pmids <- intersectIgnoreNULL(pmids, p2$PMID)
@@ -136,17 +136,17 @@ shinyServer(function(input, output, session) {
       cat("updating summaries...\n")
       
       # update MeshSummary
-      shinyjs::html("bar-text", "Retreiving Related Diseases, please wait...")
+      shinyjs::html("bar-text", "Retrieving Related Diseases, please wait...")
       diseaseSummary$dat <- getMeshSummaryByPMIDs(pmids, con)
       setDiseaseResults(session, diseaseSummary$dat, diseaseSummary)
       
       # update ChemSummary
-      shinyjs::html("bar-text", "Retreiving Related Chemicals, please wait...")
+      shinyjs::html("bar-text", "Retrieving Related Chemicals, please wait...")
       chemSummary$dat <- getChemSummaryByPMIDs(pmids, con)
       setChemResults(session, chemSummary$dat, chemSummary)
       
       # update geneSummary
-      shinyjs::html("bar-text", "Retreiving Related Genes, please wait...")
+      shinyjs::html("bar-text", "Retrieving Related Genes, please wait...")
       geneSummary$dat <- getGeneSummaryByPMIDs(pmids, con)
       setGeneResults(session, geneSummary$dat, geneSummary)
       
