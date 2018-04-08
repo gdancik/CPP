@@ -6,8 +6,16 @@ observe ({
   if (is.null(geneSummary$dat)) {
     return()
   }
+  displayGeneSummaryTable()
+})
+
+
+displayGeneSummaryTable <- function() {
   geneSummary$dat$Symbol <- gsub("\r", "", geneSummary$dat$Symbol)
-  m <- match(geneSummary$selectedTerm, geneSummary$dat$Symbol)
+  
+  selected <- c(selected$geneSymbol, geneSummary$selectedTerm)
+  cat("update gene summary, selected = ", selected, "\n")
+  m <- match(selected, geneSummary$dat$Symbol)
   
   isolate({
     selection = list(mode = "multiple", selected = m, target = "row")
@@ -16,7 +24,9 @@ observe ({
   output$geneResults <- DT::renderDataTable(datatable(geneSummary$dat, rownames = FALSE,
                                                       selection = selection,
                                                       options = list(paging = FALSE, scrollY = 300)))
-})
+  
+  
+}
 
 # update PMID table
 observe ({
@@ -43,15 +53,18 @@ observe ({
     #                                                   diseaseSummary$dat$Frequency)))
   
   })
-  
+  cat("...done observe\n")
 })
 
 # update MeshTerms graph
 # To do: no guarantee selected will be displayed if > 10 with same frequency
+
 observe({
+  cat("in plot observe...\n")
+  
   if (!is.null(diseaseSummary$uniqueDat)) {
     output$DiseaseGraph <- renderPlot({
-      #cat("rendering plot...\n")
+      cat("rendering plot...\n")
       
       # put levels in sorted order for plotting
       diseaseSummary$uniqueDat$Term <- factor(diseaseSummary$uniqueDat$Term, levels = diseaseSummary$uniqueDat$Term[order(diseaseSummary$uniqueDat$Frequency)])
@@ -60,6 +73,7 @@ observe({
       x <- levels(diseaseSummary$uniqueDat$Term)
       x <- rev(x)
       m2 <- min(10, length(x))
+      
       x <- x[1:m2]
       
       x <- subset(diseaseSummary$uniqueDat, Term %in% x)
@@ -81,7 +95,7 @@ observe({
       
       ggplot(x, aes(Term, Frequency)) + geom_bar(fill = colors, stat = "identity") +
         coord_flip()
-    }, height = max(450, nrow(x)*26))
+    }, height = max(450, min(10, nrow(diseaseSummary$uniqueDat))*26))
   }
 })
 

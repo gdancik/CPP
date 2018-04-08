@@ -6,13 +6,13 @@ chemSummary <- reactiveValues(dat = NULL, uniqueDat = NULL, selectedID = NULL,
                               selectedTerm = NULL)
 geneSummary <- reactiveValues(dat = NULL, selectedID = NULL, selectedTerm = NULL)
 
+selected <- reactiveValues(geneSymbol = NULL)
+
 # pmids is current pmids that will be displayed; pmids_initial is pmids on initial search and is used to limit 
 # subsequent searches
 pmidList <- reactiveValues(pmids = NULL, pmids_initial = NULL)
 
 lastTab <- reactiveValues(tab = NULL)
-
-globalCount <<- 0
 
 resetReactiveValues <- function() {
   diseaseSummary$dat <- NULL
@@ -28,6 +28,7 @@ resetReactiveValues <- function() {
   chemSummary$dat <- NULL
   chemSummary$selectedID <- NULL
   chemSummary$selectedTerm <- NULL
+  selected$geneSymbol <- NULL
   
 }
 

@@ -150,17 +150,37 @@ observeEvent(
 # click on geneSummary table or drop-down (need to update)
 ###########################################################################
 
-# needed for table click resulting in no selection
+# needed for table click resulting in no selection -- 
+# should handle no selection only
 observe({
-  selected <- input$geneResults_rows_selected
-  if (is.null(selected)) {
+
+    #if (is.null(selected$geneSymbol)) {
+    #  return()
+    #}
+  
+
+  if (is.null(input$geneResults_rows_selected)) {
     if (is.null(geneSummary$selectedID)) {
+      if (!is.null(selected$geneSymbol)) {
+        displayGeneSummaryTable()
+      }
       return()
     }
-    geneSummary$selectedID <- NULL
-    geneSummary$selectedTerm <- NULL
-    respondToSelectionDrill()
+    #geneSummary$selectedID <- NULL
+    #geneSummary$selectedTerm <- NULL
+    #respondToSelectionDrill()
+  } else if (length(input$geneResults_rows_selected) == 1) {
+    gene <- geneSummary$dat[input$geneResults_rows_selected,2]
+    cat("gene gene = ", gene, "\n")
+    cat("sel sel = ", selected$geneSymbol, "\n")
+    if (gene == selected$geneSymbol && !is.null(geneSummary$selected)) {
+      geneSummary$selectedID <- NULL
+      geneSummary$selectedTerm <- NULL
+      respondToSelectionDrill()
+    }
   }
+  
+  
 })
 
 
@@ -205,11 +225,27 @@ observeEvent(input$geneResults_rows_selected, {
   if (length(s) > 0) {
     print(geneSummary$dat[s,])
   }
-  if (s== 1) {
-    return()
-  }
+  
+  
   gene <- geneSummary$dat[s,2]
   gene <- gsub("\r", "", gene)
+  
+  cat("selected gene: ", gene, "\n")
+  # if main gene was de-selected, just return
+  if (!selected$geneSymbol %in% gene) {
+    displayGeneSummaryTable()
+    return()
+  }
+  
+  cat("selected gene = ", gene, "\n")
+  cat("current input = ", input$geneInput, "\n")
+  
+  gene = setdiff(gene, selected$geneSymbol)
+  cat("remove input$geneInput, selected gene = ", gene, "\n")
+  
+  if (length(gene) == 0) {
+    return()
+  }
   
   updateGeneSelections(gene, geneSummary, GeneTable)
   

@@ -61,7 +61,7 @@ shinyUI(
       fluidRow(
         shiny::column(width = 4,
                       tabsetPanel(type = "tabs", id = "tabSetDisease",
-                          tabPanel(HTML("Disease Graph</br><small>(max top 10)</small>"), id = "tabDiseaseGraph", 
+                          tabPanel(HTML("Disease Graph</br><small>(top 10 shown)</small>"), id = "tabDiseaseGraph", 
                               div(style = "height: 450px; overflow-y: scroll",
                               plotOutput("DiseaseGraph",  click = "DiseaseGraph_click"#, 
                                                           #hover = hoverOpts(id = "DiseaseGraph_hover", 

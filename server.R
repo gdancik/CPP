@@ -18,7 +18,6 @@ source("setResults.R", local = TRUE)
 # some genes have duplicate IDs...we should combine, for now, remove
 library(dplyr)
 
-
 shinyServer(function(input, output, session) {
 
   output$shinyTitle <- renderText("Cancer Publication Portal")
@@ -64,6 +63,8 @@ shinyServer(function(input, output, session) {
         if (is.null(input$geneInput) | input$geneInput == "") return()
         
         resetReactiveValues()
+        
+        selected$geneSymbol <- GeneTable$SYMBOL[GeneTable$GeneID == input$geneInput]
         
         respondToSelectionDrill()
         toggleMenus(TRUE)
