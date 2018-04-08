@@ -173,7 +173,7 @@ observe({
     gene <- geneSummary$dat[input$geneResults_rows_selected,2]
     cat("gene gene = ", gene, "\n")
     cat("sel sel = ", selected$geneSymbol, "\n")
-    if (gene == selected$geneSymbol && !is.null(geneSummary$selected)) {
+    if (gene == selected$geneSymbol && !is.null(geneSummary$selectedID)) {
       geneSummary$selectedID <- NULL
       geneSummary$selectedTerm <- NULL
       respondToSelectionDrill()
