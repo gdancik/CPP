@@ -48,6 +48,7 @@ updateSelectedMeshIDs <- function(ids, tblSummary) {
 # needed for table click resulting in no selection
 observe({
   selected <- input$diseaseResults_rows_selected
+  #return()
   cat("on observe, selected = ", selected, "\n")
   if (is.null(selected)) {
     if (is.null(diseaseSummary$selectedID)) {
@@ -58,6 +59,8 @@ observe({
     respondToSelectionDrill()
   }
 })
+
+
 
 # respond to drop down change
 observe({
@@ -76,10 +79,34 @@ observeEvent(
     
     cat("call updateSelectedMeshIDs\n")
     updateSelectedMeshIDs(selectedMeshIDs, diseaseSummary)
-   # globalCount <<- globalCount + 1
         
   })
 
+
+# respond to graph selection (or deselection) 
+
+# TO DO: allow graph selection: this triggers observe for no table selection and results
+# in refresh; multiple selections also do not work
+if (0) {
+observeEvent(
+  input$DiseaseGraph_click$y, {
+    
+    s = input$DiseaseGraph_click$y
+      
+      lvls <- levels(diseaseSummary$graphData$Term)
+    
+      cat("click on: ", s, "\n")
+      name <- lvls[round(s)]
+      m <- match(name, diseaseSummary$graphData$Term)
+      selectedMeshIDs <- diseaseSummary$graphData$MeshID[s]
+      cat("selected: ", selectedMeshIDs, ", ", name, "\n")
+
+    updateSelectedMeshIDs(selectedMeshIDs, diseaseSummary)
+    
+    
+  })
+
+}
 
 
 ###########################################################################

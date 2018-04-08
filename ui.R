@@ -10,7 +10,7 @@ shinyUI(
   
 
   navbarPage(
-    title = 'Cancer Publication Portal',
+    title = 'Cancer Publication Portal', id = "headerNavBarPage",
     tabPanel('Summaries',   
              
       includeCSS('www/ecsu.css'),
@@ -60,8 +60,8 @@ shinyUI(
       
       fluidRow(
         shiny::column(width = 4,
-                      tabsetPanel(type = "tabs",
-                          tabPanel("Disease Graph", id = "tabDiseaseGraph", 
+                      tabsetPanel(type = "tabs", id = "tabSetDisease",
+                          tabPanel(HTML("Disease Graph</br><small>(max top 10)</small>"), id = "tabDiseaseGraph", 
                               div(style = "height: 450px; overflow-y: scroll",
                               plotOutput("DiseaseGraph",  click = "DiseaseGraph_click"#, 
                                                           #hover = hoverOpts(id = "DiseaseGraph_hover", 
@@ -69,18 +69,19 @@ shinyUI(
                                                           #                              delayType = "throttle")
                               ))
                           ),
-                          tabPanel("Disease Summary", DT::dataTableOutput("diseaseResults"))
+                          tabPanel("Disease Table", DT::dataTableOutput("diseaseResults"))
                           #tabPanel("Disease Tree", htmlOutput("diseaseHierarchy"))
                                   
                       )
         ),
+        
         shiny::column(width = 4,
-                      tabsetPanel(type = "tabs",
+                      tabsetPanel(type = "tabs", id = "tabSetChemicals",
                           tabPanel("Chemicals", DT::dataTableOutput("chemResults"))
                       )
         ),
         shiny::column(width = 4,
-                      tabsetPanel(type = "tabs",
+                      tabsetPanel(type = "tabs", id = "tabSetGenes",
                           tabPanel("Gene Co-occurrences", DT::dataTableOutput("geneResults"))
                       )
         ),
@@ -147,7 +148,7 @@ shinyUI(
                         "))
       )),
     
-    tabPanel('Articles',        
+    tabPanel('Articles',         
              
                #shiny::column(width = 3)
              fluidRow(

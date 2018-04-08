@@ -6,6 +6,10 @@ library(DBI)
 library(RMySQL)
 library(ggplot2)
 
+# comment out for debugging
+cat <- function(...){invisible()}
+print <- function(...){invisible()}
+
 source("functions.R", local = TRUE)
 source("setResults.R", local = TRUE)
 
@@ -30,22 +34,27 @@ shinyServer(function(input, output, session) {
   shinyjs::disable("filterDisease")
   shinyjs::disable("filterChem")
   shinyjs::disable("filterGenes")
-  
-  # record click from Disease Graph (store in diseaseSummary reactive)
-  observeEvent(input$DiseaseGraph_click$y, {
-    # get Disease from selected graph
-    if (!is.null(input$DiseaseGraph_click$x)) {
-      lvls <- levels(diseaseSummary$uniqueDat$Term)
-      name <- lvls[round(input$DiseaseGraph_click$y)]
-      cat("You've selected <code>", name, "</code>\n")
-      m <- match(name, diseaseSummary$uniqueDat$Term)
-      diseaseSummary$selectedID <- append(diseaseSummary$selectedID, diseaseSummary$uniqueDat$MeshID[m])
-      diseaseSummary$selectedTerm <- append(diseaseSummary$selectedTerm, as.character(diseaseSummary$uniqueDat$Term)[m])
 
-#      clearSelectedGene()
-#      clearSelectedChem()
+  toggleMenus <-function(show) {
+    
+    f <- shinyjs::hide
+    if (show) {
+      f <- shinyjs::show
     }
-  })
+    
+    f("headerNavBarPage")
+    f("tabSetDisease")
+    f("tabSetChemicals")
+    f("tabSetGenes")
+    f("filterDisease")
+    f("filterChem")
+    f("filterDisease")
+    f("filterGenes")
+    
+  }
+    
+  toggleMenus(FALSE)
+  
   
     # on initial search
     observeEvent(
@@ -57,6 +66,7 @@ shinyServer(function(input, output, session) {
         resetReactiveValues()
         
         respondToSelectionDrill()
+        toggleMenus(TRUE)
         
     })
     
@@ -174,36 +184,6 @@ shinyServer(function(input, output, session) {
       respondToSelectionDrill()
       
 
-    })
-    
-    
-    observe({
-    if (!is.null(diseaseSummary$uniqueDat)) {
-      output$DiseaseGraph <- renderPlot({
-        #cat("rendering plot...\n")
-        
-        diseaseSummary$uniqueDat$Term <- factor(diseaseSummary$uniqueDat$Term, levels = diseaseSummary$uniqueDat$Term[order(diseaseSummary$uniqueDat$Frequency)])
-        colors <- rep("darkblue", nrow(diseaseSummary$uniqueDat))
-        print(diseaseSummary$selectedID)
-        
-        if (!is.null(diseaseSummary$hoverID)) {
-          m <- match(diseaseSummary$hoverID, diseaseSummary$uniqueDat$MeshID)
-          term <- diseaseSummary$uniqueDat$Term[m]
-          m <- match(term, levels(diseaseSummary$uniqueDat$Term))
-          colors[m] <- "yellow"
-        }
-        
-        if (!is.null(diseaseSummary$selectedID)) {
-          m <- match(diseaseSummary$selectedID, diseaseSummary$uniqueDat$MeshID)
-          term <- diseaseSummary$uniqueDat$Term[m]
-          m <- match(term, levels(diseaseSummary$uniqueDat$Term))
-          colors[m] <- "darkred"
-        }
-        
-        ggplot(diseaseSummary$uniqueDat, aes(Term, Frequency)) + geom_bar(fill = colors, stat = "identity") +
-          coord_flip()
-      }, height = max(450, nrow(diseaseSummary$uniqueDat)*26))
-    }
     })
     
     

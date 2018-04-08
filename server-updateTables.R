@@ -46,6 +46,45 @@ observe ({
   
 })
 
+# update MeshTerms graph
+# To do: no guarantee selected will be displayed if > 10 with same frequency
+observe({
+  if (!is.null(diseaseSummary$uniqueDat)) {
+    output$DiseaseGraph <- renderPlot({
+      #cat("rendering plot...\n")
+      
+      # put levels in sorted order for plotting
+      diseaseSummary$uniqueDat$Term <- factor(diseaseSummary$uniqueDat$Term, levels = diseaseSummary$uniqueDat$Term[order(diseaseSummary$uniqueDat$Frequency)])
+      
+      # get top 10 levels
+      x <- levels(diseaseSummary$uniqueDat$Term)
+      x <- rev(x)
+      m2 <- min(10, length(x))
+      x <- x[1:m2]
+      
+      x <- subset(diseaseSummary$uniqueDat, Term %in% x)
+      
+      # update levels to remove any no longer included
+      x$Term <- factor(x$Term)
+      
+      colors <- rep("darkblue", nrow(x))
+      print(diseaseSummary$selectedID)
+      
+      if (!is.null(diseaseSummary$selectedID)) {
+        m <- match(diseaseSummary$selectedID, x$MeshID)
+        term <- x$Term[m]
+        m <- match(term, levels(x$Term))
+        colors[m] <- "darkred"
+      }
+      
+      diseaseSummary$graphData <- x
+      
+      ggplot(x, aes(Term, Frequency)) + geom_bar(fill = colors, stat = "identity") +
+        coord_flip()
+    }, height = max(450, nrow(x)*26))
+  }
+})
+
 
 # update chem table
 observe ({
