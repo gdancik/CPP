@@ -44,7 +44,7 @@ shinyUI(
                       selectInput("filterGenes", "Additional Gene Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
         )
       ),
-        hr(),
+      hr(style = "padding: 0px; margin: 0px"),
       useShinyjs(),     
              
       fluidRow(shiny::column(width = 12,
@@ -174,9 +174,9 @@ shinyUI(
              ),
              
              fluidRow(
-               shiny::column(id = "colPubs", width = 4, 
+               shiny::column(id = "colPubs", width = 3, 
                              DT::dataTableOutput("articleTable")),
-                  shiny::column(id = "colPubs", width = 8, 
+                  shiny::column(id = "colPubs", width = 9, 
                            uiOutput("articles")
                )
              )

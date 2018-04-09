@@ -137,7 +137,7 @@ observe({
       }
       
       ggplot(xx, aes(Term, Frequency, fill = Term)) + geom_bar(stat = "identity") +
-        coord_flip() + theme(legend.position = "none") + xlab("") + ylab("# of articles") +
+        coord_flip() + theme_linedraw() + theme(legend.position = "none") + xlab("") + ylab("# of articles") +
         ggtitle(title) +
           theme(plot.title = element_text(face = "bold"),  
                 axis.title = element_text(face = "bold"),
