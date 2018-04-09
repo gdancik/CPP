@@ -19,7 +19,7 @@ shinyUI(
       tags$head(tags$style(HTML(
         "#console { max-height:15vh; max-width:50vh; overflow:auto; }"
       ))),
-             
+      
       # input / filter row
       fluidRow(
         shiny::column(width = 3, 
@@ -147,6 +147,17 @@ shinyUI(
                         
                         "))
       )),
+    
+    tabPanel('Cancer Statistics', 
+             fluidRow(
+               shiny::column(width = 5,
+                             DT::dataTableOutput("cancerSummaryTable")
+               ),
+               shiny::column(width = 7,
+                  plotOutput("CancerGraph",  click = "CancerGraph_click") 
+               )
+             )
+    ),
     
     tabPanel('Articles',         
              

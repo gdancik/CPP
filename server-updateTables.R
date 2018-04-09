@@ -100,6 +100,57 @@ observe({
 })
 
 
+# update cancer graph
+observe({
+  cat("in cancer plot observe...\n")
+  
+  if (!is.null(diseaseSummary$uniqueDat)) {
+    
+    con = dbConnect(MySQL(), group = "CPP")
+    
+    qry <- paste0("select MeshID, TreeID from MeshTerms where MeshID IN ", 
+                  cleanseList(diseaseSummary$uniqueDat$MeshID),
+                  " AND MeshTerms.TreeID LIKE \"C04.%\";"
+    )
+    
+    cancerTerms <- dbGetQuery(con, qry)
+    dbDisconnect(con)
+    
+    
+    
+    x <- subset(diseaseSummary$uniqueDat, MeshID %in% cancerTerms$MeshID)
+    
+    # put levels in sorted order for plotting
+    x$Term <- factor(x$Term, levels = x$Term[order(x$Frequency)])
+    
+    
+    output$CancerGraph <- renderPlot({
+      
+      xx <- subset(x, Term%in% rev(levels(x$Term))[1:min(20,nrow(x))])
+      title <- paste("Cancer-related publications mentioning", selected$geneSymbol)
+      if (nrow(xx)!=nrow(x)) {
+        title <- paste(title, " (top 20 shown)")
+      }
+      
+      if (!is.null(input$filterDisease) | !is.null(input$filterChem) | !is.null(input$filterGenes)) {
+        title <- paste(title, "\n(summary includes additional filters)")
+      }
+      
+      ggplot(xx, aes(Term, Frequency, fill = Term)) + geom_bar(stat = "identity") +
+        coord_flip() + theme(legend.position = "none") + xlab("") + ylab("# of articles") +
+        ggtitle(title) +
+          theme(plot.title = element_text(face = "bold"),  
+                axis.title = element_text(face = "bold"),
+                axis.text = element_text(face = "bold"))
+    }, height = 600)
+    
+    output$cancerSummaryTable <- DT::renderDataTable(datatable(x, rownames = FALSE, selection = "none",
+                                                           options = list(paging = FALSE, scrollY = 500)))
+  }
+})
+
+
+
 # update chem table
 observe ({
   m <- match(chemSummary$selectedID, chemSummary$uniqueDat$MeshID)
