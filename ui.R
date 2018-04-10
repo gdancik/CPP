@@ -166,10 +166,12 @@ shinyUI(
                   shiny::column(width = 6 
                 ),
                 shiny::column(width = 3,
-                    bsButton(inputId = "btnPubTator", label = "Refresh PubTator Results", style = "info")
+                    bsButton(inputId = "btnPubTator", label = "Load/Refresh PubTator Results", style = "info")
                 ),
                 shiny::column(width = 3,
-                              bsButton("btnPubTatorGo", label = "View Results in PubTator", style = "danger")
+                              div(align = "right",
+                                  bsButton("btnPubTatorGo", label = "View Results in PubTator", style = "danger")
+                              )
                 )
              ),
              

@@ -1,5 +1,9 @@
 # server-articles
 
+observeEvent ( input$articleTable_rows_current, {
+  shinyjs::show("btnPubTator")
+})
+
 srcPubTator <- reactive ({
   if (!is.null(pmidList$pmids)) {
     pmids <- pmidList$pmids$PMID[input$articleTable_rows_current]
@@ -16,6 +20,7 @@ observeEvent ( input$btnPubTator,{
    src <- srcPubTator()
    
    if (!is.null(src)) {
+     shinyjs::hide("btnPubTator")
       output$articles <- renderUI({
           my_test <- tags$html(tags$iframe(id = "iframeid", src=src, style = "width:100%;", height = 800))
           print(my_test)

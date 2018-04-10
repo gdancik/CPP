@@ -30,9 +30,15 @@ displayGeneSummaryTable <- function() {
 
 # update PMID table
 observe ({
-  output$articleTable <- DT::renderDataTable(DT::datatable(pmidList$pmids, rownames = FALSE,
+  if (is.null(pmidList$pmids)) {
+    return()
+  }
+  o <- order(pmidList$pmids$PMID, decreasing = TRUE)
+  save(o, file = "gg.RData")
+  output$articleTable <- DT::renderDataTable(DT::datatable(pmidList$pmids[o,,drop = FALSE], rownames = FALSE,
                                                            selection = "none", 
-                                                           options = list(lengthChange = FALSE)))
+                                                           options = list(lengthChange = FALSE, 
+                                                                          pageLength = 100, scrollY = 300)))
 })
 
 
@@ -126,10 +132,10 @@ observe({
     
     output$CancerGraph <- renderPlot({
       
-      xx <- subset(x, Term%in% rev(levels(x$Term))[1:min(20,nrow(x))])
+      xx <- subset(x, Term%in% rev(levels(x$Term))[1:min(10,nrow(x))])
       title <- paste("Cancer-related publications mentioning", selected$geneSymbol)
       if (nrow(xx)!=nrow(x)) {
-        title <- paste(title, " (top 20 shown)")
+        title <- paste(title, " (top 10 shown)")
       }
       
       if (!is.null(input$filterDisease) | !is.null(input$filterChem) | !is.null(input$filterGenes)) {
