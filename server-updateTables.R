@@ -34,7 +34,6 @@ observe ({
     return()
   }
   o <- order(pmidList$pmids$PMID, decreasing = TRUE)
-  save(o, file = "gg.RData")
   output$articleTable <- DT::renderDataTable(DT::datatable(pmidList$pmids[o,,drop = FALSE], rownames = FALSE,
                                                            selection = "none", 
                                                            options = list(lengthChange = FALSE, 
