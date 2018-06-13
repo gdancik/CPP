@@ -7,8 +7,8 @@ library(RMySQL)
 library(ggplot2)
 
 # comment out for debugging
-cat <- function(...){invisible()}
-print <- function(...){invisible()}
+#cat <- function(...){invisible()}
+#print <- function(...){invisible()}
 
 source("functions.R", local = TRUE)
 source("setResults.R", local = TRUE)
