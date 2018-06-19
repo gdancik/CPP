@@ -1,3 +1,26 @@
+# prints out query information
+catQuery <- function(desc, query, file = NULL) {
+  cat(desc, "\n", query, "\n")
+  if (!is.null(file)) {
+    write(query, file = file)
+  }
+}
+
+# run and time query, with optional output
+# if desc is not null, will output to screen and to file if 
+# file is not NULL
+runQuery <- function(con, str, desc = NULL, file = NULL) {
+  cat("in run query..\n")
+  if (!is.null(desc)) {
+    catQuery(desc, str, file)
+  }
+  t1 <- Sys.time()
+  res <- dbGetQuery(con, str)
+  t2 <- Sys.time()
+  print(t2-t1)
+  res
+}
+
 cleanse <-function(x) {
   paste(sqlInterpolate(ANSI(), "?value", value = x))
 }
@@ -20,8 +43,7 @@ getCancerPMIDs <- function(con, GeneID) {
                 "inner join MeshTerms ON PubMesh.MeshID = MeshTerms.MeshID\n",
                 "where GeneID = ", GeneID, " and MeshTerms.TreeID LIKE 'C04.%'");
   
-  #cat("original query\n", str, "\n")
-  dbGetQuery(con, str)
+  runQuery(con, str, "get cancer PMIDs with query")
   
 }
 
@@ -51,10 +73,8 @@ getPMIDs <- function(tblName, idType, ids, con, pmids) {
          "GROUP BY ", tblPMID, " having COUNT(", tblPMID, ") >= ", length(ids), ";")
   }
   
-  cat("submit the query: \n", str, "\n")
+  runQuery(con, str, "get PMIDS query")
   
-  dbGetQuery(con, str)
-         
 }
 
 
@@ -70,13 +90,13 @@ getMeshSummaryByPMIDs <- function(pmids, con) {
     "group by PubMesh.PMID, MeshTerms.MeshID, MeshTerms.Term) as TT\n",
   "group by TT.MeshID, TT.Term ORDER BY count(TT.MeshID) desc;")
   
-  dbGetQuery(con, str)
-
+  runQuery(con, str, "Mesh summary query:")
+  
 }
 
 
 # returns Chem Summary table for vector of pmids
-getChemSummaryByPMIDs <- function(pmids, con) {
+getChemSummaryByPMIDs <- function(pmids, con, pa = FALSE) {
   
   pmids <- paste0("'",pmids,"'", collapse = ",")
   
@@ -87,7 +107,12 @@ getChemSummaryByPMIDs <- function(pmids, con) {
                 "group by PubChem.PMID, MeshTerms.MeshID, MeshTerms.Term) as TT\n",
                 "group by TT.MeshID, TT.Term ORDER BY count(TT.MeshID) desc;")
   
-  dbGetQuery(con, str)
+  if (pa) {
+    str <- gsub("MeshTerms", "PharmActionTerms", str)
+  }
+  
+  runQuery(con, str, "Chem/PA summary query:")
+  
 }
 
 # returns gene summary table for vector of pmids
@@ -102,6 +127,7 @@ getGeneSummaryByPMIDs <- function(pmids, con) {
     "group by PubGene.PMID, Genes.GeneID, Genes.SYMBOL) as TT\n",
   "group by TT.GeneID, TT.SYMBOL order by count(TT.GeneID) desc;")
   
-  dbGetQuery(con, str)
+  runQuery(con, str, "Gene summary query:")
+  
   
 }

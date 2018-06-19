@@ -25,7 +25,6 @@ displayGeneSummaryTable <- function() {
                                                       selection = selection,
                                                       options = list(paging = FALSE, scrollY = 300)))
   
-  
 }
 
 # update PMID table
@@ -129,7 +128,7 @@ observe({
     x$Term <- factor(x$Term, levels = x$Term[order(x$Frequency)])
     
     
-    output$CancerGraph <- renderPlot({
+    output$cancerGraph <- renderPlot({
       
       xx <- subset(x, Term%in% rev(levels(x$Term))[1:min(10,nrow(x))])
       title <- paste("Cancer-related publications mentioning", selected$geneSymbol)
@@ -154,6 +153,20 @@ observe({
   }
 })
 
+
+
+# update pa (treatments) table
+observe ({
+  m <- match(paSummary$selectedID, paSummary$uniqueDat$MeshID)
+  isolate({
+    selection = list(mode = "multiple", selected = m, target = "row")
+  })
+  output$paResults <- DT::renderDataTable(datatable(paSummary$uniqueDat, rownames = FALSE, 
+                                                      selection = selection,
+                                                      options = list(paging = FALSE, scrollY = 300)))
+
+  
+})
 
 
 # update chem table

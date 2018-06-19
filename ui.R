@@ -139,20 +139,14 @@ addTabPanel <- function(title, tableId, graphId = NULL) {
 shinyUI(
 
 
-#  useShinyjs(),           
-#  tags$head(tags$style(HTML(
-#    "console { max-height:15vh; max-width:50vh; overflow:auto; }"
-#  ))),
-  
-
   navbarPage(
    
         
     title = 'Cancer Publication Portal', id = "headerNavBarPage", header = commonHeader,
    
+    addTabPanel('Cancer Types', "cancerSummaryTable", "cancerGraph"),
+    addTabPanel('Treatments', "paResults"),
     addTabPanel("Diseases", "diseaseResults"),
-    
-    addTabPanel('Cancer Types', "cancerSummaryTable", "CancerGraph"),
     addTabPanel('Chemicals', 'chemResults'),
     addTabPanel('Genes', 'geneResults'),
     

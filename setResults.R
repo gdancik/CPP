@@ -35,6 +35,23 @@ setDiseaseResults <-function(session, res, diseaseSummary) {
 
 
 # sets unique disease results and updates drop down
+setDrugResults <-function(session, res, paSummary) {
+  #cat("setting chem results...")
+  
+  isolate({
+    paSummary$uniqueDat <- res
+    # cat("done\n")
+    
+    choices <- paSummary$selectedID
+    if (!is.null(choices)) {
+      names(choices) <- paSummary$selectedTerm
+    }
+    
+    #setSelectInput(session, "filterChem", choices, chemSummary$selectedID)
+  })
+}
+
+# sets unique disease results and updates drop down
 setChemResults <-function(session, res, chemSummary) {
   #cat("setting chem results...")
   

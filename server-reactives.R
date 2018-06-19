@@ -4,6 +4,10 @@ diseaseSummary <- reactiveValues(dat = NULL, uniqueDat = NULL, selectedID = NULL
                                  selectedTerm = NULL, graphData = NULL)
 chemSummary <- reactiveValues(dat = NULL, uniqueDat = NULL, selectedID = NULL, 
                               selectedTerm = NULL)
+
+paSummary <- reactiveValues(dat = NULL, uniqueDat = NULL, selectedID = NULL, 
+                              selectedTerm = NULL)
+
 geneSummary <- reactiveValues(dat = NULL, selectedID = NULL, selectedTerm = NULL)
 
 selected <- reactiveValues(geneSymbol = NULL)
@@ -28,6 +32,11 @@ resetReactiveValues <- function() {
   chemSummary$dat <- NULL
   chemSummary$selectedID <- NULL
   chemSummary$selectedTerm <- NULL
+  
+  paSummary$dat <- NULL
+  paSummary$selectedID <- NULL
+  paSummary$selectedTerm <- NULL
+  
   selected$geneSymbol <- NULL
   
 }
@@ -47,4 +56,9 @@ clearSelectedDisease <- function() {
 clearSelectedChem <- function() {
   chemSummary$selectedID <- NULL
   chemSummary$selectedTerm <- NULL
+}
+
+clearSelectedPa <- function() {
+  paSummary$selectedID <- NULL
+  paSummary$selectedTerm <- NULL
 }
