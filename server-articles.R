@@ -34,9 +34,9 @@ observeEvent ( input$btnPubTatorGo, {
   src <- srcPubTator()
   cat("src = ", src)
   if (!is.null(src)) {
-    js <- paste0("window.open('http://stackoverflow.com/', '_blank');")
-    browseURL(URLencode(src))
-    
+    js <- paste0("window.open('", src, "', '_blank');")
+#    browseURL(URLencode(src))
+    runjs(js) 
   }
 })
 
