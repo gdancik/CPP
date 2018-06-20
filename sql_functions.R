@@ -115,7 +115,7 @@ getChemSummaryByPMIDs <- function(pmids, con, pa = FALSE) {
     str <- gsub("MeshTerms", "PharmActionTerms", str)
   }
   
-  runQuery(con, str, "Chem/PA summary query:", file = "chem.sql")
+  runQuery(con, str, "Chem/PA summary query:")
   
 }
 
