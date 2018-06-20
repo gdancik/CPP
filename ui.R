@@ -173,10 +173,10 @@ shinyUI(
                              uiOutput("articles")
                )
              )
-             
-             
-             
-    )
+    ),
+    tabPanel("Log", verbatimTextOutput("log")
+             )
+    
     
   ) 
   )

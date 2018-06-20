@@ -1,5 +1,13 @@
 # server-reactives.R
 
+
+logFile <- reactiveValues(log = NULL)
+updateLog <- function(logFile, ...) {
+  l = list(...)
+  isolate(logFile$log <- paste0(logFile$log, paste0(unlist(l), collapse = ""), sep = "\n"))
+}
+
+
 diseaseSummary <- reactiveValues(dat = NULL, uniqueDat = NULL, selectedID = NULL, 
                                  selectedTerm = NULL, graphData = NULL)
 chemSummary <- reactiveValues(dat = NULL, uniqueDat = NULL, selectedID = NULL, 
@@ -19,6 +27,7 @@ pmidList <- reactiveValues(pmids = NULL, pmids_initial = NULL)
 lastTab <- reactiveValues(tab = NULL)
 
 resetReactiveValues <- function() {
+  logFile$log <- NULL
   diseaseSummary$dat <- NULL
   diseaseSummary$uniqueDat <- NULL
   diseaseSummary$selectedID <- NULL 

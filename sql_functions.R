@@ -1,6 +1,7 @@
 # prints out query information
 catQuery <- function(desc, query, file = NULL) {
   cat(desc, "\n", query, "\n")
+  updateLog(logFile, desc, "\n", query)
   if (!is.null(file)) {
     write(query, file = file)
   }
@@ -18,6 +19,9 @@ runQuery <- function(con, str, desc = NULL, file = NULL) {
   res <- dbGetQuery(con, str)
   t2 <- Sys.time()
   print(t2-t1)
+  x <- t2-t1
+  updateLog(logFile, paste0("Time difference of ", round(x,3), " ", units(x)), "\n")
+
   res
 }
 
@@ -111,7 +115,7 @@ getChemSummaryByPMIDs <- function(pmids, con, pa = FALSE) {
     str <- gsub("MeshTerms", "PharmActionTerms", str)
   }
   
-  runQuery(con, str, "Chem/PA summary query:")
+  runQuery(con, str, "Chem/PA summary query:", file = "chem.sql")
   
 }
 
@@ -127,7 +131,7 @@ getGeneSummaryByPMIDs <- function(pmids, con) {
     "group by PubGene.PMID, Genes.GeneID, Genes.SYMBOL) as TT\n",
   "group by TT.GeneID, TT.SYMBOL order by count(TT.GeneID) desc;")
   
-  runQuery(con, str, "Gene summary query:")
+  runQuery(con, str, "Gene summary query:", file = "genes.sql")
   
   
 }

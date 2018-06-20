@@ -26,6 +26,11 @@ library(dplyr)
 
 shinyServer(function(input, output, session) {
 
+  observe({
+    output$log <- renderText(logFile$log)
+    
+  })
+  
   output$shinyTitle <- renderText("Cancer Publication Portal")
   
   source("server-reactives.R", local = TRUE)
