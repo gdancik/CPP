@@ -9,7 +9,6 @@ GeneTable <- GeneTable %>% filter(!SYMBOL %in% dups)
 rownames(GeneTable) <- GeneTable$SYMBOL
 
 geneSymbolToID <- function(symbols, GeneTable) {
-  symbols <- gsub("\r", "", symbols)
   m <- match(symbols, GeneTable$SYMBOL)
   data.frame(Symbol = as.character(symbols), ID = as.character(GeneTable$GeneID)[m],
              stringsAsFactors = FALSE)

@@ -3,22 +3,22 @@
 # update current selections - compare current selections with previous, and return
 # updated vector (we may add or remove selections, but should not double count)
 updateMeshSelections <- function(current, previous) {
-  
   if (setequal(current, previous)) {
     return (NULL)
   }
-  
   return (current)
 }
 
 
-# update Mesh IDs for Disease (tblSummary = diseaseSummary) or Chemicals (tblSummary = ChemSummary)
-updateSelectedMeshIDs <- function(ids, tblSummary) {
+# Given a set of 'ids', the table reactive will be updated
+#     ids = the currently selected ids
+#     tblSummary = the reactive object with table stored in tblSummary$dat
+#     colName1 = the column name where the 'ids' are stored
+#     colName2 = set to NULL or optional column name where 'terms' are stored
+updateSelectedMeshIDs <- function(ids, tblSummary, colName1 = "MeshID", colName2 = "Term") {
   
   isolate({
     cat("\ncall updateSelectedMeshIDs\n")
-    cat("new ids = ", ids, "\n")
-    cat("selected ids = ", tblSummary$selectedID, "\n")
     
     selections <- updateMeshSelections(ids, tblSummary$selectedID)
     cat("getting selections = ", selections ,"\n\n")
@@ -26,10 +26,14 @@ updateSelectedMeshIDs <- function(ids, tblSummary) {
     if (!is.null(selections))  {
       # if selections have changed, update
       tblSummary$selectedID <- selections
-      m <- match(selections, tblSummary$uniqueDat$MeshID)
-      tblSummary$selectedTerm <-as.character(tblSummary$uniqueDat$Term)[m]
+      if (!is.null(colName2)) {
+          m <- match(selections, tblSummary$dat[[colName1]])
+          tblSummary$selectedTerm <-as.character(tblSummary$dat[[colName2]])[m]
+      }
+      respondToSelectionDrill()
     } else if (is.null(ids) & !is.null(tblSummary$selectedID)) {
       # the user has canceled all filters
+      cat("setting Term and ID to NULL, then respond to selection..\n")
       tblSummary$selectedTerm <- NULL
       tblSummary$selectedID <- NULL
       respondToSelectionDrill()
@@ -39,112 +43,70 @@ updateSelectedMeshIDs <- function(ids, tblSummary) {
 }
 
 
+########################################################
+# respond to drop down changes
+########################################################
+observe({input$filterDisease
+         updateSelectedMeshIDs(input$filterDisease, diseaseSummary)})
+observe({input$filterChem
+         updateSelectedMeshIDs(input$filterChem, chemSummary)})
+observe({input$filterGenes
+         updateGeneSelections(input$filterGenes, geneSummary, GeneTable)})
+observe({input$filterMutations
+        updateSelectedMeshIDs(input$filterMutations, mutationSummary, "MutID", NULL)})
 
 
-###########################################################################
-# click on diseaseSummary table or drop-down
-###########################################################################
 
-# needed for table click resulting in no selection
-observe({
-  selected <- input$diseaseResults_rows_selected
-  #return()
-  cat("on observe, selected = ", selected, "\n")
+
+
+########################################################
+# respond to table selection or de-selection
+########################################################
+observeEvent(input$diseaseResults_rows_selected, {
+             updateSelectedMeshIDs(diseaseSummary$dat$MeshID[input$diseaseResults_rows_selected], diseaseSummary) 
+  })
+
+observeEvent(input$chemResults_rows_selected, 
+             updateSelectedMeshIDs(chemSummary$dat$MeshID[input$chemResults_rows_selected], chemSummary)  )
+
+observeEvent(input$mutationResults_rows_selected, {
+          updateSelectedMeshIDs(mutationSummary$dat$MutID[input$mutationResults_rows_selected], mutationSummary, "MutID", NULL)
+})
+
+#####################################################################
+# respond to table de-selection resulting in no selection
+#####################################################################
+
+
+checkNoSelection <- function(selected, resTable) {
   if (is.null(selected)) {
-    if (is.null(diseaseSummary$selectedID)) {
+    if (is.null(resTable$selectedID)) {
       return()
     }
-    diseaseSummary$selectedID <- NULL
-    diseaseSummary$selectedTerm <- NULL
+    resTable$selectedID <- NULL
+    resTable$selectedTerm <- NULL
     respondToSelectionDrill()
   }
-})
-
-
-
-# respond to drop down change
-observe({
-  x <- input$filterDisease # need this for trigger
-  updateSelectedMeshIDs(input$filterDisease, diseaseSummary)
-})
-
-# respond to table selection (or deselection) 
-observeEvent(
-  input$diseaseResults_rows_selected, {
-
-    s = input$diseaseResults_rows_selected
-    cat("table click, s = ", s, "\n")
-    selectedMeshIDs <- diseaseSummary$uniqueDat$MeshID[s]
-    cat("table click -- selected MeshIDs are: ", selectedMeshIDs, "\n")
-    
-    cat("call updateSelectedMeshIDs\n")
-    updateSelectedMeshIDs(selectedMeshIDs, diseaseSummary)
-        
-  })
-
-
-# respond to graph selection (or deselection) 
-
-# TO DO: allow graph selection: this triggers observe for no table selection and results
-# in refresh; multiple selections also do not work
-if (0) {
-observeEvent(
-  input$DiseaseGraph_click$y, {
-    
-    s = input$DiseaseGraph_click$y
-      
-      lvls <- levels(diseaseSummary$graphData$Term)
-    
-      cat("click on: ", s, "\n")
-      name <- lvls[round(s)]
-      m <- match(name, diseaseSummary$graphData$Term)
-      selectedMeshIDs <- diseaseSummary$graphData$MeshID[s]
-      cat("selected: ", selectedMeshIDs, ", ", name, "\n")
-
-    updateSelectedMeshIDs(selectedMeshIDs, diseaseSummary)
-    
-    
-  })
-
 }
 
 
-###########################################################################
-# click on chemSummary table or drop-down
-###########################################################################
+# process possible no selection for diseaseTable
+observe({ selected <- input$diseaseResults_rows_selected
+          checkNoSelection(selected, diseaseSummary)
+})
 
-# needed for table click resulting in no selection
-observe({
-  selected <- input$chemResults_rows_selected
-  if (is.null(selected)) {
-    if (is.null(chemSummary$selectedID)) {
-      return()
-    }
-    chemSummary$selectedID <- NULL
-    chemSummary$selectedTerm <- NULL
-    respondToSelectionDrill()
-  }
+# process possible no selection for chemTable
+observe({ selected <- input$chemResults_rows_selected
+          checkNoSelection(selected, chemSummary)
+})
+
+# process possible no selection for mutationTable
+observe({ selected <- input$mutationResults_rows_selected
+          checkNoSelection(selected,  mutationSummary)
 })
 
 
-# respond to drop down change
-observe({
-  x <- input$filterChem # need this to trigger
-  updateSelectedMeshIDs(input$filterChem, chemSummary)
-})
 
-
-# respond to table selection (or deselection) 
-observeEvent(
-  input$chemResults_rows_selected, {
-    
-    s = input$chemResults_rows_selected
-    selectedMeshIDs <- chemSummary$uniqueDat$MeshID[s]
-  #  cat("table click -- selected MeshIDs are: ", selectedMeshIDs, "\n")
-    
-    updateSelectedMeshIDs(selectedMeshIDs, chemSummary)
-    
-  })
 
 ###########################################################################
 # click on geneSummary table or drop-down (need to update)
@@ -196,7 +158,6 @@ updateGeneSelections <- function(gene, geneSummary, GeneTable) {
    
     if (!is.null(selections)) {
       gg <- geneSymbolToID(selections, GeneTable)
-      gg$Symbol <- gsub("\r", "", gg$Symbol)
       geneSummary$selectedID <- gg$ID
       geneSummary$selectedTerm <- gg$Symbol
       cat("set selected term to: ", gg$Symbol,"\n")
@@ -212,11 +173,10 @@ updateGeneSelections <- function(gene, geneSummary, GeneTable) {
 }
 
 
-# respond to drop down change
-observe({
-    x <- input$filterGenes # need this for trigger
-    updateGeneSelections(input$filterGenes, geneSummary, GeneTable)
-})
+
+
+
+
 
 # record click from geneSumary Table 
 observeEvent(input$geneResults_rows_selected, {
@@ -228,7 +188,6 @@ observeEvent(input$geneResults_rows_selected, {
   
   
   gene <- geneSummary$dat[s,2]
-  gene <- gsub("\r", "", gene)
   
   cat("selected gene: ", gene, "\n")
   # if main gene was de-selected, just return
@@ -250,5 +209,39 @@ observeEvent(input$geneResults_rows_selected, {
   updateGeneSelections(gene, geneSummary, GeneTable)
   
 })
+
+
+
+
+
+
+##########################################################################################
+# Not used
+##########################################################################################
+
+# respond to graph selection (or deselection) 
+
+# TO DO: allow graph selection: this triggers observe for no table selection and results
+# in refresh; multiple selections also do not work
+if (0) {
+  observeEvent(
+    input$DiseaseGraph_click$y, {
+      
+      s = input$DiseaseGraph_click$y
+      
+      lvls <- levels(diseaseSummary$graphData$Term)
+      
+      cat("click on: ", s, "\n")
+      name <- lvls[round(s)]
+      m <- match(name, diseaseSummary$graphData$Term)
+      selectedMeshIDs <- diseaseSummary$graphData$MeshID[s]
+      cat("selected: ", selectedMeshIDs, ", ", name, "\n")
+      
+      updateSelectedMeshIDs(selectedMeshIDs, diseaseSummary)
+      
+      
+    })
+  
+}
 
 

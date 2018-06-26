@@ -8,8 +8,8 @@ library(ggplot2)
 
 DEBUG <<- FALSE
 
-if (!DEBUG) {
 
+if (!DEBUG) {
 # comment out for debugging
   cat <- function(...){invisible()}
   print <- function(...){invisible()}
@@ -43,8 +43,10 @@ shinyServer(function(input, output, session) {
   # disable drop downs on startup
   shinyjs::disable("filterDisease")
   shinyjs::disable("filterChem")
+  shinyjs::disable("filterMutations")
   shinyjs::disable("filterGenes")
-
+  
+  
   # set home page results to NULL (otherwise you will see spinner)
   output$cancerSummaryTable <- renderDataTable(NULL)
   output$cancerGraph <- renderPlot(NULL)
@@ -62,6 +64,7 @@ shinyServer(function(input, output, session) {
     f("tabSetGenes")
     f("filterDisease")
     f("filterChem")
+    f("filterMutations")
     f("filterDisease")
     f("filterGenes")
     
@@ -133,11 +136,11 @@ shinyServer(function(input, output, session) {
       # get PMIDs for gene selection
       genes <- c(input$geneInput, geneSummary$selectedID)
       
-      cat("hi\n")
+      
       shinyjs::html("bar-text", "Retrieving Articles for Selected Genes, please wait...")
       p3 <- getPMIDs("PubGene", "GeneID", genes, con, pmids)
-      cat("bye\n")
-      cat("finished getting PMIDs...\n")
+      
+      
       pmids <- intersectIgnoreNULL(pmids, p3$PMID)
       
       # get PMIDS for Mesh Selection
@@ -156,7 +159,16 @@ shinyServer(function(input, output, session) {
         pmids <- intersectIgnoreNULL(pmids, p2$PMID)
       }
       
-
+      # get PMIDs for Mutation selection
+      if (!is.null(mutationSummary$selectedID)) {
+        shinyjs::html("bar-text", "Retrieving Articles for Selected Mutations, please wait...")
+        cat("\n\n==========================================\nMutation selection, getting PMIDS for: ", mutationSummary$selectedID, "\n")
+        p2 <- getPMIDs("PubMut", "MutID", mutationSummary$selectedID, con, pmids)
+        cat("\n\n======================================\n\nnumber of articles with selected mutation = ", nrow(p2))
+        pmids <- intersectIgnoreNULL(pmids, p2$PMID)
+      }
+      
+      
       if (length(pmids) == 0) {
         dbDisconnect(con)
         cat("NO RESULTS -- SHOULD BE CHECKED!")
@@ -165,29 +177,17 @@ shinyServer(function(input, output, session) {
       
       cat("updating summaries...\n")
       
-      # update PA Summary
-      shinyjs::html("bar-text", "Retrieving Pharmacological Substances, please wait...")
-      paSummary$dat <- getChemSummaryByPMIDs(pmids, con, pa = TRUE)
-      # need to set results using drop down
-      setDrugResults(session, paSummary$dat, paSummary)
-      
-      # update MeshSummary
-      shinyjs::html("bar-text", "Retrieving Related Diseases, please wait...")
-      diseaseSummary$dat <- getMeshSummaryByPMIDs(pmids, con)
-      setDiseaseResults(session, diseaseSummary$dat, diseaseSummary)
-      
-      # update ChemSummary
-      shinyjs::html("bar-text", "Retrieving Related Chemicals, please wait...")
-      chemSummary$dat <- getChemSummaryByPMIDs(pmids, con)
-      setChemResults(session, chemSummary$dat, chemSummary)
-      
-      
+      getSummaries("Pharmacological Substances", con, getChemSummaryByPMIDs, pmids, session, paSummary, pa = TRUE)
+      getSummaries("Related Diseases", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
+      getSummaries("Related Chemicals", con, getChemSummaryByPMIDs, pmids, session, chemSummary, "filterChem")
+      getSummaries("Related Mutations", con, getMutationSummaryByPMIDs, pmids, session, mutationSummary, "filterMutations")
+
       
       # update geneSummary
       shinyjs::html("bar-text", "Retrieving Related Genes, please wait...")
       geneSummary$dat <- getGeneSummaryByPMIDs(pmids, con)
       setGeneResults(session, geneSummary$dat, geneSummary)
-      
+      #setResults(session, geneSummary$dat, geneSummary, "filterGenes")
   
       dbDisconnect(con)
       
@@ -200,11 +200,13 @@ shinyServer(function(input, output, session) {
       
     }
     
-    # TO DO: check for disease or chemical
-    # update PMID list when Selection changes
+    
+    # re-query when selection changes
     observe( {
       
-      if (is.null(diseaseSummary$selectedID) & is.null(geneSummary$selectedID) & is.null(chemSummary$selectedID)) {
+      selections <- list(diseaseSummary$selectedID, geneSummary$selectedID, chemSummary$selectedID, mutationSummary$selectedID)
+      
+      if (all(sapply(selections, is.null))) {
         return()
       }
       

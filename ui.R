@@ -7,6 +7,8 @@ library(shinycssloaders)
 source("addDeps.R")
 
 
+
+
 commonStyles <- list(
   includeCSS('www/ecsu.css'),
   HTML("<link href='https://fonts.googleapis.com/css?family=Courgette' rel='stylesheet' type='text/css'>"),
@@ -80,7 +82,7 @@ commonHeader <- list(
   
   # input / filter row
   fluidRow(
-    shiny::column(width = 3, 
+    shiny::column(width = 2, 
                   div(style = "display:inline-block;width:70%",
                       selectizeInput("geneInput", label = "Select a Gene", choices = NULL)
                   ),
@@ -98,6 +100,10 @@ commonHeader <- list(
     shiny::column(width=2,
                   selectInput("filterChem", "Chem Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
     ),
+    shiny::column(width=2,
+                  selectInput("filterMutations", "Mutation Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
+    ),    
+    
     shiny::column(width=2,
                   selectInput("filterGenes", "Additional Gene Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
     )
@@ -148,6 +154,7 @@ shinyUI(
     addTabPanel('Treatments', "paResults"),
     addTabPanel("Diseases", "diseaseResults"),
     addTabPanel('Chemicals', 'chemResults'),
+    addTabPanel("Mutations", "mutationResults"),
     addTabPanel('Genes', 'geneResults'),
     
     

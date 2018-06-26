@@ -8,66 +8,48 @@ updateLog <- function(logFile, ...) {
 }
 
 
-diseaseSummary <- reactiveValues(dat = NULL, uniqueDat = NULL, selectedID = NULL, 
-                                 selectedTerm = NULL, graphData = NULL)
-chemSummary <- reactiveValues(dat = NULL, uniqueDat = NULL, selectedID = NULL, 
-                              selectedTerm = NULL)
+# basic reactive structure for storing disease, chem, etc results tables
+createReactiveTable <- function() {
+  reactiveValues(dat = NULL, selectedID = NULL,
+                 selectedTerm = NULL, graphData = NULL)
+}
 
-paSummary <- reactiveValues(dat = NULL, uniqueDat = NULL, selectedID = NULL, 
-                              selectedTerm = NULL)
 
-geneSummary <- reactiveValues(dat = NULL, selectedID = NULL, selectedTerm = NULL)
+# reactives to deal with results tables
+diseaseSummary <- createReactiveTable()
+chemSummary <- createReactiveTable()
+paSummary <- createReactiveTable()
+mutationSummary <- createReactiveTable()
+geneSummary <- createReactiveTable()
 
+# reactive for currently selected gene symbol
 selected <- reactiveValues(geneSymbol = NULL)
 
-# pmids is current pmids that will be displayed; pmids_initial is pmids on initial search and is used to limit 
-# subsequent searches
+
+# reactive for pmids:
+#   pmids - current pmids to be displayed
+#   pmids_initial - pmids on initial search used to limit further queries
 pmidList <- reactiveValues(pmids = NULL, pmids_initial = NULL)
 
-lastTab <- reactiveValues(tab = NULL)
+
+# resets reactive values in 'x' to NULL
+resetReactive <- function(x) {
+  for (n in names(x)) {
+    x[[n]] <- NULL
+  }
+}
 
 resetReactiveValues <- function() {
+  
   logFile$log <- NULL
-  diseaseSummary$dat <- NULL
-  diseaseSummary$uniqueDat <- NULL
-  diseaseSummary$selectedID <- NULL 
-  diseaseSummary$selectedTerm <- NULL
-  diseaseSummary$graphData <- NULL
-  pmidList$pmids <- NULL
-  pmidList$pmids_initial <- NULL
-  geneSummary$dat <- NULL
-  geneSummary$selectedID <- NULL
-  geneSummary$selectedTerm <- NULL
-  chemSummary$dat <- NULL
-  chemSummary$selectedID <- NULL
-  chemSummary$selectedTerm <- NULL
-  
-  paSummary$dat <- NULL
-  paSummary$selectedID <- NULL
-  paSummary$selectedTerm <- NULL
-  
   selected$geneSymbol <- NULL
   
+  resetReactive(diseaseSummary)
+  resetReactive(pmidList)
+  resetReactive(geneSummary)
+  resetReactive(chemSummary)
+  resetReactive(mutationSummary)
+  resetReactive(paSummary)
 }
 
 
-clearSelectedGene <- function() {
-  geneSummary$selectedID <- NULL
-  geneSummary$selectedTerm <- NULL
-}
-
-clearSelectedDisease <- function() {
-  diseaseSummary$selectedID <- NULL
-  diseaseSummary$selectedTerm <- NULL
-  diseaseSummary$graphData <- NULL
-}
-
-clearSelectedChem <- function() {
-  chemSummary$selectedID <- NULL
-  chemSummary$selectedTerm <- NULL
-}
-
-clearSelectedPa <- function() {
-  paSummary$selectedID <- NULL
-  paSummary$selectedTerm <- NULL
-}

@@ -1,5 +1,5 @@
 library(RMySQL)
-
+library(ggplot2)
 
 con = dbConnect(MySQL(), group = "CPP")
 
@@ -18,7 +18,6 @@ numCancerGenes <- dbGetQuery(con, "select count(distinct PubGene.GeneID) from Pu
 plotCounts <- function(geneCounts) {
 
   colnames(geneCounts) <- c("Symbol", "GeneID", "Frequency")
-  geneCounts$Symbol <- gsub("\r", "", geneCounts$Symbol)
 
   levels <- geneCounts$Symbol
   geneCounts$Symbol <- factor(geneCounts$Symbol, levels = levels)

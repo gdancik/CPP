@@ -1,7 +1,7 @@
 
 
 # updates the selectInput with given id, choices, and selected;
-# ifi choices is NULL, disable and set choices to "NONE"
+# if choices is NULL, disable and set choices to "NONE"
 setSelectInput <- function(session, id, choices, selected) {
   if (is.null(choices)) {
     updateSelectInput(session, id, choices = "NONE")
@@ -14,59 +14,26 @@ setSelectInput <- function(session, id, choices, selected) {
   
 }
 
-# sets unique disease results and updates drop down
-setDiseaseResults <-function(session, res, diseaseSummary) {
-  cat("setting disease results...")
-  cat("terms = ", diseaseSummary$selectedTerm, "\n")
- 
-  isolate({
-  diseaseSummary$uniqueDat <- res
-  #cat("done\n")
+####################################################################################################
+# calls 'query_function' to query database, then sets the input
+####################################################################################################
+getSummaries <- function(msg, con, query_function, pmids, session, resTable, selectID = NULL, ...) {
   
-  choices <- diseaseSummary$selectedID
-  if (!is.null(choices)) {
-    names(choices) <- diseaseSummary$selectedTerm
-  }
-  cat("updating drop down with selected = ", diseaseSummary$selectedID, "and choices = ", choices, "\n")
-  
-  setSelectInput(session, "filterDisease", choices, diseaseSummary$selectedID)
-  })
-}
-
-
-# sets unique disease results and updates drop down
-setDrugResults <-function(session, res, paSummary) {
-  #cat("setting chem results...")
+  shinyjs::html("bar-text", paste0("Retrieving ", msg, ", please wait..."))
+  resTable$dat <- query_function(pmids, con, ...)
   
   isolate({
-    paSummary$uniqueDat <- res
     # cat("done\n")
-    
-    choices <- paSummary$selectedID
+    choices <- resTable$selectedID
     if (!is.null(choices)) {
-      names(choices) <- paSummary$selectedTerm
+      names(choices) <- resTable$selectedTerm
     }
-    
-    #setSelectInput(session, "filterChem", choices, chemSummary$selectedID)
+    if (!is.null(selectID)) {  
+        setSelectInput(session, selectID, choices, resTable$selectedID)
+    }
   })
 }
 
-# sets unique disease results and updates drop down
-setChemResults <-function(session, res, chemSummary) {
-  #cat("setting chem results...")
-  
-  isolate({
-    chemSummary$uniqueDat <- res
-   # cat("done\n")
-    
-    choices <- chemSummary$selectedID
-    if (!is.null(choices)) {
-      names(choices) <- chemSummary$selectedTerm
-    }
-     
-    setSelectInput(session, "filterChem", choices, chemSummary$selectedID)
-  })
-}
 
 # sets unique disease results and updates drop down
 setGeneResults <-function(session, res, geneSummary) {
@@ -76,11 +43,6 @@ setGeneResults <-function(session, res, geneSummary) {
     geneSummary$dat <- res
    # cat("done\n")
   
-    #choices <- geneSummary$dat$Symbol
-    #choices <- gsub("\r", "", choices)
-    
-  #  cat("selected genes = ", geneSummary$selectedTerm, "\n")
-    
     setSelectInput(session, "filterGenes", geneSummary$selectedTerm, geneSummary$selectedTerm)
     
   })

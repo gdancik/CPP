@@ -1,6 +1,6 @@
 # server-updateTables.R
 
-#update geneSummary
+#update geneTable
 observe ({
   
   if (is.null(geneSummary$dat)) {
@@ -11,7 +11,6 @@ observe ({
 
 
 displayGeneSummaryTable <- function() {
-  geneSummary$dat$Symbol <- gsub("\r", "", geneSummary$dat$Symbol)
   
   selected <- c(selected$geneSymbol, geneSummary$selectedTerm)
   cat("update gene summary, selected = ", selected, "\n")
@@ -27,7 +26,10 @@ displayGeneSummaryTable <- function() {
   
 }
 
+
+##################################################################
 # update PMID table
+##################################################################
 observe ({
   if (is.null(pmidList$pmids)) {
     return()
@@ -40,80 +42,39 @@ observe ({
 })
 
 
-# update MeshTerms table and graph
-observe ({
-  
-  m <- match(diseaseSummary$selectedID, diseaseSummary$uniqueDat$MeshID)
-  cat("click, m = ", m, "\n")
+##################################################################
+# update disease, chem, pa tables
+##################################################################
+
+# generic function to display table with current selection
+updateTable <- function(resTable, columnName, tableID) {
+  m <- match(resTable$selectedID, resTable$dat[[columnName]])
   isolate({
     selection = list(mode = "multiple", selected = m, target = "row")
-  
-  
-    output$diseaseResults <- DT::renderDataTable(datatable(diseaseSummary$uniqueDat, rownames = FALSE, 
-                                                         selection = selection,
-                                                         options = list(paging = FALSE, scrollY = 300)))
-  
-    #output$diseaseHierarchy <- renderUI(HTML(displayMesh(diseaseSummary$dat$TreeID,
-    #                                                   diseaseSummary$dat$Frequency)))
-  
   })
-  cat("...done observe\n")
-})
+  output[[tableID]] <- DT::renderDataTable(datatable(resTable$dat, rownames = FALSE, 
+                                                     selection = selection,
+                                                     options = list(paging = FALSE, scrollY = 300)))
+}
 
-# update MeshTerms graph
-# To do: no guarantee selected will be displayed if > 10 with same frequency
-
-observe({
-  cat("in plot observe...\n")
-  
-  if (!is.null(diseaseSummary$uniqueDat)) {
-    output$DiseaseGraph <- renderPlot({
-      cat("rendering plot...\n")
-      
-      # put levels in sorted order for plotting
-      diseaseSummary$uniqueDat$Term <- factor(diseaseSummary$uniqueDat$Term, levels = diseaseSummary$uniqueDat$Term[order(diseaseSummary$uniqueDat$Frequency)])
-      
-      # get top 10 levels
-      x <- levels(diseaseSummary$uniqueDat$Term)
-      x <- rev(x)
-      m2 <- min(10, length(x))
-      
-      x <- x[1:m2]
-      
-      x <- subset(diseaseSummary$uniqueDat, Term %in% x)
-      
-      # update levels to remove any no longer included
-      x$Term <- factor(x$Term)
-      
-      colors <- rep("darkblue", nrow(x))
-      print(diseaseSummary$selectedID)
-      
-      if (!is.null(diseaseSummary$selectedID)) {
-        m <- match(diseaseSummary$selectedID, x$MeshID)
-        term <- x$Term[m]
-        m <- match(term, levels(x$Term))
-        colors[m] <- "darkred"
-      }
-      
-      diseaseSummary$graphData <- x
-      
-      ggplot(x, aes(Term, Frequency)) + geom_bar(fill = colors, stat = "identity") +
-        coord_flip()
-    }, height = max(450, min(10, nrow(diseaseSummary$uniqueDat))*26))
-  }
-})
+observe(updateTable(paSummary, "MeshID", "paResults"))
+observe(updateTable(diseaseSummary, "MeshID", "diseaseResults"))
+observe(updateTable(chemSummary, "MeshID", "chemResults"))
+observe(updateTable(mutationSummary, "MutID", "mutationResults"))
 
 
+##################################################################
 # update cancer graph
+##################################################################
 observe({
   cat("in cancer plot observe...\n")
   
-  if (!is.null(diseaseSummary$uniqueDat)) {
+  if (!is.null(diseaseSummary$dat)) {
     
     con = dbConnect(MySQL(), group = "CPP")
     
     qry <- paste0("select MeshID, TreeID from MeshTerms where MeshID IN ", 
-                  cleanseList(diseaseSummary$uniqueDat$MeshID),
+                  cleanseList(diseaseSummary$dat$MeshID),
                   " AND MeshTerms.TreeID LIKE \"C04.%\";"
     )
     
@@ -122,7 +83,7 @@ observe({
     
     
     
-    x <- subset(diseaseSummary$uniqueDat, MeshID %in% cancerTerms$MeshID)
+    x <- subset(diseaseSummary$dat, MeshID %in% cancerTerms$MeshID)
     
     # put levels in sorted order for plotting
     x$Term <- factor(x$Term, levels = x$Term[order(x$Frequency)])
@@ -143,39 +104,64 @@ observe({
       ggplot(xx, aes(Term, Frequency, fill = Term)) + geom_bar(stat = "identity") +
         coord_flip() + theme_linedraw() + theme(legend.position = "none") + xlab("") + ylab("# of articles") +
         ggtitle(title) +
-          theme(plot.title = element_text(face = "bold"),  
-                axis.title = element_text(face = "bold"),
-                axis.text = element_text(face = "bold"))
+        theme(plot.title = element_text(face = "bold"),  
+              axis.title = element_text(face = "bold"),
+              axis.text = element_text(face = "bold"))
     }, height = 600)
     
     output$cancerSummaryTable <- DT::renderDataTable(datatable(x, rownames = FALSE, selection = "none",
-                                                           options = list(paging = FALSE, scrollY = 500)))
+                                                               options = list(paging = FALSE, scrollY = 500)))
   }
 })
 
 
 
-# update pa (treatments) table
-observe ({
-  m <- match(paSummary$selectedID, paSummary$uniqueDat$MeshID)
-  isolate({
-    selection = list(mode = "multiple", selected = m, target = "row")
-  })
-  output$paResults <- DT::renderDataTable(datatable(paSummary$uniqueDat, rownames = FALSE, 
-                                                      selection = selection,
-                                                      options = list(paging = FALSE, scrollY = 300)))
+####################################################################################
+# Not used
+####################################################################################
 
+# update MeshTerms graph
+# To do: no guarantee selected will be displayed if > 10 with same frequency
+
+observe({
+  cat("in plot observe...\n")
   
+  if (!is.null(diseaseSummary$dat)) {
+    output$DiseaseGraph <- renderPlot({
+      cat("rendering plot...\n")
+      
+      # put levels in sorted order for plotting
+      diseaseSummary$dat$Term <- factor(diseaseSummary$dat$Term, levels = diseaseSummary$dat$Term[order(diseaseSummary$dat$Frequency)])
+      
+      # get top 10 levels
+      x <- levels(diseaseSummary$dat$Term)
+      x <- rev(x)
+      m2 <- min(10, length(x))
+      
+      x <- x[1:m2]
+      
+      x <- subset(diseaseSummary$dat, Term %in% x)
+      
+      # update levels to remove any no longer included
+      x$Term <- factor(x$Term)
+      
+      colors <- rep("darkblue", nrow(x))
+      print(diseaseSummary$selectedID)
+      
+      if (!is.null(diseaseSummary$selectedID)) {
+        m <- match(diseaseSummary$selectedID, x$MeshID)
+        term <- x$Term[m]
+        m <- match(term, levels(x$Term))
+        colors[m] <- "darkred"
+      }
+      
+      diseaseSummary$graphData <- x
+      
+      ggplot(x, aes(Term, Frequency)) + geom_bar(fill = colors, stat = "identity") +
+        coord_flip()
+    }, height = max(450, min(10, nrow(diseaseSummary$dat))*26))
+  }
 })
 
 
-# update chem table
-observe ({
-  m <- match(chemSummary$selectedID, chemSummary$uniqueDat$MeshID)
-  isolate({
-    selection = list(mode = "multiple", selected = m, target = "row")
-  })
-  output$chemResults <- DT::renderDataTable(datatable(chemSummary$uniqueDat, rownames = FALSE, 
-                                                      selection = selection,
-                                                      options = list(paging = FALSE, scrollY = 300)))
-})
+
