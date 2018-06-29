@@ -36,8 +36,9 @@ observe ({
   }
   o <- order(pmidList$pmids$PMID, decreasing = TRUE)
   output$articleTable <- DT::renderDataTable(DT::datatable(pmidList$pmids[o,,drop = FALSE], rownames = FALSE,
-                                                           selection = "none", 
+                                                           selection = "none",
                                                            options = list(lengthChange = FALSE, 
+                                                                          searching = FALSE,
                                                                           pageLength = 100, scrollY = 300)))
 })
 
@@ -106,7 +107,8 @@ observe({
         ggtitle(title) +
         theme(plot.title = element_text(face = "bold"),  
               axis.title = element_text(face = "bold"),
-              axis.text = element_text(face = "bold"))
+              axis.text = element_text(face = "bold")) +
+              scale_x_discrete(labels = function(x) str_wrap(x, width = 15))
     }, height = 600)
     
     output$cancerSummaryTable <- DT::renderDataTable(datatable(x, rownames = FALSE, selection = "none",

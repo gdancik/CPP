@@ -5,14 +5,12 @@ library(shinyjs)
 library(shinycssloaders)
 
 source("addDeps.R")
-
-
-
+source("ui-about.R")
 
 commonStyles <- list(
   includeCSS('www/ecsu.css'),
   HTML("<link href='https://fonts.googleapis.com/css?family=Courgette' rel='stylesheet' type='text/css'>"),
-  
+  HTML("<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' integrity='sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u' crossorigin='anonymous'>"),
   tags$style(HTML("
                                
                   /* color table selections */
@@ -142,50 +140,61 @@ addTabPanel <- function(title, tableId, graphId = NULL) {
   )
 }
 
+articlesPanel <- function() {
+  tabPanel('Articles',         
+           useShinyjs(),  
+           fluidRow(
+             #shiny::column(width = 6 
+             #),
+             shiny::column(width = 3,
+                           bsButton(inputId = "btnPubTator", label = "Load/Refresh PubTator Results", style = "info")
+             ),
+             shiny::column(width = 3,
+                           div(align = "right",
+                               bsButton("btnPubTatorGo", label = "View Results in PubTator", style = "danger")
+                           )
+             )
+           ),
+           
+           fluidRow(
+             shiny::column(id = "colPubs", width = 3, 
+                           DT::dataTableOutput("articleTable")),
+             shiny::column(id = "colPubs", width = 9, 
+                           uiOutput("articles")
+             )
+           )
+  )
+}
+
+logPanel <- function() {
+  tabPanel("Log", verbatimTextOutput("log"))
+}
+
 shinyUI(
 
 
-  navbarPage(
-   
-        
-    title = 'Cancer Publication Portal', id = "headerNavBarPage", header = commonHeader,
-   
-    addTabPanel('Cancer Types', "cancerSummaryTable", "cancerGraph"),
-    addTabPanel('Treatments', "paResults"),
-    addTabPanel("Diseases", "diseaseResults"),
-    addTabPanel('Chemicals', 'chemResults'),
-    addTabPanel("Mutations", "mutationResults"),
-    addTabPanel('Genes', 'geneResults'),
-    
-    
-    tabPanel('Articles',         
-             useShinyjs(),  
-             fluidRow(
-               shiny::column(width = 6 
-               ),
-               shiny::column(width = 3,
-                             bsButton(inputId = "btnPubTator", label = "Load/Refresh PubTator Results", style = "info")
-               ),
-               shiny::column(width = 3,
-                             div(align = "right",
-                                 bsButton("btnPubTatorGo", label = "View Results in PubTator", style = "danger")
-                             )
-               )
-             ),
-             
-             fluidRow(
-               shiny::column(id = "colPubs", width = 3, 
-                             DT::dataTableOutput("articleTable")),
-               shiny::column(id = "colPubs", width = 9, 
-                             uiOutput("articles")
-               )
-             )
-    ),
-    tabPanel("Log", verbatimTextOutput("log")
-             )
-    
-    
-  ) 
-  )
+  navbarPage(title = 'Cancer Publication Portal',
+             id = "headerNavBarPage", 
+    tabPanel("Home",
+          commonHeader, 
+          fluidRow(column(style='border-right: 1px solid',width = 8,
+          tabsetPanel(id = "MainPage",
+            addTabPanel('Cancer Types', "cancerSummaryTable", "cancerGraph"),
+            addTabPanel('Treatments', "paResults"),
+            addTabPanel("Diseases", "diseaseResults"),
+            addTabPanel('Chemicals', 'chemResults'),
+            addTabPanel("Mutations", "mutationResults"),
+            addTabPanel('Genes', 'geneResults')
+            #articlesPanel(),
+
+          )), # end tabsetPanel and 1st column
+          column(width = 4, 
+                    articlesPanel()
+          )) # end 2nd column and fluid row
+          ), # end Portal Panel
+      tabAbout,
+      logPanel()
+  ) # end navbarPage
+) # end shinyUI
                
 

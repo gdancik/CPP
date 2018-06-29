@@ -58,20 +58,20 @@ shinyServer(function(input, output, session) {
       f <- shinyjs::show
     }
     
-    f("headerNavBarPage")
-    f("tabSetDisease")
-    f("tabSetChemicals")
-    f("tabSetGenes")
-    f("filterDisease")
-    f("filterChem")
-    f("filterMutations")
-    f("filterDisease")
-    f("filterGenes")
+    f("MainPage")
+    #f("headerNavBarPage")
+    #f("tabSetDisease")
+    #f("tabSetChemicals")
+    #f("tabSetGenes")
+    #f("filterDisease")
+    #f("filterChem")
+    #f("filterMutations")
+    #f("filterDisease")
+    #f("filterGenes")
     
   }
     
   toggleMenus(FALSE)
-  
   
     # on initial search
     observeEvent(
