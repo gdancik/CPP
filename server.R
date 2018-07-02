@@ -19,6 +19,7 @@ source("functions.R", local = TRUE)
 source("setResults.R", local = TRUE)
 
 
+
 # some genes have duplicate IDs...we should combine, for now, remove
 library(dplyr)
 
@@ -36,9 +37,11 @@ shinyServer(function(input, output, session) {
   source("server-reactives.R", local = TRUE)
   source("server-articles.R", local = TRUE)
   source("sql_functions.R", local = TRUE)
+  source("sql_functions_contingency.R", local = TRUE)
   source("server-GeneTable.R", local = TRUE)
   source("server-updateTables.R", local = TRUE)
   source("server-tableClicks.R", local = TRUE)
+  source("stackedBarGraphs.R", local = TRUE)
   
   # disable drop downs on startup
   shinyjs::disable("filterDisease")
@@ -182,6 +185,9 @@ shinyServer(function(input, output, session) {
       getSummaries("Related Chemicals", con, getChemSummaryByPMIDs, pmids, session, chemSummary, "filterChem")
       getSummaries("Related Mutations", con, getMutationSummaryByPMIDs, pmids, session, mutationSummary, "filterMutations")
 
+      d1 <- diseaseSummary$dat
+      d2 <- chemSummary$dat
+      save(d1,d2, file = "tables.RData")
       
       # update geneSummary
       shinyjs::html("bar-text", "Retrieving Related Genes, please wait...")

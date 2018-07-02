@@ -158,9 +158,9 @@ articlesPanel <- function() {
            
            fluidRow(
              shiny::column(id = "colPubs", width = 3, 
-                           DT::dataTableOutput("articleTable")),
-             shiny::column(id = "colPubs", width = 9, 
-                           uiOutput("articles")
+                            DT::dataTableOutput("articleTable")),
+             shiny::column(id = "colPubs", width = 9,
+                                uiOutput("articles")
              )
            )
   )
@@ -182,7 +182,7 @@ shinyUI(
             addTabPanel('Cancer Types', "cancerSummaryTable", "cancerGraph"),
             addTabPanel('Treatments', "paResults"),
             addTabPanel("Diseases", "diseaseResults"),
-            addTabPanel('Chemicals', 'chemResults'),
+            addTabPanel('Chemicals', 'chemResults', "chemGraph"),
             addTabPanel("Mutations", "mutationResults"),
             addTabPanel('Genes', 'geneResults')
             #articlesPanel(),
