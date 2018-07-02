@@ -12,8 +12,13 @@ observe({
     res <- getChemByDiseaseContingency(pmidList$pmids$PMID, con)
     dbDisconnect(con)
     
-    numDiseases <- min(5, length(t))
+ 
+    if (nrow(res) == 0) {
+      return()
+    }
+    
     t <- sort(table(res$Disease), decreasing = TRUE)
+    numDiseases <- min(5, length(t))
     res2 <- filter(res, Disease %in% names(t)[1:numDiseases])
     s <- split(res2$Frequency, res2$Chemical)
     s <- sapply(s, sum)

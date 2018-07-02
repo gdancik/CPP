@@ -5,6 +5,7 @@ library(DT) # requires development version for single row selection with datatab
 library(DBI)
 library(RMySQL)
 library(ggplot2)
+library(stringr)
 
 DEBUG <<- FALSE
 
