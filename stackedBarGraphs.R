@@ -1,6 +1,10 @@
 ##################################################################
 # update chemical stacked bar graph
 ##################################################################
+
+source("abbreviate.R", local = TRUE)
+
+
 observe({
   cat("in chemical stacked bar observe...\n")
   
@@ -35,16 +39,24 @@ observe({
     st <- sort(sapply(sr, sum))
     res2$Disease <- factor(res2$Disease, levels = names(st)[order(st)])
     
-    output$chemGraph <- renderPlot({
+    output$chemGraph <- renderPlotly({
       
-      ggplot(res2, aes(Disease, Frequency, fill = Chemical)) + 
+      gg <- ggplot(res2, aes(Disease, Frequency, fill = Chemical)) + 
         geom_bar(stat = "identity") + coord_flip() +
         theme(plot.title = element_text(face = "bold"),  
               axis.title = element_text(face = "bold"),
               axis.text = element_text(face = "bold")) +
         ggtitle("Distribution of chemical terms by disease (top 5)") +
         xlab("") + ylab("Number of chemical mentions") +
-        scale_x_discrete(labels = function(x) str_wrap(x, width = 15)) + theme_linedraw()
+        theme_linedraw() +
+        scale_x_discrete(label=function(x) abbreviate2(x, 2))
+        #scale_x_discrete(labels = function(x) str_wrap(x, width = 8)) 
+      
+      
+      p <- ggplotly(gg, tooltip = c("x", "fill", "y"))
+      return(p %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)))
+      
+      
     })
   
   } # end if no diseases

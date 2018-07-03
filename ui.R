@@ -3,6 +3,7 @@ library(shinyBS)
 library(shinydashboard)
 library(shinyjs)
 library(shinycssloaders)
+library(plotly)
 
 source("addDeps.R")
 source("ui-about.R")
@@ -127,6 +128,7 @@ commonHeader <- list(
 # add a tab panel with given title, table, and graph,
 # may want to consider setting click = "CancerGraph_click", etc on graph
 addTabPanel <- function(title, tableId, graphId = NULL) {
+  
   tabPanel(title, 
            fluidRow(div(style = "height: 300px",
              shiny::column(width = 5,
@@ -135,8 +137,15 @@ addTabPanel <- function(title, tableId, graphId = NULL) {
              ),
              if (!is.null(graphId)) {
                shiny::column(width = 7,
-                             withSpinner(plotOutput(graphId), type = 3, 
-                                         color.background = "white")
+                             if (graphId == "cancerGraph") {
+                               withSpinner(plotOutput(graphId), type = 3, 
+                                           color.background = "white")  
+                             } else {
+                               withSpinner(plotlyOutput(graphId), type = 3, 
+                                           color.background = "white")  
+                             }
+                             
+                             
                )
              }
            ))
@@ -162,6 +171,9 @@ articlesPanel <- function() {
                             DT::dataTableOutput("articleTable")),
              shiny::column(id = "colPubs", width = 10,
                                 uiOutput("articles")
+             ),
+             div(id = "pageBottom", style ="visibility:hidden",
+                 a(id = "pageDownLink", href = "#pageBottom", "click")
              )
            )
   )
@@ -188,7 +200,8 @@ shinyUI(
             addTabPanel("Diseases", "diseaseResults"),
             addTabPanel('Chemicals', 'chemResults', "chemGraph"),
             addTabPanel("Mutations", "mutationResults"),
-            addTabPanel('Genes', 'geneResults')
+            addTabPanel("Genes", "geneResults"),
+            tabPanel("Articles", 'articlesLink')
             #articlesPanel(),
 
           ))), # end tabsetPanel and 1st row

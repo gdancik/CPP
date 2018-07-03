@@ -4,7 +4,10 @@ library(shiny)
 library(DT) # requires development version for single row selection with datatables
 library(DBI)
 library(RMySQL)
-library(ggplot2)
+library(ggplot2) # need development version for plotly (for horizontal bar)
+
+#install_version("plotly", version = "4.6.0", repos = "http://cran.us.r-project.org")
+library(plotly) # need development version 
 library(stringr)
 
 DEBUG <<- FALSE
@@ -54,6 +57,18 @@ shinyServer(function(input, output, session) {
   # set home page results to NULL (otherwise you will see spinner)
   output$cancerSummaryTable <- renderDataTable(NULL)
   output$cancerGraph <- renderPlot(NULL)
+  
+  lastTab <<- "Home"
+  
+  # check if user selects Articles tab
+  observe({
+    if (input$MainPage == "Articles") {
+      updateTabsetPanel(session, "MainPage", selected = lastTab)
+      shinyjs::runjs("document.getElementById('pageDownLink').click();")
+    }
+    lastTab <<- input$MainPage
+    
+  })
   
   toggleMenus <-function(show) {
     
