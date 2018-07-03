@@ -83,7 +83,6 @@ observe({
     dbDisconnect(con)
     
     
-    
     x <- subset(diseaseSummary$dat, MeshID %in% cancerTerms$MeshID)
     
     # put levels in sorted order for plotting
@@ -109,10 +108,10 @@ observe({
               axis.title = element_text(face = "bold"),
               axis.text = element_text(face = "bold")) +
               scale_x_discrete(labels = function(x) str_wrap(x, width = 15))
-    }, height = 600)
+    })
     
     output$cancerSummaryTable <- DT::renderDataTable(datatable(x, rownames = FALSE, selection = "none",
-                                                               options = list(paging = FALSE, scrollY = 500)))
+                                                               options = list(paging = FALSE, scrollY = 300)))
   }
 })
 

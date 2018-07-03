@@ -25,7 +25,10 @@ commonStyles <- list(
                   color:#FFF;
                   }
                   
-                  
+                  td, td {
+                    font-size:80%;
+                  }
+ 
                   .navbar-header > .navbar-brand {
                   font-family:Courgette;
                   color:#FFF;
@@ -90,7 +93,7 @@ commonHeader <- list(
     ),
     shiny::column(width = 2,
                   radioButtons("rbDiseaseLimits", "Article Limits:",
-                               c("Cancer-related articles only" = "cancer", "All articles" = "none"), selected = "cancer")),
+                               c("Cancer-related only" = "cancer", "All articles" = "none"), selected = "cancer")),
     
     shiny::column(width=2,
                   selectInput("filterDisease", "Disease Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
@@ -117,7 +120,7 @@ commonHeader <- list(
                                           ))
            
                          ),
-  br(),br(), commonStyles
+  br(), commonStyles
 )
 
 
@@ -125,7 +128,7 @@ commonHeader <- list(
 # may want to consider setting click = "CancerGraph_click", etc on graph
 addTabPanel <- function(title, tableId, graphId = NULL) {
   tabPanel(title, 
-           fluidRow(
+           fluidRow(div(style = "height: 300px",
              shiny::column(width = 5,
                            withSpinner(DT::dataTableOutput(tableId), type = 3,
                                        color.background = "white")
@@ -136,7 +139,7 @@ addTabPanel <- function(title, tableId, graphId = NULL) {
                                          color.background = "white")
                )
              }
-           )
+           ))
   )
 }
 
@@ -144,8 +147,6 @@ articlesPanel <- function() {
   tabPanel('Articles',         
            useShinyjs(),  
            fluidRow(
-             #shiny::column(width = 6 
-             #),
              shiny::column(width = 3,
                            bsButton(inputId = "btnPubTator", label = "Load/Refresh PubTator Results", style = "info")
              ),
@@ -157,9 +158,9 @@ articlesPanel <- function() {
            ),
            
            fluidRow(
-             shiny::column(id = "colPubs", width = 3, 
+             shiny::column(id = "colPubs", width = 2, 
                             DT::dataTableOutput("articleTable")),
-             shiny::column(id = "colPubs", width = 9,
+             shiny::column(id = "colPubs", width = 10,
                                 uiOutput("articles")
              )
            )
@@ -170,6 +171,9 @@ logPanel <- function() {
   tabPanel("Log", verbatimTextOutput("log"))
 }
 
+
+
+
 shinyUI(
 
 
@@ -177,7 +181,7 @@ shinyUI(
              id = "headerNavBarPage", 
     tabPanel("Home",
           commonHeader, 
-          fluidRow(column(style='border-right: 1px solid',width = 8,
+          fluidRow(column(style='border-right: 1px solid',width = 12,
           tabsetPanel(id = "MainPage",
             addTabPanel('Cancer Types', "cancerSummaryTable", "cancerGraph"),
             addTabPanel('Treatments', "paResults"),
@@ -187,11 +191,11 @@ shinyUI(
             addTabPanel('Genes', 'geneResults')
             #articlesPanel(),
 
-          )), # end tabsetPanel and 1st column
-          column(width = 4, 
+          ))), # end tabsetPanel and 1st row
+          fluidRow(column(width = 12,
                     articlesPanel()
-          )) # end 2nd column and fluid row
-          ), # end Portal Panel
+          ) # end second row (articles panel)
+          )), # end Portal Panel
       tabAbout,
       logPanel()
   ) # end navbarPage

@@ -18,13 +18,13 @@ observe({
     }
     
     t <- sort(table(res$Disease), decreasing = TRUE)
-    numDiseases <- min(5, length(t))
+    numDiseases <- min(10, length(t))
     res2 <- filter(res, Disease %in% names(t)[1:numDiseases])
     s <- split(res2$Frequency, res2$Chemical)
     s <- sapply(s, sum)
     s <- sort(s, decreasing = TRUE)
     
-    numChems <- min(5, length(s))
+    numChems <- min(15, length(s))
     keepThese <- names(s)[1:numChems]
     res2$Chemical[!res2$Chemical%in%keepThese] <- NA
     
@@ -44,8 +44,8 @@ observe({
               axis.text = element_text(face = "bold")) +
         ggtitle("Distribution of chemical terms by disease (top 5)") +
         xlab("") + ylab("Number of chemical mentions") +
-        scale_x_discrete(labels = function(x) str_wrap(x, width = 15))
-    }, height = 600)
+        scale_x_discrete(labels = function(x) str_wrap(x, width = 15)) + theme_linedraw()
+    })
   
   } # end if no diseases
 })
