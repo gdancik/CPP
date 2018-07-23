@@ -199,7 +199,7 @@ shinyUI(
             addTabPanel('Treatments', "paResults"),
             addTabPanel("Diseases", "diseaseResults"),
             addTabPanel('Chemicals', 'chemResults', "chemGraph"),
-            addTabPanel("Mutations", "mutationResults"),
+            addTabPanel("Mutations", "mutationResults", "mutGraph"),
             addTabPanel("Genes", "geneResults"),
             tabPanel("Articles", 'articlesLink')
             #articlesPanel(),
