@@ -95,7 +95,8 @@ shinyServer(function(input, output, session) {
     # on initial search
     observeEvent(
       {input$btnGeneSearch
-      input$rbDiseaseLimits},{
+      #input$rbDiseaseLimits
+        },{
 
         if (is.null(input$geneInput) | input$geneInput == "") return()
         
@@ -142,10 +143,10 @@ shinyServer(function(input, output, session) {
       cat("got connection\n")
       
       # get cancer PMIDs if specified, restrict to gene #
-      if (is.null(pmidList$pmids_initial) & input$rbDiseaseLimits == "cancer") {
-        cat("getting cancer IDs for ", input$geneInput, "\n")
-        pmidList$pmids_initial = getCancerPMIDs(con, cleanse(input$geneInput))
-      }
+      #if (is.null(pmidList$pmids_initial) & input$rbDiseaseLimits == "cancer") {
+      #  cat("getting cancer IDs for ", input$geneInput, "\n")
+      #  pmidList$pmids_initial = getCancerPMIDs(con, cleanse(input$geneInput))
+      #}
       
       
       cat("done getting cancer IDs\n")
@@ -196,14 +197,13 @@ shinyServer(function(input, output, session) {
       
       cat("updating summaries...\n")
       
-      getSummaries("Pharmacological Substances", con, getChemSummaryByPMIDs, pmids, session, paSummary, pa = TRUE)
+      #getSummaries("Pharmacological Substances", con, getChemSummaryByPMIDs, pmids, session, paSummary, pa = TRUE)
       getSummaries("Related Diseases", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
-      getSummaries("Related Chemicals", con, getChemSummaryByPMIDs, pmids, session, chemSummary, "filterChem")
+      getSummaries("Related Chemicals", con, getChemSummaryByPMIDs, pmids, session, chemSummary, "filterChem", pa = TRUE)
       getSummaries("Related Mutations", con, getMutationSummaryByPMIDs, pmids, session, mutationSummary, "filterMutations")
 
       d1 <- diseaseSummary$dat
       d2 <- chemSummary$dat
-      save(d1,d2, file = "tables.RData")
       
       # update geneSummary
       shinyjs::html("bar-text", "Retrieving Related Genes, please wait...")

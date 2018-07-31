@@ -92,9 +92,9 @@ commonHeader <- list(
                        actionButton("btnGeneSearch", "Search", style="position:relative; bottom: 12px; height: 35px; width 66px;")
                   )
     ),
-    shiny::column(width = 2,
-                  radioButtons("rbDiseaseLimits", "Article Limits:",
-                               c("Cancer-related only" = "cancer", "All articles" = "none"), selected = "cancer")),
+    #shiny::column(width = 2,
+    #              radioButtons("rbDiseaseLimits", "Article Limits:",
+    #                           c("Cancer-related only" = "cancer", "All articles" = "none"), selected = "cancer")),
     
     shiny::column(width=2,
                   selectInput("filterDisease", "Disease Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
@@ -196,9 +196,9 @@ shinyUI(
           fluidRow(column(style='border-right: 1px solid',width = 12,
           tabsetPanel(id = "MainPage",
             addTabPanel('Cancer Types', "cancerSummaryTable", "cancerGraph"),
-            addTabPanel('Treatments', "paResults"),
+            #addTabPanel('Treatments', "paResults"),
             addTabPanel("Diseases", "diseaseResults"),
-            addTabPanel('Chemicals', 'chemResults', "chemGraph"),
+            addTabPanel('Drugs', 'chemResults', "chemGraph"),
             addTabPanel("Mutations", "mutationResults", "mutGraph"),
             addTabPanel("Genes", "geneResults"),
             tabPanel("Articles", 'articlesLink')
