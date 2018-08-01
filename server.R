@@ -58,17 +58,17 @@ shinyServer(function(input, output, session) {
   output$cancerSummaryTable <- renderDataTable(NULL)
   output$cancerGraph <- renderPlot(NULL)
   
-  lastTab <<- "Home"
+#  lastTab <<- "Home"
   
   # check if user selects Articles tab
-  observe({
-    if (input$MainPage == "Articles") {
-      updateTabsetPanel(session, "MainPage", selected = lastTab)
-      shinyjs::runjs("document.getElementById('pageDownLink').click();")
-    }
-    lastTab <<- input$MainPage
+#  observe({
+#    if (input$MainPage == "Articles") {
+#      updateTabsetPanel(session, "MainPage", selected = lastTab)
+#      shinyjs::runjs("document.getElementById('pageDownLink').click();")
+#    }
+#    lastTab <<- input$MainPage
     
-  })
+#  })
   
   toggleMenus <-function(show) {
     

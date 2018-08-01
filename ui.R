@@ -201,14 +201,11 @@ shinyUI(
             addTabPanel('Drugs', 'chemResults', "chemGraph"),
             addTabPanel("Mutations", "mutationResults", "mutGraph"),
             addTabPanel("Genes", "geneResults"),
-            tabPanel("Articles", 'articlesLink')
-            #articlesPanel(),
+            tabPanel("Articles", 'articlesLink',articlesPanel())
 
-          ))), # end tabsetPanel and 1st row
-          fluidRow(column(width = 12,
-                    articlesPanel()
-          ) # end second row (articles panel)
-          )), # end Portal Panel
+          )))#, # end tabsetPanel and 1st row
+          #fluidRow(column(width = 12, articlesPanel() ) )# end second row (articles panel)
+          ), # end Portal Panel
       tabAbout,
       logPanel()
   ) # end navbarPage
