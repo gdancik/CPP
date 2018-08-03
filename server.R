@@ -3,7 +3,7 @@
 library(shiny)
 library(DT) # requires development version for single row selection with datatables
 library(DBI)
-library(RMySQL)
+library(RMariaDB)
 library(ggplot2) # need development version for plotly (for horizontal bar)
 
 #install_version("plotly", version = "4.6.0", repos = "http://cran.us.r-project.org")
@@ -139,7 +139,7 @@ shinyServer(function(input, output, session) {
       p1 <- list(PMID=NULL); p2 <- list(PMID=NULL); p3 <- list(PMID=NULL)
       
       cat("getting connection...\n")
-      con = dbConnect(MySQL(), group = "CPP")
+      con = dbConnect(MariaDB(), group = "CPP")
       
       cat("got connection\n")
       

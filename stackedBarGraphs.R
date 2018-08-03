@@ -10,7 +10,7 @@ getStackedResults <- function(sql_function, group) {
     return(NULL)
   }
 
-  con = dbConnect(MySQL(), group = "CPP")
+  con = dbConnect(MariaDB(), group = "CPP")
   
   cat("warning: NO FILTERS ARE APPLIED to Chemical stacked bar graph\n")
   res <- sql_function(pmidList$pmids$PMID, con)
@@ -20,10 +20,14 @@ getStackedResults <- function(sql_function, group) {
     return(NULL)
   }
   
+  
+  
   # keep results for most frequent diseases
   t <- sort(table(res$Disease), decreasing = TRUE)
   numDiseases <- min(10, length(t))
   res2 <- filter(res, Disease %in% names(t)[1:numDiseases])
+  
+  res2$Frequency <- as.double(res2$Frequency)
   
   # keep results for most frequent groups
   s <- split(res2$Frequency, res2[[group]])

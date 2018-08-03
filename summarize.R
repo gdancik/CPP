@@ -1,7 +1,7 @@
-library(RMySQL)
+library(MariaDB)
 library(ggplot2)
 
-con = dbConnect(MySQL(), group = "CPP")
+con = dbConnect(MariaDB(), group = "CPP")
 
 # count number of articles in CPP
 numArticles <- dbGetQuery(con, "select count(distinct PMID) from PubGene;")
@@ -21,6 +21,7 @@ plotCounts <- function(geneCounts) {
 
   levels <- geneCounts$Symbol
   geneCounts$Symbol <- factor(geneCounts$Symbol, levels = levels)
+  geneCounts$Frequency <- as.double(geneCounts$Frequency)
 
   ggplot(data = geneCounts, aes(Symbol, Frequency, fill = Symbol)) + 
     geom_col() + #coord_flip() + 

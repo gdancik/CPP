@@ -69,7 +69,7 @@ displayMesh <- function(x, y){
   # query the Tree IDs (columns of idTable) to get the MesH terms and
   # add terms to the output
   
-  con = dbConnect(MySQL(), dbname = "dcast", user = "root", password = "password")
+  con = dbConnect(MariaDB(), dbname = "dcast", user = "root", password = "password")
   
   ids <- paste0("'",names(idTable), "'",collapse = ",")
   query = paste0("SELECT * from MeshTerms WHERE TreeID in (", ids, ")")

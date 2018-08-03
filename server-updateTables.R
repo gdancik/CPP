@@ -72,7 +72,7 @@ observe({
   
   if (!is.null(diseaseSummary$dat)) {
     
-    con = dbConnect(MySQL(), group = "CPP")
+    con = dbConnect(MariaDB(), group = "CPP")
     
     qry <- paste0("select MeshID, TreeID from MeshTerms where MeshID IN ", 
                   cleanseList(diseaseSummary$dat$MeshID),
@@ -84,7 +84,8 @@ observe({
     
     
     x <- subset(diseaseSummary$dat, MeshID %in% cancerTerms$MeshID)
-    
+    x$Frequency <- as.double(x$Frequency)
+
     # put levels in sorted order for plotting
     x$Term <- factor(x$Term, levels = x$Term[order(x$Frequency)])
     
