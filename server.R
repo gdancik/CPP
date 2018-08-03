@@ -52,6 +52,7 @@ shinyServer(function(input, output, session) {
   shinyjs::disable("filterChem")
   shinyjs::disable("filterMutations")
   shinyjs::disable("filterGenes")
+  toggleModal(session, "welcomeId")
   
   
   # set home page results to NULL (otherwise you will see spinner)

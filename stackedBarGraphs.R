@@ -57,7 +57,7 @@ observe({
    }
    
    output$chemGraph <- renderPlotly({
-      stackedBarGraph(res2, "Disease", "Frequency", "Chemical", "Distribution of chemical terms by disease (top 5)",
+      stackedBarGraph(res2, "Disease", "Frequency", "Chemical", "Distribution of drug mentions by cancer (max 10 cancers and 15 drugs)",
                       "Number of chemical mentions")
     })
 })
@@ -72,7 +72,7 @@ observe({
   }
   
   output$mutGraph <- renderPlotly({
-    stackedBarGraph(res2, "Disease", "Frequency", "Mutation", "Distribution of mutations by disease (top 5)",
+    stackedBarGraph(res2, "Disease", "Frequency", "Mutation", "Distribution of mutations by cancer (max 10 cancers and 15 drugs)",
                     "Number of mutation mentions", abbreviate = FALSE)
   })
 })

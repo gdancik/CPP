@@ -82,6 +82,13 @@ commonStyles <- list(
 # common header for all pages
 commonHeader <- list(
   
+  bsModal("welcomeId", HTML("<i>Cancer Publication Portal</i>"), trigger = "none", size = "large",
+      p("This is a beta version of a Cancer Publication Portal for summarizing and searching cancer-related literature."),
+      p("To start, select a gene and click Search to summarize cancer publications for that gene. Click on any of the tables to further filter your query."),
+      p("Feedback is welcome, and can be sent to dancikg@easternct.edu"),
+      br(), 
+      p("This is a work in progress and is currently undergoing many changes")),
+
   # input / filter row
   fluidRow(
     shiny::column(width = 2, 
@@ -155,6 +162,7 @@ addTabPanel <- function(title, tableId, graphId = NULL) {
 articlesPanel <- function() {
   tabPanel('Articles',         
            useShinyjs(),  
+           br(),
            fluidRow(
              shiny::column(width = 3,
                            bsButton(inputId = "btnPubTator", label = "Load/Refresh PubTator Results", style = "info")
@@ -201,7 +209,7 @@ shinyUI(
             addTabPanel('Drugs', 'chemResults', "chemGraph"),
             addTabPanel("Mutations", "mutationResults", "mutGraph"),
             addTabPanel("Genes", "geneResults"),
-            tabPanel("Articles", 'articlesLink',articlesPanel())
+            tabPanel("Articles", articlesPanel())
 
           )))#, # end tabsetPanel and 1st row
           #fluidRow(column(width = 12, articlesPanel() ) )# end second row (articles panel)

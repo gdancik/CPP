@@ -39,7 +39,7 @@ observe ({
                                                            selection = "none",
                                                            options = list(lengthChange = FALSE, 
                                                                           searching = FALSE,
-                                                                          pageLength = 100, scrollY = 300)))
+                                                                          pageLength = 10, scrollY = 300)))
 })
 
 
