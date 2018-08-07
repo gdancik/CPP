@@ -8,6 +8,9 @@ updateLog <- function(logFile, ...) {
 }
 
 
+# if TRUE then we are analyzing a new gene
+triggers <- reactiveValues(newSearch = FALSE)
+
 # basic reactive structure for storing disease, chem, etc results tables
 createReactiveTable <- function() {
   reactiveValues(dat = NULL, selectedID = NULL,
@@ -18,12 +21,12 @@ createReactiveTable <- function() {
 # reactives to deal with results tables
 diseaseSummary <- createReactiveTable()
 chemSummary <- createReactiveTable()
-paSummary <- createReactiveTable()
+#paSummary <- createReactiveTable()
 mutationSummary <- createReactiveTable()
 geneSummary <- createReactiveTable()
 
 # reactive for currently selected gene symbol
-selected <- reactiveValues(geneSymbol = NULL)
+selected <- reactiveValues(geneID = NULL, geneSymbol = NULL)
 
 
 # reactive for pmids:
@@ -42,14 +45,13 @@ resetReactive <- function(x) {
 resetReactiveValues <- function() {
   
   logFile$log <- NULL
-  selected$geneSymbol <- NULL
-  
+  resetReactive(selected)
   resetReactive(diseaseSummary)
   resetReactive(pmidList)
   resetReactive(geneSummary)
   resetReactive(chemSummary)
   resetReactive(mutationSummary)
-  resetReactive(paSummary)
+  #resetReactive(paSummary)
 }
 
 

@@ -57,6 +57,7 @@ observe({
    res2 <- getStackedResults(getChemByDiseaseContingency, "Chemical")
     
    if (is.null(res2)) {
+     output$chemGraph <- renderPlotly({}) 
      return()
    }
    
@@ -72,6 +73,7 @@ observe({
   res2 <- getStackedResults(getMutByDiseaseContingency, "Mutation")
   
   if (is.null(res2)) {
+      output$mutGraph <- renderPlotly({})
     return()
   }
   

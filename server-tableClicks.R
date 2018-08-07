@@ -9,7 +9,6 @@ updateMeshSelections <- function(current, previous) {
   return (current)
 }
 
-
 # Given a set of 'ids', the table reactive will be updated
 #     ids = the currently selected ids
 #     tblSummary = the reactive object with table stored in tblSummary$dat

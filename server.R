@@ -10,7 +10,7 @@ library(ggplot2) # need development version for plotly (for horizontal bar)
 library(plotly) # need development version 
 library(stringr)
 
-DEBUG <<- FALSE
+DEBUG <<- TRUE
 
 
 if (!DEBUG) {
@@ -26,8 +26,6 @@ source("setResults.R", local = TRUE)
 
 # some genes have duplicate IDs...we should combine, for now, remove
 library(dplyr)
-
-
 
 shinyServer(function(input, output, session) {
 
@@ -52,8 +50,7 @@ shinyServer(function(input, output, session) {
   shinyjs::disable("filterChem")
   shinyjs::disable("filterMutations")
   shinyjs::disable("filterGenes")
-  toggleModal(session, "welcomeId")
-  
+  toggleModal(session, "welcomeModal")
   
   # set home page results to NULL (otherwise you will see spinner)
   output$cancerSummaryTable <- renderDataTable(NULL)
@@ -93,23 +90,75 @@ shinyServer(function(input, output, session) {
     
   toggleMenus(FALSE)
   
+  # Javascript to trigger analysis when modal is closed
+  shinyjs::runjs("
+        var numSearches = 0
+        $('#welcomeModal').on('hidden.bs.modal', function () {
+            numSearches += 1;
+            Shiny.onInputChange('testInput', numSearches);
+        });")
+  
+  observeEvent(input$geneInput, {
+    if (is.null(input$geneInput) | input$geneInput == "") {
+      return()
+    }
+    symbol <- geneID_to_symbol(input$geneInput)
+    msg <- paste0("prev: ", symbol, " curr: ", selected$geneSymbol )
+    #shinyjs::alert(msg)
+    if (!is.null(selected$geneSymbol) && symbol == selected$geneSymbol) {
+      shinyjs::disable("btnGeneSearch")
+    } 
+    else {
+      shinyjs::enable("btnGeneSearch")
+    }
+    
+  })
+  
+  observeEvent(input$btnNewSearch,{
+    updateSelectizeInput(session, "geneInput", choices = geneIDs, selected = selected$geneID, server = TRUE)
+    shinyjs::disable("btnGeneSearch")
+  })
+  
+  observeEvent(input$btnGeneSearch,{
+
+      if (is.null(input$geneInput) | input$geneInput == "") return()
+    
+      if (!is.null(selected$geneSymbol) && 
+          input$geneInput == selected$geneSymbol) {
+            return()
+      }
+    
+      triggers$newSearch <- TRUE      
+      toggleModal(session, "welcomeModal", toggle = "close")
+        
+        
+  })
+  
     # on initial search
     observeEvent(
-      {input$btnGeneSearch
+      {input$testInput
       #input$rbDiseaseLimits
         },{
-
-        if (is.null(input$geneInput) | input$geneInput == "") return()
-        
+        if (!triggers$newSearch) {
+          if (is.null(selected$geneSymbol)) {
+            shinyjs::alert("Please select a gene from the drop down menu to start")
+            toggleModal(session, "welcomeModal")
+          }
+          return()
+        }
         resetReactiveValues()
-        
-        selected$geneSymbol <- GeneTable$SYMBOL[GeneTable$GeneID == input$geneInput]
-        
+      
+        selected$geneID <- input$geneInput  
+        selected$geneSymbol <- geneID_to_symbol(input$geneInput)
         respondToSelectionDrill()
         toggleMenus(TRUE)
+        triggers$newSearch <- FALSE
         
     })
     
+    geneID_to_symbol <- function(id) {
+      GeneTable$SYMBOL[GeneTable$GeneID == id]      
+    }
   
     # returns intersection of x and y but if x is NULL return y
     intersectIgnoreNULL <- function(x,y) {
@@ -119,6 +168,45 @@ shinyServer(function(input, output, session) {
       intersect(x,y)
     }
     
+    
+   output$summaryHeader <- renderUI({
+     if (is.null(selected$geneSymbol)) {
+       return()
+     }
+     x <- paste0("Search for gene <b style='color:red'>", selected$geneSymbol,
+                 "</b> found <b>",nrow(pmidList$pmids), "</b> articles.")
+
+     l <- list("Cancer Types" = diseaseSummary,
+               "Drugs" = chemSummary,
+               Mutations = mutationSummary,
+               "Additional Genes" = geneSummary)
+     s <- sapply(l, function(x) !is.null(x$selectedID))
+     
+     if (any(s)) {
+       x <- gsub("found", "with additional filters found", x)
+       x <- paste0(x, "</br>Current filters 
+                   (<a href = '#' id = 'btnRemoveFilters' data-toggle='modal'
+                      data-target='#filterModal'>Remove</a>): ")
+       f <- names(which(s))
+       filterString <- ""
+       for (i in f) {
+         label <- "selectedTerm"
+         if (i == "Mutations") {
+           label <- "selectedID"
+         }
+         if (filterString!= "") {
+           filterString = paste0(filterString, "; ")
+         }
+         filterString <- paste0(filterString, "<b style='font-style:italic'>", i, "</b>: ", paste0(l[[i]][[label]], collapse = ", "))
+       }
+        x <- paste0(x, filterString)
+     }
+     
+     
+     x<- paste0("<span style='font-size:1.1em'>", x, "</span>")
+                 
+     HTML(x)
+    })
     
   ###################################################################################################    
   # This is the main function that drives db queries, and works as follows:

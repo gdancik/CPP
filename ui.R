@@ -7,6 +7,7 @@ library(plotly)
 
 source("addDeps.R")
 source("ui-about.R")
+source("modals.R")
 
 commonStyles <- list(
   includeCSS('www/ecsu.css'),
@@ -20,6 +21,16 @@ commonStyles <- list(
                   color: white
                   }
                   
+              .blue-button {
+              #  position:relative;
+              #  bottom: 12px;
+              #  height: 35px;
+                #width: 66px;
+                #color: white;
+                background-image: linear-gradient(#04519b,#044687 60%,#033769);
+                color:#FFF;
+              }
+
                   /* 'hide' tab */
                   #sidebar, .navbar {
                   background-image: linear-gradient(#04519b,#044687 60%,#033769);
@@ -75,6 +86,14 @@ commonStyles <- list(
                   color: darkred;
                   }
                   
+                #summaryRow {
+                  position:sticky;
+                  position:-webkit-sticky;
+                  top:0;
+                  background:white;
+                  z-index:1000;
+                  }                  
+
                   "))  
   
 )
@@ -82,41 +101,26 @@ commonStyles <- list(
 # common header for all pages
 commonHeader <- list(
   
-  bsModal("welcomeId", HTML("<i>Cancer Publication Portal</i>"), trigger = "none", size = "large",
-      p("This is a beta version of a Cancer Publication Portal for summarizing and searching cancer-related literature."),
-      p("To start, select a gene and click Search to summarize cancer publications for that gene. Click on any of the tables to further filter your query."),
-      p("Feedback is welcome, and can be sent to dancikg@easternct.edu"),
-      br(), 
-      p("This is a work in progress and is currently undergoing many changes")),
-
-  # input / filter row
-  fluidRow(
-    shiny::column(width = 2, 
-                  div(style = "display:inline-block;width:70%",
-                      selectizeInput("geneInput", label = "Select a Gene", choices = NULL)
-                  ),
-                  div (style = "display:inline-block; width: 20%",
-                       actionButton("btnGeneSearch", "Search", style="position:relative; bottom: 12px; height: 35px; width 66px;")
-                  )
-    ),
+  welcomeModal, 
+  filterModal,
+  
+  # summary row
+  fluidRow(id = "summaryRow",
     #shiny::column(width = 2,
     #              radioButtons("rbDiseaseLimits", "Article Limits:",
     #                           c("Cancer-related only" = "cancer", "All articles" = "none"), selected = "cancer")),
-    
+
     shiny::column(width=2,
-                  selectInput("filterDisease", "Disease Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
+                  actionButton("btnNewSearch", "New Gene Search", class = "blue-button")
     ),
-    shiny::column(width=2,
-                  selectInput("filterChem", "Chem Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
+    shiny::column(width =10 ,
+        htmlOutput("summaryHeader")              
     ),
-    shiny::column(width=2,
-                  selectInput("filterMutations", "Mutation Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
-    ),    
-    
-    shiny::column(width=2,
-                  selectInput("filterGenes", "Additional Gene Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
-    )
+    br()
+
   ),
+  
+  
   hr(style = "padding: 0px; margin: 0px"),
  
   fluidRow(shiny::column(width = 12,

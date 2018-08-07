@@ -58,7 +58,7 @@ updateTable <- function(resTable, columnName, tableID) {
                                                      options = list(paging = FALSE, scrollY = 300)))
 }
 
-observe(updateTable(paSummary, "MeshID", "paResults"))
+#observe(updateTable(paSummary, "MeshID", "paResults"))
 observe(updateTable(diseaseSummary, "MeshID", "diseaseResults"))
 observe(updateTable(chemSummary, "MeshID", "chemResults"))
 observe(updateTable(mutationSummary, "MutID", "mutationResults"))
