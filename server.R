@@ -142,7 +142,7 @@ shinyServer(function(input, output, session) {
         if (!triggers$newSearch) {
           if (is.null(selected$geneSymbol)) {
             shinyjs::alert("Please select a gene from the drop down menu to start")
-            toggleModal(session, "welcomeModal")
+            #toggleModal(session, "welcomeModal")
           }
           return()
         }
