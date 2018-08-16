@@ -44,6 +44,7 @@ shinyServer(function(input, output, session) {
   source("server-updateTables.R", local = TRUE)
   source("server-tableClicks.R", local = TRUE)
   source("stackedBarGraphs.R", local = TRUE)
+  source("server-download.R", local = TRUE)
   
   # disable drop downs on startup
   shinyjs::disable("filterDisease")
@@ -168,6 +169,28 @@ shinyServer(function(input, output, session) {
       intersect(x,y)
     }
     
+   # creates HTML formatted string of currently selected filters
+   createFilterString <- function() {
+     l <- list("Cancer Types" = diseaseSummary,
+               "Drugs" = chemSummary,
+               Mutations = mutationSummary,
+               "Additional Genes" = geneSummary)
+     s <- sapply(l, function(x) !is.null(x$selectedID))
+     f <- names(which(s))
+     filterString <- ""
+     for (i in f) {
+       label <- "selectedTerm"
+       if (i == "Mutations") {
+         label <- "selectedID"
+       }
+       if (filterString!= "") {
+         filterString = paste0(filterString, "; ")
+       }
+       filterString <- paste0(filterString, "<b style='font-style:italic'>", i, "</b>: ", paste0(l[[i]][[label]], collapse = ", "))
+     }
+     return(filterString)
+   }
+    
     
    output$summaryHeader <- renderUI({
      if (is.null(selected$geneSymbol)) {
@@ -181,24 +204,13 @@ shinyServer(function(input, output, session) {
                Mutations = mutationSummary,
                "Additional Genes" = geneSummary)
      s <- sapply(l, function(x) !is.null(x$selectedID))
+     filterString <- createFilterString()
      
-     if (any(s)) {
+     if (filterString != "") {
        x <- gsub("found", "with additional filters found", x)
        x <- paste0(x, "</br>Current filters 
                    (<a href = '#' id = 'btnRemoveFilters' data-toggle='modal'
                       data-target='#filterModal'>Remove</a>): ")
-       f <- names(which(s))
-       filterString <- ""
-       for (i in f) {
-         label <- "selectedTerm"
-         if (i == "Mutations") {
-           label <- "selectedID"
-         }
-         if (filterString!= "") {
-           filterString = paste0(filterString, "; ")
-         }
-         filterString <- paste0(filterString, "<b style='font-style:italic'>", i, "</b>: ", paste0(l[[i]][[label]], collapse = ", "))
-       }
         x <- paste0(x, filterString)
      }
      

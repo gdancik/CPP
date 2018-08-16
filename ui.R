@@ -191,6 +191,27 @@ articlesPanel <- function() {
   )
 }
 
+addDownloadsTabPanel <- function(title) {
+  tabPanel(title,
+        br(),
+          
+        h4("Click a button below to download the corresponding summary as a csv file."),
+  
+        downloadButton("downloadCancerTypesData", "Download Cancer Type Summary",
+                       class = 'blue-button'),
+                             
+        downloadButton("downloadDrugTreatmentsData", "Download Drugs Summary",
+                       class = 'blue-button'),
+                             
+        downloadButton("downloadMutationsData", "Download Mutations Summary",
+                       class = 'blue-button'),
+
+        downloadButton("downloadGenesData", "Download Genes Summmary",
+                       class = 'blue-button')
+               
+  )
+}
+
 logPanel <- function() {
   tabPanel("Log", verbatimTextOutput("log"))
 }
@@ -199,7 +220,6 @@ logPanel <- function() {
 
 
 shinyUI(
-
 
   navbarPage(title = 'Cancer Publication Portal',
              id = "headerNavBarPage", 
@@ -213,6 +233,7 @@ shinyUI(
             addTabPanel('Drugs', 'chemResults', "chemGraph"),
             addTabPanel("Mutations", "mutationResults", "mutGraph"),
             addTabPanel("Genes", "geneResults"),
+            addDownloadsTabPanel("Download"),
             tabPanel("Articles", articlesPanel())
 
           )))#, # end tabsetPanel and 1st row

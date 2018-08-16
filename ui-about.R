@@ -24,7 +24,9 @@ tabAbout = tabPanel("About",
     div(class = 'panel-heading', h3(class='panel-title', style = 'font-weight: bold', "Additional Contributors")),
 
     div(class = "panel-body",
-          p("Person 1",role("Contributor")),
+          p(span(style='font-weight:bold',"Stefanos Stravoravdis"),"is a Biology and Mathematics major at Eastern Connecticut State University",
+          "with research interests in bioinformatics and resistance in microorganisms.",
+          role("Contributor")),
           p("Person 2", role("Contributor"))
     )
   )
