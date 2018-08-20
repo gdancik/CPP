@@ -168,24 +168,53 @@ articlesPanel <- function() {
            useShinyjs(),  
            br(),
            fluidRow(
-             shiny::column(width = 3,
-                           bsButton(inputId = "btnPubTator", label = "Load/Refresh PubTator Results", style = "info")
+             shiny::column(
+               width = 5,
+               h4("Click the button on the right to display your articles")
              ),
-             shiny::column(width = 3,
-                           div(align = "right",
-                               bsButton("btnPubTatorGo", label = "View Results in PubTator", style = "danger")
-                           )
+             shiny::column(width = 4,
+                           actionButton(inputId = "btnPubTator", label = "Load/Refresh PubTator Results", 
+                                        class = "blue-button")
+             )
+           ),
+           fluidRow(
+             shiny::column(
+               width = 10,
+             p("Note: CPP will search for your article IDs (up to 10 at a time) in", 
+               a(href = "https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/PubTator/", 
+                 target="_blank", "PubTator"), 
+               "and will display the results in an iframe below")
+              )
+            ),
+            # shiny::column(width = 2,
+            #               div(align = "right",
+            #                   bsButton("btnPubTatorGo", label = "View Results in PubTator", style = "danger")
+            #               )
+            # ),
+           fluidRow(hr(
+             style = "background-color:darkred; height:1px"
+           )),
+           
+            fluidRow(id = "pagesNav",
+              shiny::column(
+                width = 4,
+                textOutput("articleResults")
+              ),
+             shiny::column(
+               width = 4,
+               actionButton("btnPageBackward", "<Previous", 
+                            style="color:darkblue; display:inline-block; width:25%"),
+               textOutput("pageNumbers", inline = TRUE),
+               actionButton("btnPageForward", "Next>", 
+                            style="color:darkblue; display:inline-block; width:25%")
              )
            ),
            
            fluidRow(
-             shiny::column(id = "colPubs", width = 2, 
-                            DT::dataTableOutput("articleTable")),
-             shiny::column(id = "colPubs", width = 10,
+             #shiny::column(id = "colPubs", width = 2, 
+             #                DT::dataTableOutput("articleTable")),
+             shiny::column(id = "colPubs", width = 12,
                                 uiOutput("articles")
-             ),
-             div(id = "pageBottom", style ="visibility:hidden",
-                 a(id = "pageDownLink", href = "#pageBottom", "click")
              )
            )
   )

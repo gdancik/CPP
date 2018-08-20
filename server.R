@@ -59,16 +59,6 @@ shinyServer(function(input, output, session) {
   
 #  lastTab <<- "Home"
   
-  # check if user selects Articles tab
-#  observe({
-#    if (input$MainPage == "Articles") {
-#      updateTabsetPanel(session, "MainPage", selected = lastTab)
-#      shinyjs::runjs("document.getElementById('pageDownLink').click();")
-#    }
-#    lastTab <<- input$MainPage
-    
-#  })
-  
   toggleMenus <-function(show) {
     
     f <- shinyjs::hide
@@ -232,6 +222,11 @@ shinyServer(function(input, output, session) {
     respondToSelectionDrill <- function() {
       cat("respondToSelectionDrill\n")
       
+      # hide/clear articles
+      shinyjs::hide("pagesNav")
+        output$articles <- renderUI({
+      })
+    
       if (is.null(input$geneInput)) {
         cat("NULL\n")
       }
