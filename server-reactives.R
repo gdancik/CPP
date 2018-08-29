@@ -24,6 +24,7 @@ chemSummary <- createReactiveTable()
 #paSummary <- createReactiveTable()
 mutationSummary <- createReactiveTable()
 geneSummary <- createReactiveTable()
+cancerTermSummary <- createReactiveTable()
 
 # reactive for currently selected gene symbol
 selected <- reactiveValues(geneID = NULL, geneSymbol = NULL)
@@ -52,6 +53,7 @@ resetReactiveValues <- function() {
   resetReactive(geneSummary)
   resetReactive(chemSummary)
   resetReactive(mutationSummary)
+  resetReactive(cancerTermSummary)
   #resetReactive(paSummary)
 }
 

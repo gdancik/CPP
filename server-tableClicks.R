@@ -53,9 +53,8 @@ observe({input$filterGenes
          updateGeneSelections(input$filterGenes, geneSummary, GeneTable)})
 observe({input$filterMutations
         updateSelectedMeshIDs(input$filterMutations, mutationSummary, "MutID", NULL)})
-
-
-
+observe({input$filterCancerTerms
+  updateSelectedMeshIDs(input$filterCancerTerms, cancerTermSummary, "TermID", "Term")})
 
 
 ########################################################
@@ -72,10 +71,15 @@ observeEvent(input$mutationResults_rows_selected, {
           updateSelectedMeshIDs(mutationSummary$dat$MutID[input$mutationResults_rows_selected], mutationSummary, "MutID", NULL)
 })
 
+observeEvent(input$cancerTermResults_rows_selected, {
+  cat("clicked: ", cancerTermSummary$dat$TermID[input$cancerTermResults_rows_selected], "\n")
+  updateSelectedMeshIDs(cancerTermSummary$dat$TermID[input$cancerTermResults_rows_selected], cancerTermSummary, "TermID", "Term")
+})
+
+
 #####################################################################
 # respond to table de-selection resulting in no selection
 #####################################################################
-
 
 checkNoSelection <- function(selected, resTable) {
   if (is.null(selected)) {
@@ -102,6 +106,11 @@ observe({ selected <- input$chemResults_rows_selected
 # process possible no selection for mutationTable
 observe({ selected <- input$mutationResults_rows_selected
           checkNoSelection(selected,  mutationSummary)
+})
+
+# process possible no selection for cancerTermsTable
+observe({ selected <- input$cancerTermResults_rows_selected
+checkNoSelection(selected,  cancerTermSummary)
 })
 
 

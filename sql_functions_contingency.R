@@ -24,7 +24,8 @@ getChemByDiseaseContingency <- function(pmids, con) {
   GROUP BY TT.Disease, TT.Chem) AS R
   inner join MeshTerms as DT ON DT.MeshID = R.Disease
   inner join MeshTerms as CT ON CT.MeshID = R.Chem
-  where DT.TreeID like 'C04.%';")
+  #where DT.TreeID like 'C04.%'
+  ;")
   
   runQuery(con, qry, "Chem by Disease query:")
   
@@ -52,7 +53,44 @@ FROM
     WHERE
     PubMut.PMID IN (", pmids,  ")) AS TT
   GROUP BY TT.Disease , TT.Mutation) AS R
-inner join MeshTerms as DT ON DT.MeshID = R.Disease
-where DT.TreeID like 'C04.%';")
+  inner join MeshTerms as DT ON DT.MeshID = R.Disease
+  #where DT.TreeID like 'C04.%'
+  ;")
   runQuery(con, qry, "Chem by Disease query:")
 }
+
+
+# Gets cancer term counts for each disease
+getCancerTermsByDiseaseContingency <- function(pmids, con) {
+  pmids <- paste0("'",pmids,"'", collapse = ",")
+  
+  qry <- paste0("SELECT 
+  distinct DT.Term AS Disease, CT.Term as Term, Frequency
+  FROM
+  (SELECT 
+    TT.Disease AS Disease,
+    TT.Term AS Term,
+    COUNT(TT.Term) AS Frequency
+    FROM
+    (SELECT 
+      PubCancerTerms.PMID AS PMID,
+      PubCancerTerms.TermID AS Term,
+      PubMesh.MeshID AS Disease
+      FROM
+      PubCancerTerms
+      INNER JOIN PubMesh ON PubMesh.PMID = PubCancerTerms.PMID
+      WHERE
+ PubCancerTerms.PMID IN (", pmids,  ")) AS TT
+    GROUP BY TT.Disease, TT.Term) AS R
+  inner join MeshTerms as DT ON DT.MeshID = R.Disease
+  inner join CancerTerms as CT ON CT.TermID = R.Term;
+  #where DT.TreeID like 'C04.%'
+                ;")
+  
+  runQuery(con, qry, "CancerTerm by Disease query:")
+  
+}
+
+
+
+

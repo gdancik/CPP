@@ -259,6 +259,7 @@ shinyUI(
             #addTabPanel('Cancer Types', "cancerSummaryTable"),
             #addTabPanel('Treatments', "paResults"),
             addTabPanel("Cancer Types", "diseaseResults", "cancerGraph"),
+            addTabPanel("Cancer Terms", "cancerTermResults", "cancerTermGraph"),
             addTabPanel('Drugs', 'chemResults', "chemGraph"),
             addTabPanel("Mutations", "mutationResults", "mutGraph"),
             addTabPanel("Genes", "geneResults"),

@@ -27,16 +27,21 @@ filterModal <- bsModal("filterModal", "Remove filters", "btnRemoveFilters",
      HTML("<p>To remove a filter simply delete the term from the dropdown menus below. Changes take effect immediately.</p><br>")
     )),
     fluidRow(
-      shiny::column(width=3,
+      shiny::column(width=4,
                   selectInput("filterDisease", "Disease Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
       ),
-      shiny::column(width=3,
-                  selectInput("filterChem", "Chem Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
+      shiny::column(width=4,
+                    selectInput("filterCancerTerms", "Cancer Term Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
       ),
-      shiny::column(width=3,
+      shiny::column(width=4,
+                  selectInput("filterChem", "Chem Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
+      )
+    ),
+    fluidRow(
+      shiny::column(width=4,
                   selectInput("filterMutations", "Mutation Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
       ),    
-      shiny::column(width=3,
+      shiny::column(width=4,
                   selectInput("filterGenes", "Additional Gene Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
       )
     ), size = "large"

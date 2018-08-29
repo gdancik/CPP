@@ -94,7 +94,7 @@ getMeshSummaryByPMIDs <- function(pmids, con) {
     "group by PubMesh.PMID, MeshTerms.MeshID, MeshTerms.Term) as TT\n",
   "group by TT.MeshID, TT.Term ORDER BY count(TT.MeshID) desc;")
   
-  runQuery(con, str, "Mesh summary query:", file = "mesh.sql")
+  runQuery(con, str, "Mesh summary query:")
   
 }
 
@@ -147,5 +147,21 @@ getGeneSummaryByPMIDs <- function(pmids, con) {
   
   runQuery(con, str, "Gene summary query:", file = "genes.sql")
   
+}
+
+
+# returns Mesh Summary table for vector of pmids
+getCancerTermSummaryByPMIDs <- function(pmids, con) {
+  
+  pmids <- paste0("'",pmids,"'", collapse = ",")
+  
+  str <- paste0("select count(TT.TermID) as Frequency, TT.TermID, TT.Term from\n",
+                "(select PubCancerTerms.PMID, CancerTerms.TermID, CancerTerms.Term from PubCancerTerms\n",
+                "inner join CancerTerms ON CancerTerms.TermID = PubCancerTerms.TermID\n",
+                "where PubCancerTerms.PMID IN ", paste0("(", pmids, ")\n"),
+                "group by PubCancerTerms.PMID, CancerTerms.TermID, CancerTerms.Term) as TT\n",
+                "group by TT.TermID, TT.Term ORDER BY count(TT.TermID) desc;")
+  
+  runQuery(con, str, "CancerTerm summary query:")
   
 }

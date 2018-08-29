@@ -44,7 +44,7 @@ observe ({
 
 
 ##################################################################
-# update disease, chem, pa tables
+# update disease, chem, pa tables, Cancer Term
 ##################################################################
 
 # generic function to display table with current selection
@@ -62,7 +62,7 @@ updateTable <- function(resTable, columnName, tableID) {
 observe(updateTable(diseaseSummary, "MeshID", "diseaseResults"))
 observe(updateTable(chemSummary, "MeshID", "chemResults"))
 observe(updateTable(mutationSummary, "MutID", "mutationResults"))
-
+observe(updateTable(cancerTermSummary, "TermID", "cancerTermResults"))
 
 ##################################################################
 # update cancer graph

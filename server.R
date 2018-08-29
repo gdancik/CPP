@@ -51,6 +51,7 @@ shinyServer(function(input, output, session) {
   shinyjs::disable("filterChem")
   shinyjs::disable("filterMutations")
   shinyjs::disable("filterGenes")
+  shinyjs::disable("filterCancerTerms")
   toggleModal(session, "welcomeModal")
   
   # set home page results to NULL (otherwise you will see spinner)
@@ -164,6 +165,7 @@ shinyServer(function(input, output, session) {
      l <- list("Cancer Types" = diseaseSummary,
                "Drugs" = chemSummary,
                Mutations = mutationSummary,
+               CancerTerms = cancerTermSummary,
                "Additional Genes" = geneSummary)
      s <- sapply(l, function(x) !is.null(x$selectedID))
      f <- names(which(s))
@@ -192,6 +194,7 @@ shinyServer(function(input, output, session) {
      l <- list("Cancer Types" = diseaseSummary,
                "Drugs" = chemSummary,
                Mutations = mutationSummary,
+               CancerTerms = cancerTermSummary,
                "Additional Genes" = geneSummary)
      s <- sapply(l, function(x) !is.null(x$selectedID))
      filterString <- createFilterString()
@@ -284,6 +287,16 @@ shinyServer(function(input, output, session) {
         pmids <- intersectIgnoreNULL(pmids, p2$PMID)
       }
       
+      # get PMIDs for Cancer Term Selection
+      if (!is.null(cancerTermSummary$selectedID)) {
+        shinyjs::html("bar-text", "Retrieving Articles for Selected CancerTerms, please wait...")
+        cat("\n\n==========================================\nCancer Term selection, getting PMIDS for: ", cancerTermSummary$selectedID, "\n")
+        p2 <- getPMIDs("PubCancerTerms", "TermID", cancerTermSummary$selectedID, con, pmids)
+        cat("\n\n======================================\n\nnumber of articles with selected mutation = ", nrow(p2))
+        pmids <- intersectIgnoreNULL(pmids, p2$PMID)
+      }
+      
+      
       
       if (length(pmids) == 0) {
         dbDisconnect(con)
@@ -297,10 +310,8 @@ shinyServer(function(input, output, session) {
       getSummaries("Related Diseases", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
       getSummaries("Related Chemicals", con, getChemSummaryByPMIDs, pmids, session, chemSummary, "filterChem", pa = TRUE)
       getSummaries("Related Mutations", con, getMutationSummaryByPMIDs, pmids, session, mutationSummary, "filterMutations")
-
-      d1 <- diseaseSummary$dat
-      d2 <- chemSummary$dat
-      
+      getSummaries("Related Cancer Terms", con, getCancerTermSummaryByPMIDs, pmids, session, cancerTermSummary, "filterCancerTerms")
+  
       # update geneSummary
       shinyjs::html("bar-text", "Retrieving Related Genes, please wait...")
       geneSummary$dat <- getGeneSummaryByPMIDs(pmids, con)
@@ -322,7 +333,8 @@ shinyServer(function(input, output, session) {
     # re-query when selection changes
     observe( {
       
-      selections <- list(diseaseSummary$selectedID, geneSummary$selectedID, chemSummary$selectedID, mutationSummary$selectedID)
+      selections <- list(diseaseSummary$selectedID, geneSummary$selectedID, chemSummary$selectedID, 
+                         mutationSummary$selectedID, cancerTermSummary$selectedID)
       
       if (all(sapply(selections, is.null))) {
         return()

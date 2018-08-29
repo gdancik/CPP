@@ -31,7 +31,8 @@ tabAbout = tabPanel("About",
       HTML("<ul>"),
 
       HTML("<li>"),
-      p(span(style='font-weight:bold', "Kevin Williams"), "is a Computer Science major from Eastern Connecticut State University.", 
+      p(span(style='font-weight:bold', "Kevin Williams"), "is a Computer 
+        Science major at Eastern Connecticut State University with an interest in bioinformatics, data processing, and algorithms.", 
         role("Contributor")),           
       HTML("</li>"),
       

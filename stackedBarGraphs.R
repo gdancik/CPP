@@ -85,6 +85,20 @@ observe({
 
 
 
+observe({
+  cat("in CancerTerm stacked bar observe...\n")
+  res2 <- getStackedResults(getCancerTermsByDiseaseContingency, "Term")
+  
+  if (is.null(res2)) {
+    output$cancerTermGraph <- renderPlotly({})
+    return()
+  }
+  
+  output$cancerTermGraph <- renderPlotly({
+    stackedBarGraph(res2, "Disease", "Frequency", "Term", "Distribution of Cancer Terms by cancer (max 10 cancers and 15 terms)",
+                    "Number of cancer term mentions", abbreviate = FALSE)
+  })
+})
 
 
 
