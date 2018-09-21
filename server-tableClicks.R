@@ -15,6 +15,8 @@ updateMeshSelections <- function(current, previous) {
 #     colName1 = the column name where the 'ids' are stored
 #     colName2 = set to NULL or optional column name where 'terms' are stored
 updateSelectedMeshIDs <- function(ids, tblSummary, colName1 = "MeshID", colName2 = "Term") {
+  cat("update selected Mesh IDs, currently selected = ", ids, "\n")
+  
   
   isolate({
     cat("\ncall updateSelectedMeshIDs\n")
@@ -24,10 +26,20 @@ updateSelectedMeshIDs <- function(ids, tblSummary, colName1 = "MeshID", colName2
   
     if (!is.null(selections))  {
       # if selections have changed, update
+      #cat("\nselections have changed\noriginal:", ids, "\n")
+      #cat("new: ", selections, "\n")
+      #scan(what = character())
       tblSummary$selectedID <- selections
       if (!is.null(colName2)) {
           m <- match(selections, tblSummary$dat[[colName1]])
-          tblSummary$selectedTerm <-as.character(tblSummary$dat[[colName2]])[m]
+          #keep <- !is.na(m)
+          keep <- 1:length(m)
+          tblSummary$selectedID <- selections[keep]
+          tblSummary$selectedTerm <-as.character(tblSummary$dat[[colName2]])[m[keep]]
+          if (any(is.na(tblSummary$selectedTerm))) {
+            cat("we have an NA, ", tblSummary$selectedTerm, "\n")
+           # scan(what = character())
+          }
       }
       respondToSelectionDrill()
     } else if (is.null(ids) & !is.null(tblSummary$selectedID)) {
@@ -46,6 +58,8 @@ updateSelectedMeshIDs <- function(ids, tblSummary, colName1 = "MeshID", colName2
 # respond to drop down changes
 ########################################################
 observe({input$filterDisease
+         #cat("filterDisease or diseaseSummary changed, update selected with", input$filterDisease, "\n")
+         #scan(what = character())
          updateSelectedMeshIDs(input$filterDisease, diseaseSummary)})
 observe({input$filterChem
          updateSelectedMeshIDs(input$filterChem, chemSummary)})
@@ -61,7 +75,11 @@ observe({input$filterCancerTerms
 # respond to table selection or de-selection
 ########################################################
 observeEvent(input$diseaseResults_rows_selected, {
-             updateSelectedMeshIDs(diseaseSummary$dat$MeshID[input$diseaseResults_rows_selected], diseaseSummary) 
+            cat("observer catches table change...")
+            con = dbConnect(MariaDB(), group = "CPP")
+            meshIDs <- removeParentalMeshIDs(con, diseaseSummary$dat$MeshID[input$diseaseResults_rows_selected])
+            dbDisconnect(con)
+            updateSelectedMeshIDs(meshIDs, diseaseSummary) 
   })
 
 observeEvent(input$chemResults_rows_selected, 

@@ -39,7 +39,51 @@ cleanseList <-function(x) {
   paste0("(", paste0(sapply(x, cleanse), collapse = ","), ")")
 }
 
-
+removeParentalMeshIDs <- function(con, ids) {
+  if (length(ids) == 1) {
+    return(ids)
+  }
+  ids <- paste0("'", ids, "'", collapse = ",")
+  str <- paste0("select * from MeshTerms where MeshID in (", ids, ");")
+  res <- dbGetQuery(con, str)
+  s <- split(res$TreeID, res$MeshID)
+  keep <- NULL
+  len <- length(s)
+  for (i in 1:len) {
+    current = s[i]
+    look <- s[-i]
+    g <- grep(paste0(current[[1]], collapse = "|"),
+            unlist(look))
+      if (length(g) ==0) {
+        keep <- c(keep, names(current))
+    }
+  }
+  keep
+}
+# for SINGLE MeshID, get all list of that MeshID including children
+getChildMeshIDs <- function(con, MeshID) {
+  if (is.null(MeshID)) {
+    return(NULL)
+  }
+  
+  # This get all the treeIDs that associated with the MeshID that the user selected but only MeshID related to cancer
+  qry <- paste0("Select TreeID from dcast.meshterms where MeshID = '",MeshID,"' and treeid like 'C04%';")
+  
+  treeIDlist <- dbGetQuery(con, qry)
+  # This treeIDlist will have to be formated to work with next select statement.
+  # To formating, first I have to add % at the end of each treeID to do a wildcard query.
+  # Then it has to repeat 'treeid like' and then the treeID with wildcard
+  # An example of the select statement after formating the treeIDlist with muliple treeID trees:
+  # qry <- paste0("select MeshID from dcast.meshterms where treeid like 'c04.557.337%' or treeid like 'C04.588.322.894%' or treeid like'C04.588.443.915%' ;")
+  
+  treeIDpaste <- paste0("TreeID like '", treeIDlist$TreeID, '%\'', collapse=" or ")
+  cat("limit by treeID: ", treeIDpaste)
+  #This select statement gets all the MeshIDs from the TreeIDs
+  qry <- paste0("select distinct(MeshID) from dcast.meshterms where ",treeIDpaste,";")
+  meshIDlist <- dbGetQuery(con, qry)
+  #cleanseList(meshIDlist$MeshID)
+  meshIDlist$MeshID
+}
 
 # get PMIDs corresponding to cancer articles, 
 # GeneID has been cleansed
@@ -54,10 +98,17 @@ getCancerPMIDs <- function(con, GeneID) {
   
 }
 
-# returns a vector of PMIDs from tblName where table.idType matches ids.
-# optionally, we can constrain analysis to vector of pmids
-# ids are in SQL format, e.g., ('ID1', 'ID2', 'ID3')
-getPMIDs <- function(tblName, idType, ids, con, pmids) {
+
+# getPMIDS - 
+# basic query is: select PMIDs from tblName where PMIDs in (pmids) AND
+#   tblName.idType in (ids)
+# if ids.AND is TRUE, then use group by and count to require that all
+#     (ids) are found (e.g., if looking for articles mentioning both 
+#     breast and lung tumors). Otherwise all matches to (ids) will
+#     be returned
+# ids must already be in MySQL format ('id1','id2',etc)
+
+getPMIDs <- function(tblName, idType, ids, con, pmids, ids.AND = TRUE) {
   
   tblPMID <- paste0(tblName,".PMID")
   
@@ -76,8 +127,12 @@ getPMIDs <- function(tblName, idType, ids, con, pmids) {
   } else {
     str <- paste0(str, " IN ",
          #paste0("(",paste0("'",ids,"'", collapse = ","), ")\n"),
-         cleanseList(ids), "\n",
-         "GROUP BY ", tblPMID, " having COUNT(", tblPMID, ") >= ", length(ids), ";")
+         cleanseList(ids))
+    if (ids.AND) {
+      str <- paste0(str, "\nGROUP BY ", tblPMID, 
+                    " having COUNT(", tblPMID, ") >= ", length(ids), ";")
+    }
+      
   }
   
   runQuery(con, str, "get PMIDS query")

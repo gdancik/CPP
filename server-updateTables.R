@@ -49,13 +49,31 @@ observe ({
 
 # generic function to display table with current selection
 updateTable <- function(resTable, columnName, tableID) {
+  if (is.null(resTable$dat)) {
+    return()
+  }
   m <- match(resTable$selectedID, resTable$dat[[columnName]])
   isolate({
     selection = list(mode = "multiple", selected = m, target = "row")
   })
-  output[[tableID]] <- DT::renderDataTable(datatable(resTable$dat, rownames = FALSE, 
-                                                     selection = selection,
-                                                     options = list(paging = FALSE, scrollY = 300)))
+  #selection = list(target = "none")
+  x <- resTable$dat
+  #x<-cbind(x, selected = 0)
+  #x$selected[3] <- 1
+  #save(x, file = "look.RData")
+  #colors <- rep("blue", nrow(resTable$dat))
+  #colors[3] <- "yellow"
+  output[[tableID]] <- 
+          DT::renderDataTable(datatable(x, rownames = FALSE, 
+                                selection = selection,
+                                options = list(paging = FALSE, scrollY = 300#,
+                                       #  columnDefs = list(list(targets = -1, visible = FALSE))
+                                        )
+                                ) 
+                  #%>% formatStyle("selected", target = "row", 
+                  #    backgroundColor = styleEqual(c(0,1), c("white", "maroon")),
+                  #    color = styleEqual(c(0,1), c("black", "white")))
+          )
 }
 
 #observe(updateTable(paSummary, "MeshID", "paResults"))

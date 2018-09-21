@@ -264,9 +264,20 @@ shinyServer(function(input, output, session) {
       # get PMIDS for Mesh Selection
       if (!is.null(diseaseSummary$selectedID)) {
           shinyjs::html("bar-text", "Retrieving Articles for Selected Diseases, please wait...")
-          cat("Disease selection, geting PMIDS for: ", diseaseSummary$selectedID, "\n")
-          p1 <- getPMIDs("PubMesh", "MeshID", diseaseSummary$selectedID, con, pmids)
-          pmids <- intersectIgnoreNULL(pmids, p1$PMID)
+          cat("Drill Down Disease selection, geting PMIDS for: ", diseaseSummary$selectedID, "\n")
+          #scan(what = character())
+          
+          # look at selected MeshIDs one at a time, because we need to 
+          # consider child mesh IDs for each
+          
+          for (meshID in diseaseSummary$selectedID) {
+              #cat("MeshID is: ", meshID, "....enter to continue\n")
+              #scan(what = character())
+              p1 <- getPMIDs("PubMesh", "MeshID", 
+                         getChildMeshIDs(con, meshID), 
+                         con, pmids, ids.AND = FALSE)
+              pmids <- intersectIgnoreNULL(pmids, p1$PMID)
+          }
       }
       
       # get PMIDs for Chem selection
@@ -295,8 +306,6 @@ shinyServer(function(input, output, session) {
         pmids <- intersectIgnoreNULL(pmids, p2$PMID)
       }
       
-      
-      
       if (length(pmids) == 0) {
         dbDisconnect(con)
         cat("NO RESULTS -- SHOULD BE CHECKED!")
@@ -307,6 +316,9 @@ shinyServer(function(input, output, session) {
       
       #getSummaries("Pharmacological Substances", con, getChemSummaryByPMIDs, pmids, session, paSummary, pa = TRUE)
       getSummaries("Related Diseases", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
+      ids <- diseaseSummary$selectedID
+      terms <- diseaseSummary$selectedTerm
+      
       getSummaries("Related Chemicals", con, getChemSummaryByPMIDs, pmids, session, chemSummary, "filterChem", pa = TRUE)
       getSummaries("Related Mutations", con, getMutationSummaryByPMIDs, pmids, session, mutationSummary, "filterMutations")
       getSummaries("Related Cancer Terms", con, getCancerTermSummaryByPMIDs, pmids, session, cancerTermSummary, "filterCancerTerms")
@@ -330,7 +342,8 @@ shinyServer(function(input, output, session) {
     
     
     # re-query when selection changes
-    observe( {
+    # GD: why do we need this?
+"    observe( {
       
       selections <- list(diseaseSummary$selectedID, geneSummary$selectedID, chemSummary$selectedID, 
                          mutationSummary$selectedID, cancerTermSummary$selectedID)
@@ -339,11 +352,10 @@ shinyServer(function(input, output, session) {
         return()
       }
       
-      
       respondToSelectionDrill()
       
 
-    })
+    })"
     
     
     output$test <- renderText({
