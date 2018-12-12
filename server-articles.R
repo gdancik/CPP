@@ -31,17 +31,21 @@ getPages <- function(pmids){
 pageHandler <- function(direction = "NULL"){
   
   observe({
+    
     if(!is.null(pmidList$pages)){
+      
+      shinyjs::enable("btnPageBackward")
+      shinyjs::enable("btnPageForward")
+      
+      cat("current page: ", pmidList$currentPage, "\n")
+      cat("pages: ", pmidList$pages, "\n")
+      
       pages = pmidList$pages
       if(pmidList$currentPage == 1){
         shinyjs::disable("btnPageBackward")
       }
-      else if(pmidList$currentPage == pages){
+      if(pmidList$currentPage == pages){
         shinyjs::disable("btnPageForward")
-      }
-      else{
-        shinyjs::enable("btnPageBackward")
-        shinyjs::enable("btnPageForward")
       }
     }
     else{

@@ -2,7 +2,6 @@
 # queries DB for summaries and sets the drop down results
 #######################################################################################
 
-
 ####################################################################################################
 # calls 'query_function' to query database
 ####################################################################################################
@@ -11,15 +10,7 @@ getSummaries <- function(msg, con, query_function, pmids, session, resTable, sel
   #scan(what=character())
   shinyjs::html("bar-text", paste0("Retrieving ", msg, ", please wait..."))
   resTable$dat <- query_function(pmids, con, ...)
-  
-  # we don't need to update drop box, since this will happen when user opens the modal
- # isolate({
-    
- #  if (!is.null(selectID)) {  
- #        setSelectInput(session, selectID, resTable$selectedID, resTable$selectedTerm)
- #  }
- #  })
-  
+
 }
 
 # updates the selectInput with given id, choices (ids), and terms;
@@ -40,16 +31,12 @@ setSelectInput <- function(session, id, choices, terms) {
   
 }
 
-
-
 # sets unique disease results and updates drop down
 setGeneResults <-function(session, res, geneSummary) {
   cat("setting gene results...")
   
   isolate({
     geneSummary$dat <- res
-   # cat("done\n")
-  
     setSelectInput(session, "filterGenes", geneSummary$selectedTerm, geneSummary$selectedTerm)
     
   })
