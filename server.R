@@ -44,6 +44,7 @@ shinyServer(function(input, output, session) {
   source("server-tableClicks.R", local = TRUE)
   source("stackedBarGraphs.R", local = TRUE)
   source("server-download.R", local = TRUE)
+  source("server-filter.R", local = TRUE)
   
   # disable drop downs on startup
   shinyjs::disable("filterDisease")
@@ -52,6 +53,7 @@ shinyServer(function(input, output, session) {
   shinyjs::disable("filterGenes")
   shinyjs::disable("filterCancerTerms")
   toggleModal(session, "welcomeModal")
+  shinyjs::disable("saveFilters")
   
   # set home page results to NULL (otherwise you will see spinner)
   output$cancerSummaryTable <- renderDataTable(NULL)
@@ -318,7 +320,6 @@ shinyServer(function(input, output, session) {
       getSummaries("Related Diseases", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
       ids <- diseaseSummary$selectedID
       terms <- diseaseSummary$selectedTerm
-      
       getSummaries("Related Chemicals", con, getChemSummaryByPMIDs, pmids, session, chemSummary, "filterChem", pa = TRUE)
       getSummaries("Related Mutations", con, getMutationSummaryByPMIDs, pmids, session, mutationSummary, "filterMutations")
       getSummaries("Related Cancer Terms", con, getCancerTermSummaryByPMIDs, pmids, session, cancerTermSummary, "filterCancerTerms")

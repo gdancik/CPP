@@ -57,18 +57,20 @@ updateSelectedMeshIDs <- function(ids, tblSummary, colName1 = "MeshID", colName2
 ########################################################
 # respond to drop down changes
 ########################################################
-observe({input$filterDisease
-         #cat("filterDisease or diseaseSummary changed, update selected with", input$filterDisease, "\n")
-         #scan(what = character())
-         updateSelectedMeshIDs(input$filterDisease, diseaseSummary)})
-observe({input$filterChem
-         updateSelectedMeshIDs(input$filterChem, chemSummary)})
-observe({input$filterGenes
-         updateGeneSelections(input$filterGenes, geneSummary, GeneTable)})
-observe({input$filterMutations
-        updateSelectedMeshIDs(input$filterMutations, mutationSummary, "MutID", NULL)})
-observe({input$filterCancerTerms
-  updateSelectedMeshIDs(input$filterCancerTerms, cancerTermSummary, "TermID", "Term")})
+#observe({input$filterDisease
+#         cat("filterDisease or diseaseSummary changed, update selected with", input$filterDisease, "\n")
+#         scan(what = character())
+#         updateSelectedMeshIDs(input$filterDisease, diseaseSummary)})
+#observe({input$filterChem
+#         updateSelectedMeshIDs(input$filterChem, chemSummary)})
+
+
+#observe({input$filterGenes
+#         updateGeneSelections(input$filterGenes, geneSummary, GeneTable)})
+#observe({input$filterMutations
+#        updateSelectedMeshIDs(input$filterMutations, mutationSummary, "MutID", NULL)})
+#observe({input$filterCancerTerms
+#  updateSelectedMeshIDs(input$filterCancerTerms, cancerTermSummary, "TermID", "Term")})
 
 
 ########################################################
@@ -146,7 +148,6 @@ observe({
     #  return()
     #}
   
-
   if (is.null(input$geneResults_rows_selected)) {
     if (is.null(geneSummary$selectedID)) {
       if (!is.null(selected$geneSymbol)) {
@@ -164,6 +165,7 @@ observe({
     if (gene == selected$geneSymbol && !is.null(geneSummary$selectedID)) {
       geneSummary$selectedID <- NULL
       geneSummary$selectedTerm <- NULL
+      cat("responding to selection drill")
       respondToSelectionDrill()
     }
   }
@@ -191,16 +193,12 @@ updateGeneSelections <- function(gene, geneSummary, GeneTable) {
       # the user has canceled all filters
       geneSummary$selectedTerm <- NULL
       geneSummary$selectedID <- NULL
-      respondToSelectionDrill()
     }
+    respondToSelectionDrill()
     
   })
   
 }
-
-
-
-
 
 
 
@@ -235,9 +233,6 @@ observeEvent(input$geneResults_rows_selected, {
   updateGeneSelections(gene, geneSummary, GeneTable)
   
 })
-
-
-
 
 
 

@@ -1,21 +1,10 @@
+#######################################################################################
+# queries DB for summaries and sets the drop down results
+#######################################################################################
 
-
-# updates the selectInput with given id, choices, and selected;
-# if choices is NULL, disable and set choices to "NONE"
-setSelectInput <- function(session, id, choices, selected) {
-  if (is.null(choices)) {
-    updateSelectInput(session, id, choices = "NONE")
-    shinyjs::disable(id)
-  } else {
-    updateSelectInput(session, id, choices = choices,
-                      selected = selected)
-    shinyjs::enable(id)
-  }
-  
-}
 
 ####################################################################################################
-# calls 'query_function' to query database, then sets the input
+# calls 'query_function' to query database
 ####################################################################################################
 getSummaries <- function(msg, con, query_function, pmids, session, resTable, selectID = NULL, ...) {
   #cat("getSummaries, msg: ", msg, "\n")
@@ -23,22 +12,39 @@ getSummaries <- function(msg, con, query_function, pmids, session, resTable, sel
   shinyjs::html("bar-text", paste0("Retrieving ", msg, ", please wait..."))
   resTable$dat <- query_function(pmids, con, ...)
   
-  isolate({
-    # cat("done\n")
-    choices <- resTable$selectedID
-    if (!is.null(choices)) {
-      names(choices) <- resTable$selectedTerm
-    }
-    if (!is.null(selectID)) {  
-        setSelectInput(session, selectID, choices, resTable$selectedID)
-    }
-  })
+  # we don't need to update drop box, since this will happen when user opens the modal
+ # isolate({
+    
+ #  if (!is.null(selectID)) {  
+ #        setSelectInput(session, selectID, resTable$selectedID, resTable$selectedTerm)
+ #  }
+ #  })
+  
 }
+
+# updates the selectInput with given id, choices (ids), and terms;
+# if choices is NULL, disable and set choices to "NONE"
+setSelectInput <- function(session, id, choices, terms) {
+  if (is.null(choices)) {
+    updateSelectInput(session, id, choices = "NONE")
+    shinyjs::disable(id)
+  } else {
+    if (!is.null(terms)) {
+      names(choices) <- terms
+    }
+    
+    updateSelectInput(session, id, choices = choices,
+                      selected = choices)
+    shinyjs::enable(id)
+  }
+  
+}
+
 
 
 # sets unique disease results and updates drop down
 setGeneResults <-function(session, res, geneSummary) {
-  #cat("setting gene results...")
+  cat("setting gene results...")
   
   isolate({
     geneSummary$dat <- res

@@ -234,18 +234,17 @@ addDownloadsTabPanel <- function(title) {
                              
         downloadButton("downloadMutationsData", "Download Mutations Summary",
                        class = 'blue-button'),
-
+        
         downloadButton("downloadGenesData", "Download Genes Summmary",
                        class = 'blue-button')
-               
+        
+
   )
 }
 
 logPanel <- function() {
   tabPanel("Log", verbatimTextOutput("log"))
 }
-
-
 
 
 shinyUI(

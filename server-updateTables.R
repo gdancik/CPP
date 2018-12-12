@@ -116,9 +116,12 @@ observe({
         title <- paste(title, " (top 10 shown)")
       }
       
-      if (!is.null(input$filterDisease) | !is.null(input$filterChem) | !is.null(input$filterGenes)) {
+      l <- list(diseaseSummary$selectedID, chemSummary$selectedID, geneSummary$selectedID,
+           cancerTermSummary$selectedID)
+      if (!all(sapply(l, is.null))) {
         title <- paste(title, "\n(summary includes additional filters)")
       }
+      
       
       ggplot(xx, aes(Term, Frequency, fill = Term)) + geom_bar(stat = "identity") +
         coord_flip() + theme_linedraw() + theme(legend.position = "none") + xlab("") + ylab("# of articles") +
