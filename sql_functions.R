@@ -2,7 +2,7 @@ source("treeIDfunctions.R", local = TRUE)
 
 # prints out query information
 catQuery <- function(desc, query, file = NULL) {
-  return()
+  #return()
   cat(desc, "\n", query, "\n")
   updateLog(logFile, desc, "\n", query)
   if (!is.null(file)) {

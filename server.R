@@ -9,6 +9,7 @@ library(ggplot2) # need development version for plotly (for horizontal bar)
 #install_version("plotly", version = "4.6.0", repos = "http://cran.us.r-project.org")
 library(plotly) # need development version 
 library(stringr)
+library(shinycssloaders)
 
 DEBUG <<- TRUE
 
@@ -53,7 +54,7 @@ shinyServer(function(input, output, session) {
   shinyjs::disable("filterGenes")
   shinyjs::disable("filterCancerTerms")
   toggleModal(session, "welcomeModal")
-  shinyjs::disable("saveFilters")
+  #shinyjs::disable("saveFilters")
   
   # set home page results to NULL (otherwise you will see spinner)
   output$cancerSummaryTable <- renderDataTable(NULL)

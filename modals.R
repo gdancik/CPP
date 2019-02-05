@@ -1,6 +1,10 @@
 # from shinyGEO, includes cancel button with applyID
 formatBSModal<-function (id, title, trigger, applyID, ..., size) 
 {
+
+
+           
+
   if (!missing(size)) {
     if (size == "large") {
       size = "modal-lg"
@@ -24,7 +28,7 @@ formatBSModal<-function (id, title, trigger, applyID, ..., size)
                                                            shiny::tags$div(class = "modal-body", list(...)), 
                                                            shiny::tags$div(class = "modal-footer", 
                                                                            shiny::tags$button(type = "button", class = "btn btn-default", `data-dismiss` = "modal", "Cancel"),
-                                                                           actionButton(applyID, "Apply Filter", class = "btn-primary")    
+                                                                           actionButton(applyID, "Update filters", class = "btn-primary")    
                                                            )      
                                            )
                            )
@@ -58,7 +62,16 @@ welcomeModal <-  bsModal("welcomeModal",HTML("<i>Cancer Publication Portal</i>")
 
 
 filterModal <- formatBSModal("filterModal", "Remove filters", "btnRemoveFilters", "saveFilters",
-    fluidRow(column(12,
+
+  conditionalPanel(condition="$('html').hasClass('shiny-busy')",
+        HTML("<div class=\"progress\" style=\"z-index:1000; position: fixed;  width: 100%; height:25px; !important\">
+                                               <div class=\"progress-bar progress-bar-striped active\" role=\"progressbar\" aria-valuenow=\"100\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"opacity: 1; width:100%\" !important>
+                         <span id=\"modal-bar-text\"><b>Applying filters, please wait...</b></span>
+                                               </div></div>")
+  ),
+                         
+                         
+  fluidRow(column(12,
      HTML("<p>To remove a filter simply delete the term from the dropdown menus below. Changes take effect immediately.</p><br>")
     )),
     fluidRow(
