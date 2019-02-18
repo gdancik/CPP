@@ -167,8 +167,9 @@ getMeshSummaryByPMIDs <- function(pmids, con) {
        WHERE
        PubMesh.PMID IN (", pmids, ")
        GROUP BY PubMesh.PMID , MeshTerms.MeshID , MeshTerms.Term , MeshTerms.TreeID) AS TT
-       WHERE (TT.TreeID = 'C04'
-            OR TT.TreeID LIKE 'C04.%')
+#       WHERE (TT.TreeID = 'C04'
+#            OR TT.TreeID LIKE 'C04.%')
+       WHERE TT.TreeID LIKE 'C04.%'
        GROUP BY TT.MeshID , TT.Term , TT.TreeID;")
   
   

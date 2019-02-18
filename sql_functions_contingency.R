@@ -24,7 +24,7 @@ getChemByDiseaseContingency <- function(pmids, con) {
   GROUP BY TT.Disease, TT.Chem) AS R
   inner join MeshTerms as DT ON DT.MeshID = R.Disease
   inner join MeshTerms as CT ON CT.MeshID = R.Chem
-  #where DT.TreeID like 'C04.%'
+  where DT.TreeID like 'C04.%'
   ;")
   
   runQuery(con, qry, "Chem by Disease query:")
@@ -54,7 +54,7 @@ FROM
     PubMut.PMID IN (", pmids,  ")) AS TT
   GROUP BY TT.Disease , TT.Mutation) AS R
   inner join MeshTerms as DT ON DT.MeshID = R.Disease
-  #where DT.TreeID like 'C04.%'
+  where DT.TreeID like 'C04.%'
   ;")
   runQuery(con, qry, "Chem by Disease query:")
 }
@@ -83,14 +83,12 @@ getCancerTermsByDiseaseContingency <- function(pmids, con) {
  PubCancerTerms.PMID IN (", pmids,  ")) AS TT
     GROUP BY TT.Disease, TT.Term) AS R
   inner join MeshTerms as DT ON DT.MeshID = R.Disease
-  inner join CancerTerms as CT ON CT.TermID = R.Term;
-  #where DT.TreeID like 'C04.%'
+  inner join CancerTerms as CT ON CT.TermID = R.Term
+  where DT.TreeID like 'C04.%'
                 ;")
   
   runQuery(con, qry, "CancerTerm by Disease query:")
   
 }
-
-
 
 
