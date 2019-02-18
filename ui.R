@@ -4,6 +4,7 @@ library(shinydashboard)
 library(shinyjs)
 library(shinycssloaders)
 library(plotly)
+library(rclipboard)
 
 source("addDeps.R")
 source("ui-about.R")
@@ -100,7 +101,7 @@ commonStyles <- list(
 
 # common header for all pages
 commonHeader <- list(
-  
+
   welcomeModal, 
   filterModal,
   
@@ -166,50 +167,34 @@ addTabPanel <- function(title, tableId, graphId = NULL) {
 articlesPanel <- function() {
   tabPanel('Articles',         
            useShinyjs(),  
+           rclipboardSetup(),
+           
            br(),
            fluidRow(
              shiny::column(
                width = 5,
-               h4("Click the button on the right to display your articles")
+               h4("Display your articles by creating a collection in PubTator")
              ),
              shiny::column(width = 4,
-                           actionButton(inputId = "btnPubTator", label = "Load/Refresh PubTator Results", 
-                                        class = "blue-button")
+                          # actionButton(inputId = "btnPubTator", label = "Load/Refresh PubTator Results", 
+                          #              class = "blue-button")
+                          uiOutput("clip")
              )
            ),
            fluidRow(
              shiny::column(
-               width = 10,
-             p("Note: CPP will search for your article IDs (up to 10 at a time) in", 
-               a(href = "https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/PubTator/", 
+               width = 12,
+               p("Directions: The ", 
+                 a(href = "https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/PubTator/", 
                  target="_blank", "PubTator"), 
-               "and will display the results in an iframe below")
+                 "website is displayed below. Click the", em("Create a new collection"), "link to create a new PubTator collection.",
+                 "Click the above button to copy your PMIDs and paste into the Collection PMID list box.",
+                 "Give your collection a name and click the submit button. Your collection will now appear in the Collection list.", 
+                 "Click the collection name to view the results."  
+                ), 
+                hr(style="background-color:darkred; height:1px; margin:10px;")
               )
             ),
-            # shiny::column(width = 2,
-            #               div(align = "right",
-            #                   bsButton("btnPubTatorGo", label = "View Results in PubTator", style = "danger")
-            #               )
-            # ),
-           fluidRow(hr(
-             style = "background-color:darkred; height:1px"
-           )),
-           
-            fluidRow(id = "pagesNav",
-              shiny::column(
-                width = 4,
-                textOutput("articleResults")
-              ),
-             shiny::column(
-               width = 4,
-               actionButton("btnPageBackward", "<Previous", 
-                            style="color:darkblue; display:inline-block; width:25%"),
-               textOutput("pageNumbers", inline = TRUE),
-               actionButton("btnPageForward", "Next>", 
-                            style="color:darkblue; display:inline-block; width:25%")
-             )
-           ),
-           
            fluidRow(
              #shiny::column(id = "colPubs", width = 2, 
              #                DT::dataTableOutput("articleTable")),
@@ -225,7 +210,10 @@ addDownloadsTabPanel <- function(title) {
         br(),
           
         h4("Click a button below to download the corresponding summary as a csv file."),
-  
+ 
+        downloadButton("downloadPMIDs", "Download PMIDs",
+                       class = 'blue-button'),
+ 
         downloadButton("downloadCancerTypesData", "Download Cancer Type Summary",
                        class = 'blue-button'),
                              

@@ -5,6 +5,7 @@ library(DT) # requires development version for single row selection with datatab
 library(DBI)
 library(RMariaDB)
 library(ggplot2) # need development version for plotly (for horizontal bar)
+library(rclipboard)
 
 #install_version("plotly", version = "4.6.0", repos = "http://cran.us.r-project.org")
 library(plotly) # need development version 
@@ -29,6 +30,7 @@ library(dplyr)
 
 shinyServer(function(input, output, session) {
 
+ 
   observe({
     output$log <- renderText(logFile$log)
     
@@ -228,9 +230,6 @@ shinyServer(function(input, output, session) {
       cat("respondToSelectionDrill\n")
       
       # hide/clear articles
-      shinyjs::hide("pagesNav")
-        output$articles <- renderUI({
-      })
     
       if (is.null(input$geneInput)) {
         cat("NULL\n")

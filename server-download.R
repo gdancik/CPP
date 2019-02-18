@@ -13,6 +13,15 @@ writeDownloadHeader <- function(file) {
 }
 
 
+output$downloadPMIDs <- downloadHandler(
+      "pmids.csv",
+      content = function(file) {
+        writeDownloadHeader(file)
+        write.table(pmidList$pmids, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
+      },
+      contentType = "text/csv"
+)
+
 output$downloadCancerTypesData <- downloadHandler(
       "cancerTypesSummary.csv",
       content = function(file) {
@@ -21,6 +30,9 @@ output$downloadCancerTypesData <- downloadHandler(
       },
       contentType = "text/csv"
 )
+
+
+
 
 output$downloadDrugTreatmentsData <- downloadHandler(
   "drugSummary.csv",

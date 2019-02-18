@@ -33,8 +33,7 @@ selected <- reactiveValues(geneID = NULL, geneSymbol = NULL)
 # reactive for pmids:
 #   pmids - current pmids to be displayed
 #   pmids_initial - pmids on initial search used to limit further queries
-pmidList <- reactiveValues(pmids = NULL, pmids_initial = NULL,
-                           pages = NULL, currentPage = NULL, pagePMIDS = NULL)
+pmidList <- reactiveValues(pmids = NULL, pmids_initial = NULL)
 
 
 # resets reactive values in 'x' to NULL
