@@ -2,9 +2,6 @@
 formatBSModal<-function (id, title, trigger, applyID, ..., size) 
 {
 
-
-           
-
   if (!missing(size)) {
     if (size == "large") {
       size = "modal-lg"
@@ -61,10 +58,10 @@ welcomeModal <-  bsModal("welcomeModal",HTML("<i>Cancer Publication Portal</i>")
   )
 
 
-filterModal <- formatBSModal("filterModal", "Remove filters", "btnRemoveFilters", "saveFilters",
+filterModal <- formatBSModal("filterModal", "Remove filters", "btnRemoveFilters", "btnSaveFilters",
 
   conditionalPanel(condition="$('html').hasClass('shiny-busy')",
-        HTML("<div class=\"progress\" style=\"z-index:1000; position: fixed;  width: 100%; height:25px; !important\">
+        HTML("<div class=\"progress\" style=\"z-index:1000; position: fixed; width: 95%; height:25px; !important\">
                                                <div class=\"progress-bar progress-bar-striped active\" role=\"progressbar\" aria-valuenow=\"100\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"opacity: 1; width:100%\" !important>
                          <span id=\"modal-bar-text\"><b>Applying filters, please wait...</b></span>
                                                </div></div>")
@@ -72,7 +69,7 @@ filterModal <- formatBSModal("filterModal", "Remove filters", "btnRemoveFilters"
                          
                          
   fluidRow(column(12,
-     HTML("<p>To remove a filter simply delete the term from the dropdown menus below. Changes take effect immediately.</p><br>")
+     HTML("<p>To remove a filter, delete the term from the dropdown menus below. Then click the 'Update filters' button to apply your changes.</p><br>")
     )),
     fluidRow(
       shiny::column(width=4,

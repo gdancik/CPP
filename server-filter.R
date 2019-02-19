@@ -3,7 +3,7 @@
 ##########################################################################################
 
 observeEvent(input$filterModal,{
-  cat("entering modal\n")
+  shinyjs::disable("btnSaveFilters") 
   setSelectInput(session, "filterDisease", diseaseSummary$selectedID, diseaseSummary$selectedTerm)
   setSelectInput(session, "filterChem", chemSummary$selectedID, chemSummary$selectedTerm)
   setSelectInput(session, "filterMutations", mutationSummary$selectedID, mutationSummary$selectedTerm)
@@ -12,6 +12,31 @@ observeEvent(input$filterModal,{
 
 })
 
+
+# observer to enable / disable Save Filter button
+observe({
+
+    # return TRUE if x includes values that y does not
+    f <- function(x,y) {
+        s <- setdiff(x,y)
+        length(s) > 0
+    }
+
+    # check whether any filters have changed
+    l <- vector("logical", 5)
+    l[1] <- f(diseaseSummary$selectedID, input$filterDisease)
+    l[2] <- f(chemSummary$selectedID, input$filterChem)
+    l[3] <- f(mutationSummary$selectedID, input$filterMutations)
+    l[4] <- f(cancerTermSummary$selectedID, input$filterCancerTerms)
+    l[5] <- f(geneSummary$selectedID, input$filterGenes)
+
+    # enable or disable Save Filter button as appropriate
+    if (any(l)) {
+        shinyjs::enable("btnSaveFilters")
+    } else {
+        shinyjs::disable("btnSaveFilters")
+    }
+})
 
 # updates filters based on filter values 'f' and summary table with name 's_name'
 updateFilters <- function(f,s_name) {
@@ -40,8 +65,7 @@ updateFilters <- function(f,s_name) {
     return(TRUE)
 }
 
-# let's enable button only if there is a change
-observeEvent(input$saveFilters, {
+observeEvent(input$btnSaveFilters, {
 
       f <- vector("logical", 5)
       f[[1]] <- updateFilters(input$filterDisease, "diseaseSummary")

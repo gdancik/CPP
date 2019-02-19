@@ -56,7 +56,6 @@ shinyServer(function(input, output, session) {
   shinyjs::disable("filterGenes")
   shinyjs::disable("filterCancerTerms")
   toggleModal(session, "welcomeModal")
-  #shinyjs::disable("saveFilters")
   
   # set home page results to NULL (otherwise you will see spinner)
   output$cancerSummaryTable <- renderDataTable(NULL)
