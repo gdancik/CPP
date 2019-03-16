@@ -93,7 +93,15 @@ commonStyles <- list(
                   top:0;
                   background:white;
                   z-index:1000;
-                  }                  
+                }
+
+                .graph-button {
+                  font:bold 12px verdana;
+                  width:40%;
+                  margin: 10px 32% 0 28%;
+                  background: #ddd;
+                  color:#464646;
+                }
 
                   "))  
   
@@ -104,6 +112,9 @@ commonHeader <- list(
 
   welcomeModal, 
   filterModal,
+  graphSetupModalTerm,
+  graphSetupModalChem,
+  graphSetupModalMut,
   
   # summary row
   fluidRow(id = "summaryRow",
@@ -142,22 +153,29 @@ commonHeader <- list(
 addTabPanel <- function(title, tableId, graphId = NULL) {
   
   tabPanel(title, 
+
            fluidRow(div(style = "height: 300px",
              shiny::column(width = 5,
                            withSpinner(DT::dataTableOutput(tableId), type = 3,
                                        color.background = "white")
              ),
              if (!is.null(graphId)) {
-               shiny::column(width = 7,
+               shiny::column(7, 
                              if (graphId == "cancerGraph") {
                                withSpinner(plotOutput(graphId), type = 3, 
                                            color.background = "white")  
                              } else {
                                withSpinner(plotlyOutput(graphId), type = 3, 
                                            color.background = "white")  
+                             },
+                             # graph setup buttons
+                             if (graphId == "cancerTermGraph") {
+                               actionButton("btnGraphSetupTerm", "Graph Settings", class = "graph-button") 
+                             } else if (graphId == "chemGraph") {
+                               actionButton("btnGraphSetupChem", "Graph Settings", class = "graph-button")
+                             } else if (graphId == "mutGraph") {
+                               actionButton("btnGraphSetupMut", "Graph Settings", class = "graph-button")
                              }
-                             
-                             
                )
              }
            ))

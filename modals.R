@@ -1,5 +1,5 @@
 # from shinyGEO, includes cancel button with applyID
-formatBSModal<-function (id, title, trigger, applyID, ..., size) 
+formatBSModal<-function (id, title, trigger, applyID, ..., size, applyText = "Update filters") 
 {
 
   if (!missing(size)) {
@@ -25,7 +25,7 @@ formatBSModal<-function (id, title, trigger, applyID, ..., size)
                                                            shiny::tags$div(class = "modal-body", list(...)), 
                                                            shiny::tags$div(class = "modal-footer", 
                                                                            shiny::tags$button(type = "button", class = "btn btn-default", `data-dismiss` = "modal", "Cancel"),
-                                                                           actionButton(applyID, "Update filters", class = "btn-primary")    
+                                                                           actionButton(applyID, applyText, class = "btn-primary")    
                                                            )      
                                            )
                            )
@@ -92,3 +92,76 @@ filterModal <- formatBSModal("filterModal", "Remove filters", "btnRemoveFilters"
     ), size = "large"
 )
 
+# modals for graph settings
+graphSetupModalTerm <- formatBSModal("graphSetupModalTerm", "Cancer Terms Graph Settings", "btnGraphSetupTerm", "btnUpdateGraphTerm",
+
+                      fluidRow(column(12, 
+                            HTML("<p>Selection boxes below show default graph settings (15 most frequent terms in 10 most frequent cancers) or your\
+                                    previous customized settings. <br><br>Tune the graph by choosing among all mentioned cancer types and terms for the gene. \
+                                    You can add a term by clicking on its selection box and choosing from the dropdown menu below \
+                                    (you can start typing the term to find it in the list).\
+                                    You can also remove current selection by deleting the term in the selection box. <br><br>\
+                                    When you are done, click the 'Update graph' button to apply your changes.\
+                                 We do not recommend choosing more than 10 cancer types and more than 15 cancer terms. </p><br>")
+                             )),
+                      actionButton("defaultCterms", "Restore Defaults", class = "btn btn-info"),
+                      actionButton("clearCterms", "Clear", class = "btn btn-secondary"),
+                      hr(class = "blue-button", style="height: 2px"),
+                      fluidRow(
+                        column(6, style="padding-right:0px",
+                               selectInput("ctype", "Select cancer types: *", choices = NULL, multiple = TRUE, selectize = TRUE)
+                             ),
+                        column(6, style="padding-right:0px",
+                               selectInput("termType", "Select cancer terms: *", choices = NULL, multiple = TRUE, selectize = TRUE)
+                        )
+                      ), size = "large", applyText = "Update graph"
+                   )
+
+graphSetupModalChem <- formatBSModal("graphSetupModalChem", "Chemicals Graph Settings", "btnGraphSetupChem", "btnUpdateGraphChem",
+                                     
+                        fluidRow(column(12, 
+                            HTML("<p>Selection boxes below show default graph settings (15 most frequent chemicals in 10 most frequent cancers) or your\
+                                  previous customized settings. <br><br>Tune the graph by choosing among all mentioned cancer types and chemicals for the gene. \
+                                  You can add a term by clicking on its selection box and choosing from the dropdown menu below \
+                                  (you can start typing the term to find it in the list).\
+                                  You can also remove current selection by deleting the term in the selection box. <br><br>\
+                                  When you are done, click the 'Update graph' button to apply your changes.\
+                                  We do not recommend choosing more than 10 cancer types and more than 15 chemicals. </p><br>")
+                               )),
+                       actionButton("defaultChems", "Restore Defaults", class = "btn btn-info"),
+                       actionButton("clearChems", "Clear", class = "btn btn-secondary"),
+                       hr(class = "blue-button", style="height: 2px"),
+                       fluidRow(
+                         column(6, style="padding-right:0px",
+                                selectInput("ctypeChem", "Select cancer types: *", choices = NULL, multiple = TRUE, selectize = TRUE)
+                               ),
+                         column(6, style="padding-right:0px",
+                                selectInput("chems", "Select chemicals: *", choices = NULL, multiple = TRUE, selectize = TRUE)
+                               )
+                        ), size = "large", applyText = "Update graph"
+                    )
+
+
+graphSetupModalMut <- formatBSModal("graphSetupModalMut", "Mutations Graph Settings", "btnGraphSetupMut", "btnUpdateGraphMut",
+                                     
+                        fluidRow(column(12, 
+                            HTML("<p>Selection boxes below show default graph settings (15 most frequent mutations in 10 most frequent cancers) or your\
+                                  previous customized settings. <br><br>Tune the graph by choosing among all mentioned cancer types and mutations for the gene. \
+                                  You can add a term by clicking on its selection box and choosing from the dropdown menu below \
+                                  (you can start typing the term to find it in the list).\
+                                  You can also remove current selection by deleting the term in the selection box. <br><br>\
+                                  When you are done, click the 'Update graph' button to apply your changes.\
+                                  We do not recommend choosing more than 10 cancer types and more than 15 mutations. </p><br>")
+                              )),
+                            actionButton("defaultMuts", "Restore Defaults", class = "btn btn-info"),
+                            actionButton("clearMuts", "Clear", class = "btn btn-secondary"),
+                            hr(class = "blue-button", style="height: 2px"),
+                            fluidRow(
+                                 column(6, style="padding-right:0px",
+                                    selectInput("ctypeMut", "Select cancer types: *", choices = NULL, multiple = TRUE, selectize = TRUE)
+                                 ),
+                                 column(6, style="padding-right:0px",
+                                    selectInput("muts", "Select mutations: *", choices = NULL, multiple = TRUE, selectize = TRUE)
+                                 )
+                             ), size = "large", applyText = "Update graph"
+                        )
