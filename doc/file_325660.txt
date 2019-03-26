@@ -1,1 +1,0 @@
-{"sourcedb": "PubMed","sourceid": "325660","text":"[The 60th birthday of Prof. V. Kub  cek]. ","denotations":[{"obj":"Gene:2260","span":{"begin":36,"end":39}}]}

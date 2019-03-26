@@ -12,7 +12,7 @@ library(plotly) # need development version
 library(stringr)
 library(shinycssloaders)
 
-DEBUG <<- TRUE
+DEBUG <<- FALSE
 
 
 if (!DEBUG) {
