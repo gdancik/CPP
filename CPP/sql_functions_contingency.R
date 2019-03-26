@@ -23,7 +23,7 @@ getChemByDiseaseContingency <- function(pmids, con) {
   PubChem.PMID IN (", pmids,  ")) AS TT
   GROUP BY TT.Disease, TT.Chem) AS R
   inner join MeshTerms as DT ON DT.MeshID = R.Disease
-  inner join MeshTerms as CT ON CT.MeshID = R.Chem
+  inner join PharmActionTerms as CT ON CT.MeshID = R.Chem
   where DT.TreeID like 'C04.%'
   ;")
   
