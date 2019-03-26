@@ -318,12 +318,19 @@ shinyServer(function(input, output, session) {
       
       #getSummaries("Pharmacological Substances", con, getChemSummaryByPMIDs, pmids, session, paSummary, pa = TRUE)
       getSummaries("Related Diseases", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
-      ids <- diseaseSummary$selectedID
-      terms <- diseaseSummary$selectedTerm
+      #ids <- diseaseSummary$selectedID
+      #terms <- diseaseSummary$selectedTerm
+      
+      # skip Neoplasms by Site and Neoplasms
+      skipIDs <- c('D009371', 'D009369')
+      diseaseSummary$dat <- diseaseSummary$dat [!diseaseSummary$dat$MeshID %in% skipIDs,]
+      
       getSummaries("Related Chemicals", con, getChemSummaryByPMIDs, pmids, session, chemSummary, "filterChem", pa = TRUE)
       getSummaries("Related Mutations", con, getMutationSummaryByPMIDs, pmids, session, mutationSummary, "filterMutations")
       getSummaries("Related Cancer Terms", con, getCancerTermSummaryByPMIDs, pmids, session, cancerTermSummary, "filterCancerTerms")
   
+      
+      
       # update geneSummary
       shinyjs::html("bar-text", "Retrieving Related Genes, please wait...")
       geneSummary$dat <- getGeneSummaryByPMIDs(pmids, con)
