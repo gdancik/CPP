@@ -48,6 +48,7 @@ shinyServer(function(input, output, session) {
   source("stackedBarGraphs.R", local = TRUE)
   source("server-download.R", local = TRUE)
   source("server-filter.R", local = TRUE)
+  source("server-graphSetup.R", local = TRUE)
   
   # disable drop downs on startup
   shinyjs::disable("filterDisease")
