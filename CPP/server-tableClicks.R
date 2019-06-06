@@ -53,26 +53,6 @@ updateSelectedMeshIDs <- function(ids, tblSummary, colName1 = "MeshID", colName2
   })
 }
 
-
-########################################################
-# respond to drop down changes
-########################################################
-#observe({input$filterDisease
-#         cat("filterDisease or diseaseSummary changed, update selected with", input$filterDisease, "\n")
-#         scan(what = character())
-#         updateSelectedMeshIDs(input$filterDisease, diseaseSummary)})
-#observe({input$filterChem
-#         updateSelectedMeshIDs(input$filterChem, chemSummary)})
-
-
-#observe({input$filterGenes
-#         updateGeneSelections(input$filterGenes, geneSummary, GeneTable)})
-#observe({input$filterMutations
-#        updateSelectedMeshIDs(input$filterMutations, mutationSummary, "MutID", NULL)})
-#observe({input$filterCancerTerms
-#  updateSelectedMeshIDs(input$filterCancerTerms, cancerTermSummary, "TermID", "Term")})
-
-
 ########################################################
 # respond to table selection or de-selection
 ########################################################
@@ -95,6 +75,7 @@ observeEvent(input$cancerTermResults_rows_selected, {
   cat("clicked: ", cancerTermSummary$dat$TermID[input$cancerTermResults_rows_selected], "\n")
   updateSelectedMeshIDs(cancerTermSummary$dat$TermID[input$cancerTermResults_rows_selected], cancerTermSummary, "TermID", "Term")
 })
+
 
 
 #####################################################################
@@ -132,7 +113,6 @@ observe({ selected <- input$mutationResults_rows_selected
 observe({ selected <- input$cancerTermResults_rows_selected
 checkNoSelection(selected,  cancerTermSummary)
 })
-
 
 
 
@@ -180,14 +160,18 @@ updateGeneSelections <- function(gene, geneSummary, GeneTable) {
   isolate({  
     cat("current selection = ", gene, "\n")
     cat("previous selection = ", geneSummary$selectedTerm, "\n")
+
     selections <- updateMeshSelections(gene, geneSummary$selectedTerm)
     cat("selections = ", selections, "\n")
-  
+ 
    
     if (!is.null(selections)) {
       gg <- geneSymbolToID(selections, GeneTable)
+      save(selections, GeneTable, file = "genes.RData")
       geneSummary$selectedID <- gg$ID
       geneSummary$selectedTerm <- gg$Symbol
+      print(gg)
+      #scan(what = "character") 
       cat("set selected term to: ", gg$Symbol,"\n")
     } else if (is.null(gene) & !is.null(geneSummary$selectedID)) {
       # the user has canceled all filters
@@ -213,20 +197,15 @@ observeEvent(input$geneResults_rows_selected, {
   
   gene <- geneSummary$dat[s,2]
   
-  cat("selected gene: ", gene, "\n")
-  # if main gene was de-selected, just return
-  if (!selected$geneSymbol %in% gene) {
-    displayGeneSummaryTable()
-    return()
-  }
-  
   cat("selected gene = ", gene, "\n")
-  cat("current input = ", input$geneInput, "\n")
-  
-  gene = setdiff(gene, selected$geneSymbol)
-  cat("remove input$geneInput, selected gene = ", gene, "\n")
-  
-  if (length(gene) == 0) {
+  cat("current input = ", selected$geneSymbol, "\n")
+ 
+  #gene <- c(gene, selected$geneSymbol) 
+ 
+  symbol <- trimws(geneID_to_symbol(input$geneInput))
+  gene <- setdiff(gene, symbol) 
+
+  if (length(gene) < 1) {
     return()
   }
   
@@ -236,11 +215,6 @@ observeEvent(input$geneResults_rows_selected, {
 
 
 
-##########################################################################################
-# Not used
-##########################################################################################
-
-# respond to graph selection (or deselection) 
 
 # TO DO: allow graph selection: this triggers observe for no table selection and results
 # in refresh; multiple selections also do not work

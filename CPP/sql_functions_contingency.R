@@ -86,9 +86,39 @@ getCancerTermsByDiseaseContingency <- function(pmids, con) {
   inner join CancerTerms as CT ON CT.TermID = R.Term
   where DT.TreeID like 'C04.%'
                 ;")
-  
   runQuery(con, qry, "CancerTerm by Disease query:")
   
 }
+
+# Gets gene counts for each disease
+getGenesByDiseaseContingency <- function(pmids, con) {
+  pmids <- paste0("'",pmids,"'", collapse = ",")
+  
+  qry <- paste0("SELECT 
+  distinct DT.Term AS Disease, CT.SYMBOL as Gene, Frequency
+  FROM
+  (SELECT 
+    TT.Disease AS Disease,
+    TT.Term AS Term,
+    COUNT(TT.Term) AS Frequency
+    FROM
+    (SELECT 
+      PubGene.PMID AS PMID,
+      PubGene.GeneID as Term,
+      PubMesh.MeshID AS Disease
+      FROM
+      PubGene
+      INNER JOIN PubMesh ON PubMesh.PMID = PubGene.PMID
+      WHERE
+ PubGene.PMID IN (", pmids,  ")) AS TT
+    GROUP BY TT.Disease, TT.Term) AS R
+  inner join MeshTerms as DT ON DT.MeshID = R.Disease
+  inner join Genes as CT ON CT.GeneID = R.Term
+  where DT.TreeID like 'C04.%'
+                ;")
+  runQuery(con, qry, "Genes by Disease query:")
+  
+}
+
 
 

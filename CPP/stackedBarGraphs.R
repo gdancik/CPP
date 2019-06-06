@@ -55,12 +55,16 @@ getStackedResults <- function(sql_function, group) {
 observe({
   cat("in chemical stacked bar observe...\n")
    res2 <- getStackedResults(getChemByDiseaseContingency, "Chemical")
-    
+   
+
    if (is.null(res2)) {
      output$chemGraph <- renderPlotly({}) 
      return()
    }
-   
+
+   # abbreviate chemical labels
+   res2$Chemical <- abbreviate(res2$Chemical, minlength=25, dot = TRUE, strict = TRUE, named = FALSE)
+
    output$chemGraph <- renderPlotly({
       stackedBarGraph(res2, "Disease", "Frequency", "Chemical", "Distribution of drug mentions by cancer (max 10 cancers and 15 drugs)",
                       "Number of chemical mentions")
@@ -101,6 +105,42 @@ observe({
 })
 
 
+observe({
+  cat("in Genes stacked bar observe...\n")
+  res2 <- getStackedResults(getGenesByDiseaseContingency, "Gene")
+ 
+  if (is.null(res2)) {
+    output$geneGraph <- renderPlotly({})
+    return()
+  }
+
+
+  gene <- isolate(input$geneInput)
+
+  if (!is.null(gene)) {
+   print(gene)
+   print(geneID_to_symbol(gene))
+
+   symbol <- trimws(geneID_to_symbol(gene)) 
+
+   res2 <- dplyr::filter(res2, Gene!=symbol)
+
+  }
+
+  if (nrow(res2) == 0) {
+    output$geneGraph <- renderPlotly({})
+    return()
+  }
+
+  output$geneGraph <- renderPlotly({
+    stackedBarGraph(res2, "Disease", "Frequency", "Gene", "Distribution of additional genes by cancer (max 10 cancers and 15 terms)",
+                    "Number of gene mentions", abbreviate = FALSE)
+  })
+})
+
+
+
+
 
 # generates a stacked bar graph using ggplotly with specified data frame (res2)
 # res2 must be data.frame with columns corresponding to x,fill, and y
@@ -116,7 +156,8 @@ stackedBarGraph <- function(res2, xname, yname, fillName, title, ylab, abbreviat
           axis.text = element_text(face = "bold")) +
     ggtitle(title) +
     xlab("") + ylab(ylab) +
-    theme_linedraw() + scale_x_discrete(label=function(x) abbreviate2(x, 2))
+    theme_linedraw() + scale_x_discrete(label=function(x) abbreviate2(x, 2)) +
+    scale_y_discrete(label=function(x) abbreviate(x,4, dot = TRUE))
   
   #scale_x_discrete(labels = function(x) str_wrap(x, width = 8)) 
   
