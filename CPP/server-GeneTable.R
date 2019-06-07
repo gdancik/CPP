@@ -18,4 +18,15 @@ geneSymbolToID <- function(symbols, GeneTable) {
 geneIDs <- GeneTable$GeneID
 names(geneIDs) <- GeneTable$SYMBOL
 
-updateSelectizeInput(session, "geneInput", choices = geneIDs, selected = 178, server = TRUE)
+
+id <- geneSymbolToID(CONFIG$DEFAULT.GENE, GeneTable)$ID
+
+if (is.na(id)) {
+   msg <- paste0("invalid default gene: ", CONFIG$DEFAULT.GENE)
+   alert(msg)
+   id <- 178
+}
+updateSelectizeInput(session, "geneInput", choices = geneIDs, selected = id, server = TRUE)
+
+#  toggleModal(session, "welcomeModal")
+

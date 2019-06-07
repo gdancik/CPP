@@ -12,7 +12,11 @@ library(plotly) # need development version
 library(stringr)
 library(shinycssloaders)
 
-DEBUG <<- FALSE
+CONFIG <- list(
+  DEBUG = FALSE,
+  DEFAULT.GENE = "AGL",
+  AUTO.RUN = TRUE
+)
 
 
 if (!DEBUG) {
@@ -56,7 +60,12 @@ shinyServer(function(input, output, session) {
   shinyjs::disable("filterMutations")
   shinyjs::disable("filterGenes")
   shinyjs::disable("filterCancerTerms")
-  toggleModal(session, "welcomeModal")
+  
+  # set up welcome modal
+  toggleModal(session, "welcomeModal", toggle = "open")
+  if (CONFIG$AUTO.RUN) {
+    shinyjs::click("btnGeneSearch")
+  }
   
   # set home page results to NULL (otherwise you will see spinner)
   output$cancerSummaryTable <- renderDataTable(NULL)
@@ -117,6 +126,19 @@ shinyServer(function(input, output, session) {
   
   observeEvent(input$btnGeneSearch,{
 
+      cat("btnGeneSearch, geneInput = ", input$geneInput, "\n")
+    
+      if (CONFIG$AUTO.RUN) {
+        cat("updating..")
+        
+        #updateSelectizeInput(session, "geneInput", choices = geneIDs, selected =10 , server = TRUE)
+    
+        CONFIG$AUTO.RUN <- FALSE
+        triggers$newSearch <- TRUE      
+        toggleModal(session, "welcomeModal", toggle = "close")
+        return()
+     }
+    
       if (is.null(input$geneInput) | input$geneInput == "") return()
     
       if (!is.null(selected$geneSymbol) && 
@@ -138,7 +160,7 @@ shinyServer(function(input, output, session) {
         if (!triggers$newSearch) {
           if (is.null(selected$geneSymbol)) {
             shinyjs::alert("Please select a gene from the drop down menu to start")
-            #toggleModal(session, "welcomeModal")
+            toggleModal(session, "welcomeModal")
           }
           return()
         }

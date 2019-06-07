@@ -53,6 +53,7 @@ resetReactiveValues <- function() {
   resetReactive(chemSummary)
   resetReactive(mutationSummary)
   resetReactive(cancerTermSummary)
+  triggers$newSearch <- FALSE
   #resetReactive(paSummary)
 }
 
