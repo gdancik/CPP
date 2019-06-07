@@ -19,7 +19,7 @@ CONFIG <- list(
 )
 
 
-if (!DEBUG) {
+if (!CONFIG$DEBUG) {
 # comment out for debugging
   cat <- function(...){invisible()}
   print <- function(...){invisible()}
@@ -61,7 +61,13 @@ shinyServer(function(input, output, session) {
   shinyjs::disable("filterGenes")
   shinyjs::disable("filterCancerTerms")
   
-  # set up welcome modal
+  # add logPanel if in debug mode
+  if (CONFIG$DEBUG) {
+    appendTab("headerNavBarPage", 
+              tabPanel("Log", verbatimTextOutput("log"))  )
+  }
+  
+  # set up welcome modal and auto run if specified
   toggleModal(session, "welcomeModal", toggle = "open")
   if (CONFIG$AUTO.RUN) {
     shinyjs::click("btnGeneSearch")
@@ -375,24 +381,6 @@ shinyServer(function(input, output, session) {
       }
       
     }
-    
-    
-    # re-query when selection changes
-    # GD: why do we need this?
-"    observe( {
-      
-      selections <- list(diseaseSummary$selectedID, geneSummary$selectedID, chemSummary$selectedID, 
-                         mutationSummary$selectedID, cancerTermSummary$selectedID)
-      
-      if (all(sapply(selections, is.null))) {
-        return()
-      }
-      
-      respondToSelectionDrill()
-      
-
-    })"
-    
     
     output$test <- renderText({
         HTML("<h2> how are you? </h2>")

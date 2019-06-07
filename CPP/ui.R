@@ -248,11 +248,6 @@ addDownloadsTabPanel <- function(title) {
   )
 }
 
-logPanel <- function() {
-  tabPanel("Log", verbatimTextOutput("log"))
-}
-
-
 shinyUI(
 
   navbarPage(title = 'Cancer Publication Portal',
@@ -274,8 +269,8 @@ shinyUI(
           )))#, # end tabsetPanel and 1st row
           #fluidRow(column(width = 12, articlesPanel() ) )# end second row (articles panel)
           ), # end Portal Panel
-      tabAbout,
-      logPanel()
+      tabAbout#,
+      #logPanel()
   ) # end navbarPage
 ) # end shinyUI
                
