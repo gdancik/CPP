@@ -15,7 +15,7 @@ library(shinycssloaders)
 CONFIG <- list(
   DEBUG = FALSE,
   DEFAULT.GENE = "AGL",
-  AUTO.RUN = TRUE
+  AUTO.RUN = FALSE
 )
 
 
@@ -94,6 +94,12 @@ shinyServer(function(input, output, session) {
   }
     
   toggleMenus(FALSE)
+  
+  shinyjs::runjs("
+                 if (navigator.userAgent.indexOf('Chrome') == -1) {
+                    alert('For the best user experience, we recommend using the Google Chrome browswer, available at: http://www.google.com/chrome/');
+                 }
+  ")
   
   # Javascript to trigger analysis when modal is closed
   shinyjs::runjs("
