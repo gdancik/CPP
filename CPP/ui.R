@@ -115,6 +115,7 @@ commonHeader <- list(
   graphSetupModalTerm,
   graphSetupModalChem,
   graphSetupModalMut,
+  cancerTypeSetupModal,
   
   # summary row
   fluidRow(id = "summaryRow",

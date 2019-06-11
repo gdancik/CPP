@@ -100,6 +100,19 @@ getCancerPMIDs <- function(con, GeneID) {
 }
 
 
+# get PMIDs corresponding to cancer articles with user cancer selection
+getCancerPMIDsbyMeshID <- function(con, GeneID, MeshID) {
+  
+  str <- paste0("select distinct PubGene.PMID from PubGene\n",
+                "inner join PubMesh ON PubMesh.PMID = PubGene.PMID\n",
+                "inner join MeshTerms ON PubMesh.MeshID = MeshTerms.MeshID\n",
+                "where GeneID = ", GeneID, " and PubMesh.MeshID IN" , MeshID);
+  
+  runQuery(con, str, "get cancer PMIDs with query limited to user selection of cancer types")
+  
+}
+
+
 # getPMIDS - 
 # basic query is: select PMIDs from tblName where PMIDs in (pmids) AND
 #   tblName.idType in (ids)
