@@ -24,7 +24,7 @@ formatBSModal<-function (id, title, trigger, applyID, ..., size, applyText = "Up
                                                            ), 
                                                            shiny::tags$div(class = "modal-body", list(...)), 
                                                            shiny::tags$div(class = "modal-footer", 
-                                                                           shiny::tags$button(type = "button", class = "btn btn-default", `data-dismiss` = "modal", "Cancel"),
+                                                                           shiny::tags$button(type = "button", class = "btn btn-default cancel", `data-dismiss` = "modal", "Cancel"),
                                                                            actionButton(applyID, applyText, class = "btn-primary")    
                                                            )      
                                            )
@@ -165,3 +165,34 @@ graphSetupModalMut <- formatBSModal("graphSetupModalMut", "Mutations Graph Setti
                                  )
                              ), size = "large", applyText = "Update graph"
                         )
+
+cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Cancer Types Selection", "", "btnSelectCancerType",
+                                      fluidRow(column(12,
+                                                      conditionalPanel(condition="$('html').hasClass('shiny-busy')",
+                                                                       HTML("<div class=\"progress\" style=\"position: fixed;  width: 97%; height:25px; !important\">
+                                                                            <div class=\"progress-bar progress-bar-striped active\" role=\"progressbar\" aria-valuenow=\"100\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"opacity: 1; width:100%\" !important>
+                                                                            <span id=\"bar-text\"><b>Loading, please wait...</b></span>
+                                                                            </div></div>")
+                                                                       ),
+                                                      
+                                                      
+                                                      HTML("<p>The selection box below allows to select cancer types associated with the gene <br><br>\
+                                                           You can select the tumor types of interest by clicking on the selection box and choosing from the dropdown menu below \
+                                                           (you can start typing the tumor type to find it in the list).\
+                                                           You can also remove current selection by deleting the tumor type in the selection box. <br><br>\
+                                                           When you are done, click the 'Select cancer types' button to apply your changes.<br>\
+                                                           If you want to see the results for all possible tumor types, leave the selection box blank and click \
+                                                           the 'Select cancer types' button to proceed.</p><br>")
+                                                      )),
+                                                      
+                                      fluidRow(
+                                        column(6, 
+                                               conditionalPanel(condition="!$('html').hasClass('shiny-busy')",
+                                                                style="padding-right:0px",
+                                                                selectInput("cancerType", "Select cancer types: ", choices = NULL, multiple = TRUE, selectize = TRUE)
+                                               )),
+                                      
+                                        tags$head(tags$style("button.close, button.cancel {display:none}"))
+                                        
+                                      ), size = "large", applyText = "Select cancer types"
+                                                      )

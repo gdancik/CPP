@@ -51,6 +51,13 @@ tabAbout = tabPanel("About",
           "with research interests in bioinformatics and resistance in microorganisms.",
           role("Contributor")),
       HTML("</li>"),
+      
+      HTML("<li>"),
+      p(span(style='font-weight:bold', "Nataliia Romanenko"), "graduated from Eastern Connecticut State University with a degree in Computer Science. 
+        She is pursuing a Masters in Computer Science at Georgia Tech. ",
+        role("Contributor")),           
+      HTML("</li>"),
+      
       HTML("</ul>")
     )
   )
