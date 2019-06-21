@@ -14,7 +14,7 @@ echo "container id is $id"
 echo "deleting /root/CPP/* from container"
 docker exec $id rm -Rf /root/CPP/*
 
-echo "adding local CPP/ to /rooot/CPP"
+echo "adding local CPP/ to /root/CPP"
 docker cp CPP $id:/root/
 
 echo "saving image as gdancik/cpp:$d"

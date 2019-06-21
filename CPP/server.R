@@ -14,7 +14,7 @@ library(shinycssloaders)
 
 CONFIG <- list(
   DEBUG = FALSE,
-  DEFAULT.GENE = "AGL",
+  DEFAULT.GENE = "HRAS",
   AUTO.RUN = FALSE
 )
 
@@ -23,6 +23,12 @@ if (!CONFIG$DEBUG) {
 # comment out for debugging
   cat <- function(...){invisible()}
   print <- function(...){invisible()}
+}
+
+
+wait <- function() {
+  cat("Press a key to continue...")
+  scan(what = character(), n = 1)
 }
 
 source("functions.R", local = TRUE)
@@ -39,7 +45,7 @@ shinyServer(function(input, output, session) {
     output$log <- renderText(logFile$log)
     
   })
-  
+
   output$shinyTitle <- renderText("Cancer Publication Portal")
   
   source("server-reactives.R", local = TRUE)
@@ -108,13 +114,6 @@ shinyServer(function(input, output, session) {
                  }
   ")
   
-  # Javascript to trigger analysis when modal is closed
-  shinyjs::runjs("
-        var numSearches = 0
-        $('#welcomeModal').on('hidden.bs.modal', function () {
-            numSearches += 1;
-            Shiny.onInputChange('testInput', numSearches);
-        });")
   
   observeEvent(input$geneInput, {
     if (is.null(input$geneInput) | input$geneInput == "") {
@@ -141,13 +140,14 @@ shinyServer(function(input, output, session) {
 
       cat("btnGeneSearch, geneInput = ", input$geneInput, "\n")
     
+      #shinyjs::addClass(class = "cancel", select = "button.cancel")  
+    
       if (CONFIG$AUTO.RUN) {
         cat("updating..")
         
         #updateSelectizeInput(session, "geneInput", choices = geneIDs, selected =10 , server = TRUE)
     
         CONFIG$AUTO.RUN <- FALSE
-        triggers$newSearch <- TRUE      
         toggleModal(session, "welcomeModal", toggle = "close")
         return()
      }
@@ -159,9 +159,9 @@ shinyServer(function(input, output, session) {
             return()
       }
     
-      triggers$newSearch <- TRUE      
       toggleModal(session, "welcomeModal", toggle = "close")
       reset("cancerType")
+      cat("toggle modal from btnGeneSearch\n")
       toggleModal(session, "cancerTypeSetupModal", toggle = "open")
       cat("opening select cancer type modal")  
         
@@ -169,16 +169,9 @@ shinyServer(function(input, output, session) {
   
     # on initial search
     observeEvent(
-      {input$testInput
-      #input$rbDiseaseLimits
+      {input$btnGeneSearch
         },{
-        if (!triggers$newSearch) {
-          if (is.null(selected$geneSymbol)) {
-            shinyjs::alert("Please select a gene from the drop down menu to start")
-            toggleModal(session, "welcomeModal")
-          }
-          return()
-        }
+        
         resetReactiveValues()
       
         selected$geneID <- input$geneInput  
@@ -186,7 +179,7 @@ shinyServer(function(input, output, session) {
         getCancerTypes()
         #respondToSelectionDrill()
         toggleMenus(TRUE)
-        triggers$newSearch <- FALSE
+        
         
     })
     
@@ -232,7 +225,30 @@ shinyServer(function(input, output, session) {
      }
      x <- paste0("Search for gene <b style='color:red'>", selected$geneSymbol,
                  "</b> found <b>",nrow(pmidList$pmids), "</b> articles.")
-
+     
+     cancerIDs <- cancerSelectionSummary$selected1
+     if (is.null(cancerIDs)) {
+       x <- gsub("found", "for any cancer type found", x)
+       cancers <- "</br>Selected cancers: (none selected)"
+     } else {
+       x <- gsub("found", "for selected cancer types found", x)
+       m <- min(4, length(cancerIDs))
+       cancerIDs <- cancerIDs[1: min(4, m)]
+       m <- match(cancerIDs, cancerSelectionSummary$dat$MeshID)
+       cancers <- cancerSelectionSummary$dat$Term[m]
+       if (length(m) ==4) {
+         cancers[4] <- " ..."
+       }
+       cancers <- paste0(cancers, collapse = "; ")
+       cancers <- paste0("</br><b>Selected cancers</b>: ", cancers)
+     }
+     
+     # add cancer modal
+     cancers <- paste0(cancers, " (<a href = '#' id = 'linkCancerTypeSetup' data-toggle='modal'
+                 data-target='#cancerTypeSetupModal'>View/Change</a>) ")
+     
+     x <- paste0(x, cancers)
+     
      l <- list("Cancer Types" = diseaseSummary,
                "Drugs" = chemSummary,
                Mutations = mutationSummary,
@@ -249,7 +265,6 @@ shinyServer(function(input, output, session) {
         x <- paste0(x, filterString)
      }
      
-     
      x<- paste0("<span style='font-size:1.1em'>", x, "</span>")
                  
      HTML(x)
@@ -258,14 +273,17 @@ shinyServer(function(input, output, session) {
   ###################################################################################################    
   # This is the main function that drives db queries, and works as follows:
   # 1) if cancer-specific, get list of cancer-specific PMIDS if not already set
-  # 2) get PMIDs based on Mesh selection (limited to current PMID list)
+  # 2) get PMIDs based on Mesh selection (limited to current PMID list) (NO LONGER DONE)
   # 3) get PMIDs based on Chem selection (limited to current PMID list)
   # 4) get PMIDs based on Gene selection (limited to current PMID list)
   # 5) get intersection of (2) - (4) producing list of PMIDs matching search criteria
   # 6) get summaries for Mesh terms, Chemicals, and Genes
   ###################################################################################################    
     respondToSelectionDrill <- function() {
+      
       cat("respondToSelectionDrill\n")
+    
+      resetReactive(diseaseSummary)
       
       # hide/clear articles
     
@@ -277,61 +295,38 @@ shinyServer(function(input, output, session) {
       
       cat("getting connection...\n")
       con = dbConnect(MariaDB(), group = "CPP")
-      
       cat("got connection\n")
       
-      # get cancer PMIDs if specified, restrict to gene #
-      #if (is.null(pmidList$pmids_initial) & input$rbDiseaseLimits == "cancer") {
-      #  cat("getting cancer IDs for ", input$geneInput, "\n")
-      #  pmidList$pmids_initial = getCancerPMIDs(con, cleanse(input$geneInput))
-      #}
-      
-      ### process user cancer types selection, if any
-      if (!is.null(input$cancerType)) {
-        MeshIDs = diseaseSummary$dat$MeshID[diseaseSummary$dat$Term %in% input$cancerType]
-        MeshIDswithChildren = c()
-        # get children of selected cancers
-        for (meshID in MeshIDs) {
-          children <- getChildMeshIDs(con, meshID)
-          MeshIDswithChildren <- c(MeshIDswithChildren, children)
-        }
-        # filter articles by selected cancer types (with children)
-        pmidList$pmids_initial = getCancerPMIDsbyMeshID(con, cleanse(input$geneInput), cleanseList(MeshIDswithChildren))
-
-      }
-      
-      cat("done getting cancer IDs\n")
       pmids <- pmidList$pmids_initial$PMID
       
       cat("pmids = ", pmids, "\n")
       # get PMIDs for gene selection
       genes <- c(input$geneInput, geneSummary$selectedID)
-      
-      
-      shinyjs::html("bar-text", "Retrieving Articles for Selected Genes, please wait...")
-      p3 <- getPMIDs("PubGene", "GeneID", genes, con, pmids)
-      
-      
-      pmids <- intersectIgnoreNULL(pmids, p3$PMID)
-      
-      # get PMIDS for Mesh Selection
-      if (!is.null(diseaseSummary$selectedID)) {
-          shinyjs::html("bar-text", "Retrieving Articles for Selected Diseases, please wait...")
-          cat("Drill Down Disease selection, geting PMIDS for: ", diseaseSummary$selectedID, "\n")
-          #scan(what = character())
-          
-          # look at selected MeshIDs one at a time, because we need to 
-          # consider child mesh IDs for each
-          
-          for (meshID in diseaseSummary$selectedID) {
-              #cat("MeshID is: ", meshID, "....enter to continue\n")
-              #scan(what = character())
-              p1 <- getPMIDs("PubMesh", "MeshID", 
-                         getChildMeshIDs(con, meshID), 
-                         con, pmids, ids.AND = FALSE)
-              pmids <- intersectIgnoreNULL(pmids, p1$PMID)
-          }
+    
+      if (length(genes) > 1) {
+        shinyjs::html("bar-text", "Retrieving Articles for Selected Genes, please wait...")
+        p3 <- getPMIDs("PubGene", "GeneID", genes, con, pmids)
+        pmids <- intersectIgnoreNULL(pmids, p3$PMID)
       }
+      
+      # # get PMIDS for Mesh Selection
+      # if (!is.null(diseaseSummary$selectedID)) {
+      #     shinyjs::html("bar-text", "Retrieving Articles for Selected Diseases, please wait...")
+      #     cat("Drill Down Disease selection, geting PMIDS for: ", diseaseSummary$selectedID, "\n")
+      #     #scan(what = character())
+      #     
+      #     # look at selected MeshIDs one at a time, because we need to 
+      #     # consider child mesh IDs for each
+      #     
+      #     for (meshID in diseaseSummary$selectedID) {
+      #         #cat("MeshID is: ", meshID, "....enter to continue\n")
+      #         #scan(what = character())
+      #         p1 <- getPMIDs("PubMesh", "MeshID", 
+      #                    getChildMeshIDs(con, meshID), 
+      #                    con, pmids, ids.AND = FALSE)
+      #         pmids <- intersectIgnoreNULL(pmids, p1$PMID)
+      #     }
+      # }
       
       # get PMIDs for Chem selection
       if (!is.null(chemSummary$selectedID)) {
@@ -373,15 +368,13 @@ shinyServer(function(input, output, session) {
       #terms <- diseaseSummary$selectedTerm
       
       # skip Neoplasms by Site and Neoplasms
-      skipIDs <- c('D009371', 'D009369')
+      skipIDs <- c('D009370', 'D009371', 'D009369')
       diseaseSummary$dat <- diseaseSummary$dat [!diseaseSummary$dat$MeshID %in% skipIDs,]
       
       getSummaries("Related Chemicals", con, getChemSummaryByPMIDs, pmids, session, chemSummary, "filterChem", pa = TRUE)
       getSummaries("Related Mutations", con, getMutationSummaryByPMIDs, pmids, session, mutationSummary, "filterMutations")
       getSummaries("Related Cancer Terms", con, getCancerTermSummaryByPMIDs, pmids, session, cancerTermSummary, "filterCancerTerms")
   
-      
-      
       # update geneSummary
       shinyjs::html("bar-text", "Retrieving Related Genes, please wait...")
       geneSummary$dat <- getGeneSummaryByPMIDs(pmids, con)
@@ -399,48 +392,52 @@ shinyServer(function(input, output, session) {
       
     }
    
-   
-    
     output$test <- renderText({
         HTML("<h2> how are you? </h2>")
     })
     
-    
-    
+    # gets cancer types following initial gene selection
     getCancerTypes <- function() {
       
       if (is.null(input$geneInput)) {
-        cat("NULL\n")
+        return()
       }
-      num <- 0
-      p1 <- list(PMID=NULL); p2 <- list(PMID=NULL); p3 <- list(PMID=NULL)
       
-      con = dbConnect(MariaDB(), group = "CPP")
-      pmids <- pmidList$pmids_initial$PMID
-      
-      cat("pmids = ", pmids, "\n")
       # get PMIDs for gene selection
       genes <- c(input$geneInput, geneSummary$selectedID)
-      
       shinyjs::html("bar-text", "Retrieving Cancer Types for the selected Gene, please wait...")
-      p3 <- getPMIDs("PubGene", "GeneID", genes, con, pmids)
       
-      pmids <- intersectIgnoreNULL(pmids, p3$PMID)
-
+      # get PMIDs for selected gene
+      con = dbConnect(MariaDB(), group = "CPP")
+      p3 <- getPMIDs("PubGene", "GeneID", genes, con, NULL)
+      pmids <- p3$PMID
+      
       if (length(pmids) == 0) {
         dbDisconnect(con)
         cat("NO RESULTS -- SHOULD BE CHECKED!")
         return()
       }
       
-      diseaseSummary$dat <- getMeshSummaryByPMIDs(pmids, con)
+      # get Mesh IDs
+      mesh <- getMeshSummaryByPMIDs(pmids, con)
       
-      # skip Neoplasms by Site and Neoplasms
-      skipIDs <- c('D009371', 'D009369')
-      diseaseSummary$dat <- diseaseSummary$dat [!diseaseSummary$dat$MeshID %in% skipIDs,]
+      # get Tree info
+      qry <- paste0("select MeshID, TreeID from MeshTerms where MeshID IN ",
+                    cleanseList(mesh$MeshID),
+                    " AND MeshTerms.TreeID LIKE \"C04.%\";"
+      )
+      
+      cancerSelectionSummary$tree_ids <- dbGetQuery(con, qry)
       
       dbDisconnect(con)
- 
+      
+      # skip Neoplasms by Histologic types, Neoplasms by Site, and Neoplasms
+      skipIDs <- c('D009370', 'D009371', 'D009369')
+      mesh <- mesh [!mesh$MeshID %in% skipIDs,]
+      
+      cancerSelectionSummary$dat <- mesh
+      
+      
       #update PMIDs
       pmidList$pmids <- data.frame(PMID = pmids)
       

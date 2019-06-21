@@ -1,5 +1,5 @@
-# from shinyGEO, includes cancel button with applyID
-formatBSModal<-function (id, title, trigger, applyID, ..., size, applyText = "Update filters") 
+# from shinyGEO, includes cancel button with applyID; cancelID is optional id of cancel button
+formatBSModal<-function (id, title, trigger, applyID, ..., size, applyText = "Update filters", cancelID = NULL) 
 {
 
   if (!missing(size)) {
@@ -14,7 +14,8 @@ formatBSModal<-function (id, title, trigger, applyID, ..., size, applyText = "Up
   else {
     size <- "modal-dialog"
   }
-  bsTag <- shiny::tags$div(class = "modal sbs-modal fade", 
+  bsTag <- shiny::tags$div(class = "modal sbs-modal fade", `data-backdrop` = 'static',
+                           `data-keyboard`="false",
                            id = id, tabindex = "-1", `data-sbs-trigger` = trigger, 
                            shiny::tags$div(class = size, 
                                            shiny::tags$div(class = "modal-content", 
@@ -24,7 +25,7 @@ formatBSModal<-function (id, title, trigger, applyID, ..., size, applyText = "Up
                                                            ), 
                                                            shiny::tags$div(class = "modal-body", list(...)), 
                                                            shiny::tags$div(class = "modal-footer", 
-                                                                           shiny::tags$button(type = "button", class = "btn btn-default cancel", `data-dismiss` = "modal", "Cancel"),
+                                                                           shiny::tags$button(id = cancelID, type = "button", class = "btn btn-default cancel", `data-dismiss` = "modal", "Cancel"),
                                                                            actionButton(applyID, applyText, class = "btn-primary")    
                                                            )      
                                            )
@@ -50,12 +51,26 @@ welcomeModal <-  bsModal("welcomeModal",HTML("<i>Cancer Publication Portal</i>")
         column(2,style = "vertical-align:middle; padding-left:0px",
            HTML("<label class = 'control-label' style='visibility:hidden'>Hello</label>"),
            div(
-                actionButton("btnGeneSearch", "Summarize Cancer Articles", class = "blue-button")
+                actionButton("btnGeneSearch", "Select Cancer Types", class = "blue-button")
            )
         )
       )
         
   )
+
+# prevent outside click of modal to close it
+welcomeModal$attribs$`data-keyboard`= "false" 
+welcomeModal$attribs$`data-backdrop`= "static"
+
+# set class of cancel button
+a <- welcomeModal$children[[1]]$children[[1]]$children[[3]]$children[[1]]$attribs
+a$class <- paste(a$class, "cancel")
+welcomeModal$children[[1]]$children[[1]]$children[[3]]$children[[1]]$attribs <- a
+welcomeModal$children[[1]]$children[[1]]$children[[3]]$children[[1]]$attribs$id <- 'btnWelcomeCancel'
+rm(a)
+
+
+
 
 
 filterModal <- formatBSModal("filterModal", "Remove filters", "btnRemoveFilters", "btnSaveFilters",
@@ -89,7 +104,7 @@ filterModal <- formatBSModal("filterModal", "Remove filters", "btnRemoveFilters"
       shiny::column(width=4,
                   selectInput("filterGenes", "Additional Gene Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
       )
-    ), size = "large"
+    ), size = "large", cancelID = "btnCancelFilter"
 )
 
 # modals for graph settings
@@ -166,33 +181,34 @@ graphSetupModalMut <- formatBSModal("graphSetupModalMut", "Mutations Graph Setti
                              ), size = "large", applyText = "Update graph"
                         )
 
-cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Cancer Types Selection", "", "btnSelectCancerType",
+cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Select Cancer Types", "", "btnSelectCancerType", 
                                       fluidRow(column(12,
-                                                      conditionalPanel(condition="$('html').hasClass('shiny-busy')",
-                                                                       HTML("<div class=\"progress\" style=\"position: fixed;  width: 97%; height:25px; !important\">
-                                                                            <div class=\"progress-bar progress-bar-striped active\" role=\"progressbar\" aria-valuenow=\"100\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"opacity: 1; width:100%\" !important>
-                                                                            <span id=\"bar-text\"><b>Loading, please wait...</b></span>
-                                                                            </div></div>")
-                                                                       ),
-                                                      
-                                                      
-                                                      HTML("<p>The selection box below allows to select cancer types associated with the gene <br><br>\
-                                                           You can select the tumor types of interest by clicking on the selection box and choosing from the dropdown menu below \
-                                                           (you can start typing the tumor type to find it in the list).\
-                                                           You can also remove current selection by deleting the tumor type in the selection box. <br><br>\
-                                                           When you are done, click the 'Select cancer types' button to apply your changes.<br>\
-                                                           If you want to see the results for all possible tumor types, leave the selection box blank and click \
-                                                           the 'Select cancer types' button to proceed.</p><br>")
+                                                      HTML("<p>Select the cancer types you are interested in using the table or drop down below. 
+                                                           When you are done, click the button below to apply your changes.<br>\
+                                                           </p>")
                                                       )),
                                                       
-                                      fluidRow(
-                                        column(6, 
-                                               conditionalPanel(condition="!$('html').hasClass('shiny-busy')",
-                                                                style="padding-right:0px",
-                                                                selectInput("cancerType", "Select cancer types: ", choices = NULL, multiple = TRUE, selectize = TRUE)
-                                               )),
                                       
-                                        tags$head(tags$style("button.close, button.cancel {display:none}"))
+                                      fluidRow(
                                         
-                                      ), size = "large", applyText = "Select cancer types"
+                                        column(6,
+                                               withSpinner(DT::dataTableOutput("cancerSelectionTable"), type = 3,
+                                                           color.background = "white")
+                                               ),
+                                        
+                                        column(6, 
+                                               
+                                               fluidRow(
+                                               conditionalPanel(condition="!$('html').hasClass('shiny-busy')",
+                                                      style="padding-right:0px",
+                                                      div(id = "cancerTypeDiv",
+                                                          selectInput("cancerType", "Selected cancer types: ", choices = NULL, multiple = TRUE, selectize = TRUE),
+                                                            htmlOutput("cancerSelectionMsg")
+                                                      )
+                                               ))
+                                        )
+                                      ),
+                                      
+                                      size = "large", applyText = "Summarize all cancer types", 
+                                      cancelID = "btnCancelCancerType"
                                                       )

@@ -41,27 +41,80 @@ updateSelectedMeshIDs <- function(ids, tblSummary, colName1 = "MeshID", colName2
            # scan(what = character())
           }
       }
+      
       respondToSelectionDrill()
     } else if (is.null(ids) & !is.null(tblSummary$selectedID)) {
       # the user has canceled all filters
       cat("setting Term and ID to NULL, then respond to selection..\n")
       tblSummary$selectedTerm <- NULL
       tblSummary$selectedID <- NULL
+      resetReactive(diseaseSummary)
       respondToSelectionDrill()
     }
     
   })
 }
 
-########################################################
+#############################################################
 # respond to table selection or de-selection
-########################################################
-observeEvent(input$diseaseResults_rows_selected, {
-            cat("observer catches table change...")
-            con = dbConnect(MariaDB(), group = "CPP")
-            meshIDs <- removeParentalMeshIDs(con, diseaseSummary$dat$MeshID[input$diseaseResults_rows_selected])
-            dbDisconnect(con)
-            updateSelectedMeshIDs(meshIDs, diseaseSummary) 
+#############################################################
+
+#################################################
+# For diseaseSummary, open model if user clicks
+#################################################
+observe( {
+           input$diseaseResults_rows_selected
+          
+            if (is.null(diseaseSummary$dat)) {
+              cat("diseaseSummary$dat is NULL\n")
+              return()
+            } 
+  
+  
+            cat("diseaseSummary$dat is not NULL\n")
+              
+            initialized <- isolate(diseaseSummary$initialized)
+            cat("initialized: ", initialized, "\n")
+            if (is.null(initialized)) {
+                initialized <- 1
+                isolate(diseaseSummary$initialized <- initialized)
+                return()
+            } else if (initialized == 1) {
+                initialized <- 2
+                isolate(diseaseSummary$initialized <- initialized)
+                return()
+            }
+            
+            # if no rows selected
+            if (is.null(input$diseaseResults_rows_selected)) {
+              cat("no rows selected\n")
+              cat("selected1: ", cancerSelectionSummary$selected1, "\n")
+               isolate(displayCancerSelectionSummary(diseaseSummary$dat, cancerSelectionSummary$selected1, cancerSelectionSummary$selected2, "diseaseResults"))
+               cat("toggle modal from no rows selected...\n")
+               toggleModal(session, "cancerTypeSetupModal",  toggle = "open")
+               return()
+            } else {
+              
+                
+                ids <- diseaseSummary$dat$MeshID[input$diseaseResults_rows_selected]          
+                
+                # if user didn't actually click, then return
+                correctIDs <- intersect(diseaseSummary$dat$MeshID, cancerSelectionSummary$selected1)
+                cat("indices: ", input$diseaseResults_rows_selected, "\n")
+                cat("selected ids = ", ids, "\n")
+                cat("selected1 = ", cancerSelectionSummary$selected1, "\n")
+                cat("correctIDs: ", correctIDs, "\n")
+              
+                if (setequal(correctIDs, ids)) {
+                    cat("returning...\n")
+                    return()
+                }
+              
+                isolate(displayCancerSelectionSummary(diseaseSummary$dat, cancerSelectionSummary$selected1, cancerSelectionSummary$selected2, "diseaseResults"))
+                cat("toggle modal from user click...\n")
+                toggleModal(session, "cancerTypeSetupModal",  toggle = "open")
+                return()
+            }
   })
 
 observeEvent(input$chemResults_rows_selected, 
@@ -94,10 +147,11 @@ checkNoSelection <- function(selected, resTable) {
 }
 
 
+
 # process possible no selection for diseaseTable
-observe({ selected <- input$diseaseResults_rows_selected
-          checkNoSelection(selected, diseaseSummary)
-})
+#observe({ selected <- input$diseaseResults_rows_selected
+#          checkNoSelection(selected, diseaseSummary)
+#})
 
 # process possible no selection for chemTable
 observe({ selected <- input$chemResults_rows_selected
@@ -167,7 +221,7 @@ updateGeneSelections <- function(gene, geneSummary, GeneTable) {
    
     if (!is.null(selections)) {
       gg <- geneSymbolToID(selections, GeneTable)
-      save(selections, GeneTable, file = "genes.RData")
+      #save(selections, GeneTable, file = "genes.RData")
       geneSummary$selectedID <- gg$ID
       geneSummary$selectedTerm <- gg$Symbol
       print(gg)
@@ -212,31 +266,3 @@ observeEvent(input$geneResults_rows_selected, {
   updateGeneSelections(gene, geneSummary, GeneTable)
   
 })
-
-
-
-
-# TO DO: allow graph selection: this triggers observe for no table selection and results
-# in refresh; multiple selections also do not work
-if (0) {
-  observeEvent(
-    input$DiseaseGraph_click$y, {
-      
-      s = input$DiseaseGraph_click$y
-      
-      lvls <- levels(diseaseSummary$graphData$Term)
-      
-      cat("click on: ", s, "\n")
-      name <- lvls[round(s)]
-      m <- match(name, diseaseSummary$graphData$Term)
-      selectedMeshIDs <- diseaseSummary$graphData$MeshID[s]
-      cat("selected: ", selectedMeshIDs, ", ", name, "\n")
-      
-      updateSelectedMeshIDs(selectedMeshIDs, diseaseSummary)
-      
-      
-    })
-  
-}
-
-

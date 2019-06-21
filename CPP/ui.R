@@ -41,6 +41,11 @@ commonStyles <- list(
                   td, td {
                     font-size:80%;
                   }
+
+                 .modal-open {
+                      overflow-y: auto;
+                      height: 100px;
+                 }
  
                   .navbar-header > .navbar-brand {
                   font-family:Courgette;
@@ -103,7 +108,11 @@ commonStyles <- list(
                   color:#464646;
                 }
 
-                  "))  
+                  ")),
+
+              #modal styles  
+              tags$head(tags$style("button.close, button.cancel {display:none}")),
+              tags$head(tags$style("#cancerTypeDiv {min-height: 20em; max-height: 30em; overflow-y: auto;}"))
   
 )
 
@@ -183,9 +192,10 @@ addTabPanel <- function(title, tableId, graphId = NULL) {
   )
 }
 
+
 articlesPanel <- function() {
   tabPanel('Articles',         
-           useShinyjs(),  
+           
            rclipboardSetup(),
            
            br(),
@@ -249,10 +259,14 @@ addDownloadsTabPanel <- function(title) {
   )
 }
 
-shinyUI(
 
+
+shinyUI(
+  
+  
   navbarPage(title = 'Cancer Publication Portal',
              id = "headerNavBarPage", 
+             
     tabPanel("Home",
           commonHeader, 
           fluidRow(column(style='border-right: 1px solid',width = 12,
@@ -270,7 +284,11 @@ shinyUI(
           )))#, # end tabsetPanel and 1st row
           #fluidRow(column(width = 12, articlesPanel() ) )# end second row (articles panel)
           ), # end Portal Panel
-      tabAbout#,
+      tabAbout,
+    
+    # activate shinyJS
+    useShinyjs()
+    
       #logPanel()
   ) # end navbarPage
 ) # end shinyUI

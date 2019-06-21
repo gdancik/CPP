@@ -7,24 +7,24 @@ updateLog <- function(logFile, ...) {
   isolate(logFile$log <- paste0(logFile$log, paste0(unlist(l), collapse = ""), sep = "\n"))
 }
 
-
-# if TRUE then we are analyzing a new gene
-triggers <- reactiveValues(newSearch = FALSE)
-
 # basic reactive structure for storing disease, chem, etc results tables
-createReactiveTable <- function() {
+createReactiveTable <- function(...) {
   reactiveValues(dat = NULL, selectedID = NULL,
-                 selectedTerm = NULL, graphData = NULL)
+                 selectedTerm = NULL, graphData = NULL, ...)
 }
 
 
 # reactives to deal with results tables
-diseaseSummary <- createReactiveTable()
+diseaseSummary <- createReactiveTable(initialized = NULL)
 chemSummary <- createReactiveTable()
 #paSummary <- createReactiveTable()
 mutationSummary <- createReactiveTable()
 geneSummary <- createReactiveTable()
 cancerTermSummary <- createReactiveTable()
+
+# reactive holding original cancer summary and corresponding tree IDs 
+cancerSelectionSummary <- reactiveValues(dat = NULL, tree_ids = NULL, ids2 = NULL, highlightPending = NULL,
+                                         selected1 = NULL, selected2 = NULL)
 
 # reactive for currently selected gene symbol
 selected <- reactiveValues(geneID = NULL, geneSymbol = NULL)
@@ -53,7 +53,10 @@ resetReactiveValues <- function() {
   resetReactive(chemSummary)
   resetReactive(mutationSummary)
   resetReactive(cancerTermSummary)
-  triggers$newSearch <- FALSE
+
+  cat("RESETTING REACTIVES...\n")
+  resetReactive(cancerSelectionSummary)
+
   #resetReactive(paSummary)
 }
 
