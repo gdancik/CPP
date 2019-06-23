@@ -10,7 +10,6 @@ getSummaries <- function(msg, con, query_function, pmids, session, resTable, sel
   #scan(what=character())
   shinyjs::html("bar-text", paste0("Retrieving ", msg, ", please wait..."))
   resTable$dat <- query_function(pmids, con, ...)
-
 }
 
 # updates the selectInput with given id, choices (ids), and terms;

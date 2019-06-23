@@ -155,16 +155,10 @@ getPMIDs <- function(tblName, idType, ids, con, pmids, ids.AND = TRUE) {
 
 
 # returns Mesh Summary table for vector of pmids
+# no longer used -- see next function
+
 getMeshSummaryByPMIDs <- function(pmids, con) {
-  
   pmids <- paste0("'",pmids,"'", collapse = ",")
-  
-  str <- paste0("select count(TT.MeshID) as Frequency, TT.MeshID, TT.Term from\n",
-  "(select PubMesh.PMID, MeshTerms.MeshID, MeshTerms.Term from PubMesh\n",
-    "inner join MeshTerms ON MeshTerms.MeshID = PubMesh.MeshID\n",
-    "where PubMesh.PMID IN ", paste0("(", pmids, ")\n"),
-    "group by PubMesh.PMID, MeshTerms.MeshID, MeshTerms.Term) as TT\n",
-  "group by TT.MeshID, TT.Term ORDER BY count(TT.MeshID) desc;")
   
   str <- paste0("SELECT count(TT.MeshID) as Frequency,
      TT.MeshID, TT.Term, TT.TreeID
@@ -180,18 +174,74 @@ getMeshSummaryByPMIDs <- function(pmids, con) {
        WHERE
        PubMesh.PMID IN (", pmids, ")
        GROUP BY PubMesh.PMID , MeshTerms.MeshID , MeshTerms.Term , MeshTerms.TreeID) AS TT
-#       WHERE (TT.TreeID = 'C04'
-#            OR TT.TreeID LIKE 'C04.%')
-       WHERE TT.TreeID LIKE 'C04.%'
+       WHERE TT.TreeID LIKE 'C04%'
        GROUP BY TT.MeshID , TT.Term , TT.TreeID;")
-  
-  
+
   res <- runQuery(con, str, "Mesh summary query:")
-#save(res, file = "res.RData")
+
   a<-countChildTreeIDs(res)
   a
   
 }
+
+
+# returns Mesh Summary table for vector of pmids
+# version 2 which counts unique articles
+getMeshSummaryByPMIDs <- function(pmids, con) {
+
+  # get article / mesh associations
+  pmids <- paste0("'",pmids,"'", collapse = ",")
+  str <- paste0("SELECT
+                PubMesh.PMID,
+                MeshTerms.MeshID,
+                MeshTerms.TreeID
+                FROM
+                PubMesh
+                INNER JOIN MeshTerms ON MeshTerms.MeshID = PubMesh.MeshID
+                WHERE
+                PubMesh.PMID IN (", pmids, ") and MeshTerms.TreeID LIKE 'C04%';")
+  
+  res <- runQuery(con, str, "Mesh summary query:")
+  
+  # get terms
+  treeIDs <- unique(res$TreeID)
+  t <- paste0("'",treeIDs,"'", collapse = ",")
+  str <- paste0("SELECT * from MeshTerms
+                WHERE TreeID IN (", t, ");")
+  meshSummary <- dbGetQuery(con, str)
+  
+  
+  
+  # count number of unique articles for each set of ids
+  countArticles <- function(ids) {
+    tot <- 0
+    art <- vector(mode = "numeric")
+    for (id in ids) {
+      i <- startsWith(res$TreeID, id)
+      art <- c(art, res$PMID[i])
+    }  
+    length(unique(art))
+  }
+  
+  # get Tree IDs for each Mesh ID, and count number of
+  # articles per Mesh ID (need to do this since
+  # Mesh ID can have multiple Tree IDs)
+  s <- split(res$TreeID, res$MeshID)
+  s <- lapply(s, unique)
+  counts <- sapply(s, countArticles)
+  counts <- sort(counts, decreasing = TRUE)
+  
+  # construct table and return it
+  n <- names(counts)
+  m <- match(n, meshSummary$MeshID)
+ 
+  d <- data.frame(Frequency = counts, MeshID = as.character(n), Term = as.character(meshSummary$Term[m]),
+                  stringsAsFactors = FALSE)
+  
+}
+
+
+
 
 
 # returns Chem Summary table for vector of pmids

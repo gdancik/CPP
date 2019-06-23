@@ -1,17 +1,27 @@
 ##########################################################################################
 # Functions to handle cancerTypeSetupModal
 ##########################################################################################
+
+# when modal opens following gene search
 observeEvent(input$cancerTypeSetupModal,{
-  
+  a <- cancerSelectionSummary$selected1
+  catn("open modal, set selected to: ", cancerSelectionSummary$selected1)
   updateSelectInput(session, "cancerType", choices = cancerSelectionChoices(), 
-                    selected = cancerSelectionSummary$selected1)
+                    selected = a)
+  
+  if (is.null(diseaseSummary$dat)) {
+    shinyjs::enable('btnSelectCancerType')
+  }
 })
 
 
-# Select Cancer Type button
+# when modal opens from select cancer button
 observeEvent(input$btnSelectCancerType, {
   
-  cat("open modal from btnSelectCancertype selection...\n")
+  cat("searching for gene btnSelectCancertype selection...\n")
+  
+  showProgress()
+  shinyjs::disable('btnSelectCancerType')
   toggleModal(session, "cancerTypeSetupModal",  toggle = "close")
   
   shinyjs::removeClass(id = "btnWelcomeCancel", class = "cancel") 
@@ -28,16 +38,43 @@ observeEvent(input$btnSelectCancerType, {
   
   meshIDs <- unique(c(input$cancerType, ids))
   
+  con = dbConnect(MariaDB(), group = "CPP")
   if (!is.null(meshIDs)) {
-    con <- dbConnect(MariaDB(), group = "CPP")
     pmidList$pmids_initial = getCancerPMIDsbyMeshID(con, cleanse(input$geneInput), cleanseList(meshIDs))
-    dbDisconnect(con)
+  } else {
+    pmidList$pmids_initial <- getPMIDs("PubGene", "GeneID", input$geneInput, con, NULL)
   }
+  
+  dbDisconnect(con)
   
   cat("done getting cancer IDs\n")
   
   respondToSelectionDrill()
   
-  
+  hideProgress()
 })
+
+# ## update btnSelectCancerType based on current selection
+observe({
+  label <- "Summarize selected cancer types"
+  if (is.null(input$cancerType)) {
+    label <- "Summarize all cancer types"
+  }
+  updateActionButton(session, "btnSelectCancerType", label)
+
+  if (is.null(diseaseSummary$dat)) {
+    return()
+  }
+
+  if (setequal(input$cancerType, cancerSelectionSummary$selected1)) {
+    shinyjs::disable('btnSelectCancerType')
+  } else {
+    shinyjs::enable('btnSelectCancerType')
+  }
+
+})
+
+
+
+
 

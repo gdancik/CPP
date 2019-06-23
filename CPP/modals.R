@@ -1,5 +1,6 @@
 # from shinyGEO, includes cancel button with applyID; cancelID is optional id of cancel button
-formatBSModal<-function (id, title, trigger, applyID, ..., size, applyText = "Update filters", cancelID = NULL) 
+formatBSModal<-function (id, title, trigger, applyID, ..., size, applyText = "Update filters", 
+                         cancelID = NULL, escape = TRUE) 
 {
 
   if (!missing(size)) {
@@ -14,8 +15,7 @@ formatBSModal<-function (id, title, trigger, applyID, ..., size, applyText = "Up
   else {
     size <- "modal-dialog"
   }
-  bsTag <- shiny::tags$div(class = "modal sbs-modal fade", `data-backdrop` = 'static',
-                           `data-keyboard`="false",
+  t <- bsTag <- shiny::tags$div(class = "modal sbs-modal fade", `data-backdrop` = 'static',
                            id = id, tabindex = "-1", `data-sbs-trigger` = trigger, 
                            shiny::tags$div(class = size, 
                                            shiny::tags$div(class = "modal-content", 
@@ -31,6 +31,10 @@ formatBSModal<-function (id, title, trigger, applyID, ..., size, applyText = "Up
                                            )
                            )
   )
+  if (!escape) {
+    t$attribs$`data-keyboard`= "false" 
+  }
+  t
   #htmltools::attachDependencies(bsTag, shinyBSDep)
 }
 
@@ -183,12 +187,17 @@ graphSetupModalMut <- formatBSModal("graphSetupModalMut", "Mutations Graph Setti
 
 cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Select Cancer Types", "", "btnSelectCancerType", 
                                       fluidRow(column(12,
+                                                      
+                                                      #conditionalPanel(condition="$('html').hasClass('shiny-busy')",
+                                                                       HTML("<div id = 'cancerTypeProgress' class=\"progress hide\" style=\"position: fixed;  width: 97%; height:25px; !important\">
+                                                                            <div class=\"progress-bar progress-bar-striped active\" role=\"progressbar\" aria-valuenow=\"100\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"opacity: 1; width:100%\" !important>
+                                                                            <span id=\"cancerSelection-bar-text\"><b>Loading, please wait...</b></span>
+                                                                            </div></div>"),
+                                                                       #),
                                                       HTML("<p>Select the cancer types you are interested in using the table or drop down below. 
                                                            When you are done, click the button below to apply your changes.<br>\
                                                            </p>")
                                                       )),
-                                                      
-                                      
                                       fluidRow(
                                         
                                         column(6,
@@ -210,5 +219,18 @@ cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Select Cancer Typ
                                       ),
                                       
                                       size = "large", applyText = "Summarize all cancer types", 
-                                      cancelID = "btnCancelCancerType"
-                                                      )
+                                      cancelID = "btnCancelCancerType", escape = FALSE
+)
+
+
+showProgress <- function(msg = NULL) {
+  if (!is.null(msg)) {
+    shinyjs::html("cancerSelection-bar-text", msg)
+  }
+  shinyjs::removeClass(id = 'cancerTypeProgress', class = 'hide')
+}
+
+hideProgress <- function() {
+  shinyjs::addClass(id = 'cancerTypeProgress', class = 'hide')
+}
+

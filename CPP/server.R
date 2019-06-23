@@ -13,7 +13,7 @@ library(stringr)
 library(shinycssloaders)
 
 CONFIG <- list(
-  DEBUG = FALSE,
+  DEBUG = TRUE,
   DEFAULT.GENE = "HRAS",
   AUTO.RUN = FALSE
 )
@@ -31,9 +31,12 @@ wait <- function() {
   scan(what = character(), n = 1)
 }
 
+catn <- function(...) {
+  cat(..., '\n')
+}
+
 source("functions.R", local = TRUE)
 source("setResults.R", local = TRUE)
-
 
 # some genes have duplicate IDs...we should combine, for now, remove
 library(dplyr)
@@ -108,11 +111,11 @@ shinyServer(function(input, output, session) {
     
   toggleMenus(FALSE)
   
-  shinyjs::runjs("
-                 if (navigator.userAgent.indexOf('Chrome') == -1) {
-                    alert('For the best user experience, we recommend using the Google Chrome browswer, available at: http://www.google.com/chrome/');
-                 }
-  ")
+  # shinyjs::runjs("
+  #                if (navigator.userAgent.indexOf('Chrome') == -1) {
+  #                   alert('For the best user experience, we recommend using the Google Chrome browser, available at: http://www.google.com/chrome/');
+  #                }
+  # ")
   
   
   observeEvent(input$geneInput, {
@@ -180,7 +183,6 @@ shinyServer(function(input, output, session) {
         #respondToSelectionDrill()
         toggleMenus(TRUE)
         
-        
     })
     
     geneID_to_symbol <- function(id) {
@@ -194,7 +196,14 @@ shinyServer(function(input, output, session) {
       }
       intersect(x,y)
     }
+
     
+#################################################################
+# HTML formatted strings for filters and cancer types
+#   createFilterString uses diseaseSummary, etc, so keep
+#   here
+#################################################################
+
    # creates HTML formatted string of currently selected filters
    createFilterString <- function() {
      l <- list("Cancer Types" = diseaseSummary,
@@ -218,6 +227,28 @@ shinyServer(function(input, output, session) {
      return(filterString)
    }
     
+   
+   createCancerString <- function(max_num = NULL) {
+      cancerIDs <- cancerSelectionSummary$selected1
+      if (is.null(cancerIDs)) {
+        return(NULL)
+      }
+      m <- length(cancerIDs)
+      if (!is.null(max_num)) {
+          m <- min(max_num, length(cancerIDs))
+      }
+      
+      i <- match(cancerIDs[1:m], cancerSelectionSummary$dat$MeshID)    
+      cancers <- cancerSelectionSummary$dat$Term[i]
+      
+      if (length(cancerIDs) > m) {
+        cancers[m] <- " ..."
+      }
+      
+      cancers <- paste0(cancers, collapse = "; ")
+      cancers
+   }
+   
     
    output$summaryHeader <- renderUI({
      if (is.null(selected$geneSymbol)) {
@@ -226,22 +257,15 @@ shinyServer(function(input, output, session) {
      x <- paste0("Search for gene <b style='color:red'>", selected$geneSymbol,
                  "</b> found <b>",nrow(pmidList$pmids), "</b> articles.")
      
-     cancerIDs <- cancerSelectionSummary$selected1
-     if (is.null(cancerIDs)) {
-       x <- gsub("found", "for any cancer type found", x)
-       cancers <- "</br>Selected cancers: (none selected)"
+     cancers <- createCancerString(4)
+     if (is.null(cancers)) {
+          x <- gsub("found", "for any cancer type found", x)
+          cancers <- "</br>Selected cancers: (none selected)"
      } else {
        x <- gsub("found", "for selected cancer types found", x)
-       m <- min(4, length(cancerIDs))
-       cancerIDs <- cancerIDs[1: min(4, m)]
-       m <- match(cancerIDs, cancerSelectionSummary$dat$MeshID)
-       cancers <- cancerSelectionSummary$dat$Term[m]
-       if (length(m) ==4) {
-         cancers[4] <- " ..."
-       }
-       cancers <- paste0(cancers, collapse = "; ")
        cancers <- paste0("</br><b>Selected cancers</b>: ", cancers)
      }
+     
      
      # add cancer modal
      cancers <- paste0(cancers, " (<a href = '#' id = 'linkCancerTypeSetup' data-toggle='modal'
@@ -270,6 +294,9 @@ shinyServer(function(input, output, session) {
      HTML(x)
     })
     
+   
+   
+   
   ###################################################################################################    
   # This is the main function that drives db queries, and works as follows:
   # 1) if cancer-specific, get list of cancer-specific PMIDS if not already set
@@ -298,6 +325,8 @@ shinyServer(function(input, output, session) {
       cat("got connection\n")
       
       pmids <- pmidList$pmids_initial$PMID
+      catn("initial pmids:")
+      catn(pmids)
       
       cat("pmids = ", pmids, "\n")
       # get PMIDs for gene selection
@@ -355,22 +384,33 @@ shinyServer(function(input, output, session) {
       }
       
       if (length(pmids) == 0) {
-        dbDisconnect(con)
+        #dbDisconnect(con)
+        pmidList$pmids <- data.frame(PMID = pmids)
         cat("NO RESULTS -- SHOULD BE CHECKED!")
-        return()
+        # don't stop here because this is now possible
+        # if user updates cancer types but keeps filters
+        
+        pmids <- "NULL"
       }
       
       cat("updating summaries...\n")
       
+      catn("get mesh summary...\n")
       #getSummaries("Pharmacological Substances", con, getChemSummaryByPMIDs, pmids, session, paSummary, pa = TRUE)
-      getSummaries("Related Diseases", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
+
+      getSummaries("Cancer Types", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
+      
+      cat("we got disease summaries")
+      
       #ids <- diseaseSummary$selectedID
       #terms <- diseaseSummary$selectedTerm
-      
+    
       # skip Neoplasms by Site and Neoplasms
-      skipIDs <- c('D009370', 'D009371', 'D009369')
-      diseaseSummary$dat <- diseaseSummary$dat [!diseaseSummary$dat$MeshID %in% skipIDs,]
-      
+      if (nrow(diseaseSummary$dat) > 0) {
+        #skipIDs <- c('D009370', 'D009371', 'D009369')
+        skipIDs <- c('D009370', 'D009371')  # keep Neoplasms
+        diseaseSummary$dat <- diseaseSummary$dat [!diseaseSummary$dat$MeshID %in% skipIDs,]
+      }
       getSummaries("Related Chemicals", con, getChemSummaryByPMIDs, pmids, session, chemSummary, "filterChem", pa = TRUE)
       getSummaries("Related Mutations", con, getMutationSummaryByPMIDs, pmids, session, mutationSummary, "filterMutations")
       getSummaries("Related Cancer Terms", con, getCancerTermSummaryByPMIDs, pmids, session, cancerTermSummary, "filterCancerTerms")
@@ -384,6 +424,9 @@ shinyServer(function(input, output, session) {
       dbDisconnect(con)
       
       #update PMIDs
+      if (pmids == 'NULL') {
+        pmids <- NULL
+      }
       pmidList$pmids <- data.frame(PMID = pmids)
       
       if (is.null(pmidList$pmids_initial)) {
@@ -404,7 +447,7 @@ shinyServer(function(input, output, session) {
       }
       
       # get PMIDs for gene selection
-      genes <- c(input$geneInput, geneSummary$selectedID)
+      genes <- c(input$geneInput)
       shinyjs::html("bar-text", "Retrieving Cancer Types for the selected Gene, please wait...")
       
       # get PMIDs for selected gene
@@ -427,12 +470,17 @@ shinyServer(function(input, output, session) {
                     " AND MeshTerms.TreeID LIKE \"C04.%\";"
       )
       
+      
       cancerSelectionSummary$tree_ids <- dbGetQuery(con, qry)
       
       dbDisconnect(con)
       
+     
+      
+      
       # skip Neoplasms by Histologic types, Neoplasms by Site, and Neoplasms
       skipIDs <- c('D009370', 'D009371', 'D009369')
+      skipIDs <- c('D009370', 'D009371')
       mesh <- mesh [!mesh$MeshID %in% skipIDs,]
       
       cancerSelectionSummary$dat <- mesh

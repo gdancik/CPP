@@ -30,17 +30,17 @@ displayGeneSummaryTable <- function() {
 ##################################################################
 # update PMID table
 ##################################################################
-observe ({
-  if (is.null(pmidList$pmids)) {
-    return()
-  }
-  o <- order(pmidList$pmids$PMID, decreasing = TRUE)
-  output$articleTable <- DT::renderDataTable(DT::datatable(pmidList$pmids[o,,drop = FALSE], rownames = FALSE,
-                                                           selection = "none",
-                                                           options = list(lengthChange = FALSE, 
-                                                                          searching = FALSE,
-                                                                          pageLength = 10, scrollY = 300)))
-})
+# observe ({
+#   if (is.null(pmidList$pmids)) {
+#     return()
+#   }
+#   o <- order(pmidList$pmids$PMID, decreasing = TRUE)
+#   output$articleTable <- DT::renderDataTable(DT::datatable(pmidList$pmids[o,,drop = FALSE], rownames = FALSE,
+#                                                            selection = "none",
+#                                                            options = list(lengthChange = FALSE, 
+#                                                                           searching = FALSE,
+#                                                                           pageLength = 10, scrollY = 300)))
+# })
 
 
 ##################################################################
@@ -49,20 +49,18 @@ observe ({
 
 # generic function to display table with current selection
 updateTable <- function(resTable, columnName, tableID) {
+  
   if (is.null(resTable$dat)) {
     return()
   }
-  m <- match(resTable$selectedID, resTable$dat[[columnName]])
+  
+  x <- resTable$dat
+  
   isolate({
+    m <- match(resTable$selectedID, resTable$dat[[columnName]])
     selection = list(mode = "multiple", selected = m, target = "row")
   })
-  #selection = list(target = "none")
-  x <- resTable$dat
-  #x<-cbind(x, selected = 0)
-  #x$selected[3] <- 1
-  #save(x, file = "look.RData")
-  #colors <- rep("blue", nrow(resTable$dat))
-  #colors[3] <- "yellow"
+  
   output[[tableID]] <- 
           DT::renderDataTable(datatable(x, rownames = FALSE, 
                                 selection = selection,
@@ -70,9 +68,6 @@ updateTable <- function(resTable, columnName, tableID) {
                                        #  columnDefs = list(list(targets = -1, visible = FALSE))
                                         )
                                 ) 
-                  #%>% formatStyle("selected", target = "row", 
-                  #    backgroundColor = styleEqual(c(0,1), c("white", "maroon")),
-                  #    color = styleEqual(c(0,1), c("black", "white")))
           )
 }
 
@@ -174,6 +169,10 @@ displayCancerSelectionSummary <- function(dat, ids1, ids2, outputID = "cancerSel
   cat("ids2 = ", ids2, "\n")
   cat("\n\n")
   
+  if (is.null(dat)) {
+    return()
+  }
+  
   #wait()
   
   selection = list(mode = "multiple", selected = NULL, target = "row")
@@ -184,14 +183,14 @@ displayCancerSelectionSummary <- function(dat, ids1, ids2, outputID = "cancerSel
   }
   
   x <- dat
-  if (is.null(x)) {
-    return()
-  }
+  # if (is.null(x)) {
+  #   output[[outputID]] <- DT::renderDataTable(data.frame())
+  #   return()
+  # }
+  # 
   
   x <- mutate(x, color = 0)
   x$color[x$MeshID %in% ids2] <- 1
-  
-  
   
   # set selection, and hide the 'color' column
   dt <- datatable(x, rownames = FALSE,
@@ -304,7 +303,9 @@ observe({
 
 # get child MeshIDs from input$cancerType
 getChildMeshIDsForSelectedCancers <- function() {
-    
+   
+    catn("get childmesh ids for selected cancers...")
+
     # get tree info for selected ids (my_trees) and unselected (other_trees)
     trees <- cancerSelectionSummary$tree_ids
     
@@ -341,7 +342,6 @@ onclick("highlight", {
   
   displayCancerSelectionSummary(cancerSelectionSummary$dat, input$cancerType, cancerSelectionSummary$ids2)
   
-  
   output$cancerSelectionMsg <- renderUI({
 
     if (is.null(cancerSelectionSummary$ids2)) {
@@ -350,15 +350,6 @@ onclick("highlight", {
     HTML("<br/><b>Note: </b>", "Above selections will include additional cancer types</br> 
          highlighted in pink in the table.")
   })
-  
-})
-
-observe({
-  label <- "Summarize selected cancer types"
-  if (is.null(input$cancerType)) {
-    label <- "Summarize all cancer types"
-  }
-  updateActionButton(session, "btnSelectCancerType", label)
   
 })
 

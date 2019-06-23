@@ -52,13 +52,30 @@ getStackedResults <- function(sql_function, group) {
 }
 
 
-observe({
-  cat("in chemical stacked bar observe...\n")
+
+observeEvent(input$MainPage, {
+  if (input$MainPage == "Mutations") {
+    plotStackedMutations()
+  } else if (input$MainPage == "Drugs") {
+    plotStackedChem()
+  } else if (input$MainPage == "Cancer Terms") {
+    plotStackedCancerTerms()
+  } else if (input$MainPage == "Genes") {
+    plotStackedGenes()
+  }
+})
+
+
+plotStackedChem <- reactive({
+   cat("in chemical stacked bar observe...\n")
+   msg <- "Summarizing chemicals, please wait..."
+   showProgress(msg)
+   shinyjs::html("bar-text", msg)
    res2 <- getStackedResults(getChemByDiseaseContingency, "Chemical")
    
-
    if (is.null(res2)) {
      output$chemGraph <- renderPlotly({}) 
+     hideProgress()
      return()
    }
 
@@ -69,15 +86,23 @@ observe({
       stackedBarGraph(res2, "Disease", "Frequency", "Chemical", "Distribution of drug mentions by cancer (max 10 cancers and 15 drugs)",
                       "Number of chemical mentions")
     })
+
+    hideProgress()
 })
 
 
-observe({
+
+plotStackedMutations <- reactive({
   cat("in mut stacked bar observe...\n")
+  msg <- "Summarizing mutations, please wait..."
+  showProgress(msg)
+  shinyjs::html("bar-text", msg)
+  
   res2 <- getStackedResults(getMutByDiseaseContingency, "Mutation")
   
   if (is.null(res2)) {
-      output$mutGraph <- renderPlotly({})
+    output$mutGraph <- renderPlotly({})
+    hideProgress()
     return()
   }
   
@@ -85,16 +110,24 @@ observe({
     stackedBarGraph(res2, "Disease", "Frequency", "Mutation", "Distribution of mutations by cancer (max 10 cancers and 15 drugs)",
                     "Number of mutation mentions", abbreviate = FALSE)
   })
+  hideProgress()
+  return()
 })
 
 
 
-observe({
+plotStackedCancerTerms <- reactive({
+  
   cat("in CancerTerm stacked bar observe...\n")
+  msg <- "Summarizing cancer terms, please wait..."
+  showProgress(msg)
+  shinyjs::html("bar-text", msg)
+  
   res2 <- getStackedResults(getCancerTermsByDiseaseContingency, "Term")
   
   if (is.null(res2)) {
     output$cancerTermGraph <- renderPlotly({})
+    hideProgress()
     return()
   }
   
@@ -102,18 +135,26 @@ observe({
     stackedBarGraph(res2, "Disease", "Frequency", "Term", "Distribution of Cancer Terms by cancer (max 10 cancers and 15 terms)",
                     "Number of cancer term mentions", abbreviate = FALSE)
   })
+  hideProgress()
+  return()
 })
 
 
-observe({
+plotStackedGenes <- reactive({
+  
   cat("in Genes stacked bar observe...\n")
+  
+  msg <- "Summarizing genes, please wait..."
+  showProgress(msg)
+  shinyjs::html("bar-text", msg)
+  
   res2 <- getStackedResults(getGenesByDiseaseContingency, "Gene")
  
   if (is.null(res2)) {
     output$geneGraph <- renderPlotly({})
+    hideProgress()
     return()
   }
-
 
   gene <- isolate(input$geneInput)
 
@@ -129,6 +170,7 @@ observe({
 
   if (nrow(res2) == 0) {
     output$geneGraph <- renderPlotly({})
+    hideProgress()
     return()
   }
 
@@ -136,11 +178,9 @@ observe({
     stackedBarGraph(res2, "Disease", "Frequency", "Gene", "Distribution of additional genes by cancer (max 10 cancers and 15 terms)",
                     "Number of gene mentions", abbreviate = FALSE)
   })
+  hideProgress()
+  return()
 })
-
-
-
-
 
 # generates a stacked bar graph using ggplotly with specified data frame (res2)
 # res2 must be data.frame with columns corresponding to x,fill, and y

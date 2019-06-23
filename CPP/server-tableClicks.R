@@ -91,7 +91,10 @@ observe( {
               cat("selected1: ", cancerSelectionSummary$selected1, "\n")
                isolate(displayCancerSelectionSummary(diseaseSummary$dat, cancerSelectionSummary$selected1, cancerSelectionSummary$selected2, "diseaseResults"))
                cat("toggle modal from no rows selected...\n")
-               toggleModal(session, "cancerTypeSetupModal",  toggle = "open")
+              # toggleModal(session, "cancerTypeSetupModal",  toggle = "open")
+               catn("click link")
+               shinyjs::click('#cancerTypeSetupModal')
+               
                return()
             } else {
               
@@ -111,14 +114,18 @@ observe( {
                 }
               
                 isolate(displayCancerSelectionSummary(diseaseSummary$dat, cancerSelectionSummary$selected1, cancerSelectionSummary$selected2, "diseaseResults"))
-                cat("toggle modal from user click...\n")
+                cat("toggle modal from user...\n")
+                #shinyjs::click('#cancerTypeSetupModal')
                 toggleModal(session, "cancerTypeSetupModal",  toggle = "open")
                 return()
             }
   })
 
-observeEvent(input$chemResults_rows_selected, 
-             updateSelectedMeshIDs(chemSummary$dat$MeshID[input$chemResults_rows_selected], chemSummary)  )
+observeEvent(input$chemResults_rows_selected, {
+             #catn("chem table, rows selected...")
+             #wait()
+             updateSelectedMeshIDs(chemSummary$dat$MeshID[input$chemResults_rows_selected], chemSummary)  
+})
 
 observeEvent(input$mutationResults_rows_selected, {
           updateSelectedMeshIDs(mutationSummary$dat$MutID[input$mutationResults_rows_selected], mutationSummary, "MutID", NULL)
@@ -154,18 +161,30 @@ checkNoSelection <- function(selected, resTable) {
 #})
 
 # process possible no selection for chemTable
+# if table has no rows, we don't want to process
+# as a selection, so ignore 
 observe({ selected <- input$chemResults_rows_selected
+          if (!is.null(chemSummary$dat) && nrow(chemSummary$dat) == 0) {
+            return()
+          }
           checkNoSelection(selected, chemSummary)
 })
 
 # process possible no selection for mutationTable
 observe({ selected <- input$mutationResults_rows_selected
-          checkNoSelection(selected,  mutationSummary)
+        if (!is.null(mutationSummary$dat) && nrow(mutationSummary$dat) == 0) {
+          return()
+        }
+        checkNoSelection(selected,  mutationSummary)
 })
 
 # process possible no selection for cancerTermsTable
-observe({ selected <- input$cancerTermResults_rows_selected
-checkNoSelection(selected,  cancerTermSummary)
+observe({ 
+  if (!is.null(cancerTermSummary$dat) && nrow(cancerTermSummary$dat) == 0) {
+    return()
+  }
+  selected <- input$cancerTermResults_rows_selected
+  checkNoSelection(selected, cancerTermSummary)
 })
 
 

@@ -23,13 +23,16 @@ commonStyles <- list(
                   }
                   
               .blue-button {
-              #  position:relative;
-              #  bottom: 12px;
-              #  height: 35px;
-                #width: 66px;
-                #color: white;
                 background-image: linear-gradient(#04519b,#044687 60%,#033769);
                 color:#FFF;
+              }
+
+              .width100 {
+                width: 100%;
+              }
+
+              .hide {
+                display:none;
               }
 
                   /* 'hide' tab */
@@ -238,31 +241,38 @@ addDownloadsTabPanel <- function(title) {
   tabPanel(title,
         br(),
           
-        h4("Click a button below to download the corresponding summary as a csv file."),
+        h3("Click a button below to download PMIDS and summary results as a csv file."),
+        br(),
  
+        fluidRow(
+          column(3,
+        
         downloadButton("downloadPMIDs", "Download PMIDs",
-                       class = 'blue-button'),
+                       class = 'blue-button width100'), br(),br(),
  
         downloadButton("downloadCancerTypesData", "Download Cancer Type Summary",
-                       class = 'blue-button'),
-                             
+                       class = 'blue-button width100'), br(),br(),
+        
+        downloadButton("downloadCancerTermsData", "Download Cancer Terms Summary",
+                       class = 'blue-button width100')
+          ), column(3,
+        
         downloadButton("downloadDrugTreatmentsData", "Download Drugs Summary",
-                       class = 'blue-button'),
+                       class = 'blue-button width100'), br(),br(),
                              
         downloadButton("downloadMutationsData", "Download Mutations Summary",
-                       class = 'blue-button'),
+                       class = 'blue-button width100'), br(),br(),
         
         downloadButton("downloadGenesData", "Download Genes Summmary",
-                       class = 'blue-button')
-        
-
+                       class = 'blue-button width100')
+          )
+        )
   )
 }
 
 
 
 shinyUI(
-  
   
   navbarPage(title = 'Cancer Publication Portal',
              id = "headerNavBarPage", 

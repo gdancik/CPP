@@ -1,22 +1,42 @@
 
-writeDownloadHeader <- function(file) {
+writeDownloadHeader <- function(header, file) {
   f <- createFilterString()
+  cancers <- createCancerString()
+
+  if (is.null(cancers)) {
+    cancers <- "(none)"
+  }
+  cancers <- paste0("Any from selected cancers: ", cancers)
+  
+  
+  # if (f == "") {
+  #   f <- paste0("\"# Summary for ", selected$geneSymbol, " (no filters)\"")
+  # } else {
+  #   f <- gsub("<.+?>", "", f)
+  #   f <- paste0("\"# Summary for ", selected$geneSymbol, " with filters: ", f, "\"")
+  # }
+  
+  h <- paste0("# ", header, "\n# Selected gene: ", selected$geneSymbol)
+  cancers <- paste0("\"# ", cancers, "\"") 
+  f <- gsub("<.+?>", "", f)
+  
+  write(h, file)
+  write(cancers, file, append = TRUE)
   
   if (f == "") {
-    f <- paste0("\"# Summary for ", selected$geneSymbol, " (no filters)\"")
-  } else {
-    f <- gsub("<.+?>", "", f)
-    f <- paste0("\"# Summary for ", selected$geneSymbol, " with filters -- ", f, "\"")
+    return()
   }
+  f <- paste0("# All from ", f, "\n")
   
-  write(f, file)
+  write(f, file, append = TRUE)
+  
 }
 
 
 output$downloadPMIDs <- downloadHandler(
       "pmids.csv",
       content = function(file) {
-        writeDownloadHeader(file)
+        writeDownloadHeader("PMID list", file)
         write.table(pmidList$pmids, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
       },
       contentType = "text/csv"
@@ -25,19 +45,27 @@ output$downloadPMIDs <- downloadHandler(
 output$downloadCancerTypesData <- downloadHandler(
       "cancerTypesSummary.csv",
       content = function(file) {
-        writeDownloadHeader(file)
+        writeDownloadHeader("Cancer Type Summary", file)
         write.table(diseaseSummary$dat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
       },
       contentType = "text/csv"
 )
 
 
+output$downloadCancerTermsData <- downloadHandler(
+  "cancerTerms.csv",
+  content = function(file) {
+    writeDownloadHeader("Cancer Terms Summary", file)
+    write.table(cancerTermSummary$dat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
+  },
+  contentType = "text/csv"
+)
 
 
 output$downloadDrugTreatmentsData <- downloadHandler(
   "drugSummary.csv",
   content = function(file) {
-    writeDownloadHeader(file)
+    writeDownloadHeader("Drug Summary", file)
     write.table(chemSummary$dat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
   },
   contentType = "text/csv"
@@ -46,7 +74,7 @@ output$downloadDrugTreatmentsData <- downloadHandler(
 output$downloadMutationsData <- downloadHandler(
   "mutationSummary.csv",
   content = function(file) {
-    writeDownloadHeader(file)
+    writeDownloadHeader("Mutation Summary", file)
     write.table(mutationSummary$dat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
   },
   contentType = "text/csv"
@@ -55,7 +83,7 @@ output$downloadMutationsData <- downloadHandler(
 output$downloadGenesData <- downloadHandler(
   "geneSummary.csv",
   content = function(file) {
-    writeDownloadHeader(file)
+    writeDownloadHeader("Gene Summary", file)
     write.table(geneSummary$dat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
   },
   contentType = "text/csv"
