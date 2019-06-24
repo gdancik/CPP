@@ -32,7 +32,17 @@ commonStyles <- list(
               }
 
               .hide {
-                display:none;
+                //display:none;
+                height: 20px;
+              }
+
+
+              .noclick {
+                pointer-events: none;
+              }
+
+              .noclick tr {
+                  color: lightgrey;
               }
 
                   /* 'hide' tab */
@@ -149,15 +159,19 @@ commonHeader <- list(
   hr(style = "padding: 0px; margin: 0px"),
  
   fluidRow(shiny::column(width = 12,
-                         conditionalPanel(condition="$('html').hasClass('shiny-busy')",
-                                          HTML("<div class=\"progress\" style=\"position: fixed;  width: 100%; height:25px; !important\">
-                                               <div class=\"progress-bar progress-bar-striped active\" role=\"progressbar\" aria-valuenow=\"100\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"opacity: 1; width:100%\" !important>
-                                               <span id=\"bar-text\"><b>Loading, please wait...</b></span>
-                                               </div></div>")
-                                          ))
-           
-                         ),
-  br(), commonStyles
+             div(style = "position: relative; width: 100%; height: 10px", 
+                conditionalPanel(condition="$('html').hasClass('shiny-busy')",
+                  HTML("<div class=\"progress\" style=\"position: fixed;  width: 100%; height:50px; z-index:1000; !important\">
+                      <div class=\"progress-bar progress-bar-striped active\" role=\"progressbar\" aria-valuenow=\"100\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"opacity: 1; width:100%\" !important>
+                      </br>
+                          <span id=\"bar-text\" style = \"font-size:2em\"><b>Loading, please wait...</b></span>
+                      </div>
+                    </div>")
+                )
+              ))
+           ),
+  br(), 
+  commonStyles
 )
 
 
@@ -169,8 +183,10 @@ addTabPanel <- function(title, tableId, graphId = NULL) {
 
            fluidRow(div(style = "height: 300px",
              shiny::column(width = 5,
-                           withSpinner(DT::dataTableOutput(tableId), type = 3,
-                                       color.background = "white")
+                           #withSpinner(
+                             DT::dataTableOutput(tableId), type = 3,
+                                       color.background = "white"
+                            # )
              ),
              if (!is.null(graphId)) {
                shiny::column(7, 
@@ -276,8 +292,8 @@ shinyUI(
   
   navbarPage(title = 'Cancer Publication Portal',
              id = "headerNavBarPage", 
-             
     tabPanel("Home",
+          
           commonHeader, 
           fluidRow(column(style='border-right: 1px solid',width = 12,
           tabsetPanel(id = "MainPage",

@@ -1,3 +1,5 @@
+source("progress.R")
+
 # from shinyGEO, includes cancel button with applyID; cancelID is optional id of cancel button
 formatBSModal<-function (id, title, trigger, applyID, ..., size, applyText = "Update filters", 
                          cancelID = NULL, escape = TRUE) 
@@ -46,6 +48,10 @@ welcomeModal <-  bsModal("welcomeModal",HTML("<i>Cancer Publication Portal</i>")
         drop down box."),
       p("Feedback is welcome, and can be sent to dancikg@easternct.edu"),
       
+      fluidRow(column(12,
+               progressDiv('welcomeModalProgress', 'welcomeModal-bar-text', "Summarizing cancer types, please wait..."))),
+
+
       hr(class = "blue-button", style="height: 2px"),
       
       fluidRow(
@@ -55,7 +61,7 @@ welcomeModal <-  bsModal("welcomeModal",HTML("<i>Cancer Publication Portal</i>")
         column(2,style = "vertical-align:middle; padding-left:0px",
            HTML("<label class = 'control-label' style='visibility:hidden'>Hello</label>"),
            div(
-                actionButton("btnGeneSearch", "Select Cancer Types", class = "blue-button")
+                actionButton("btnGeneSearch", "Summarize cancer types", class = "blue-button")
            )
         )
       )
@@ -185,17 +191,13 @@ graphSetupModalMut <- formatBSModal("graphSetupModalMut", "Mutations Graph Setti
                              ), size = "large", applyText = "Update graph"
                         )
 
+
 cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Select Cancer Types", "", "btnSelectCancerType", 
                                       fluidRow(column(12,
-                                                      
-                                                      #conditionalPanel(condition="$('html').hasClass('shiny-busy')",
-                                                                       HTML("<div id = 'cancerTypeProgress' class=\"progress hide\" style=\"position: fixed;  width: 97%; height:25px; !important\">
-                                                                            <div class=\"progress-bar progress-bar-striped active\" role=\"progressbar\" aria-valuenow=\"100\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"opacity: 1; width:100%\" !important>
-                                                                            <span id=\"cancerSelection-bar-text\"><b>Loading, please wait...</b></span>
-                                                                            </div></div>"),
-                                                                       #),
-                                                      HTML("<p>Select the cancer types you are interested in using the table or drop down below. 
-                                                           When you are done, click the button below to apply your changes.<br>\
+                                            progressDiv('cancerTypeProgress', 'cancerSelection-bar-text'),          
+                                                        
+                                                      HTML("<p>Select the desired cancer types by clicking on the table or by using the drop down below. 
+                                                           When you are finished, click the Submit button to retrieve summaries of your results. </br></br>\
                                                            </p>")
                                                       )),
                                       fluidRow(
@@ -204,8 +206,9 @@ cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Select Cancer Typ
                                                withSpinner(DT::dataTableOutput("cancerSelectionTable"), type = 3,
                                                            color.background = "white")
                                                ),
+                                        column(1),
                                         
-                                        column(6, 
+                                        column(5, 
                                                
                                                fluidRow(
                                                conditionalPanel(condition="!$('html').hasClass('shiny-busy')",
@@ -218,7 +221,7 @@ cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Select Cancer Typ
                                         )
                                       ),
                                       
-                                      size = "large", applyText = "Summarize all cancer types", 
+                                      size = "large", applyText = "Retrieve summaries for all cancer types", 
                                       cancelID = "btnCancelCancerType", escape = FALSE
 )
 

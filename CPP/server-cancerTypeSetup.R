@@ -19,10 +19,9 @@ observeEvent(input$cancerTypeSetupModal,{
 observeEvent(input$btnSelectCancerType, {
   
   cat("searching for gene btnSelectCancertype selection...\n")
-  
-  showProgress()
+  disableTableClicks()
   shinyjs::disable('btnSelectCancerType')
-  toggleModal(session, "cancerTypeSetupModal",  toggle = "close")
+  showProgress()
   
   shinyjs::removeClass(id = "btnWelcomeCancel", class = "cancel") 
   shinyjs::removeClass(id = "btnCancelCancerType", class = "cancel") 
@@ -51,14 +50,17 @@ observeEvent(input$btnSelectCancerType, {
   
   respondToSelectionDrill()
   
+  toggleModal(session, "cancerTypeSetupModal",  toggle = "close")
   hideProgress()
+  enableTableClicks()
+  
 })
 
 # ## update btnSelectCancerType based on current selection
 observe({
-  label <- "Summarize selected cancer types"
+  label <- "Retrieve summaries for selected cancer types"
   if (is.null(input$cancerType)) {
-    label <- "Summarize all cancer types"
+    label <- "Retrieve summaries for all cancer types"
   }
   updateActionButton(session, "btnSelectCancerType", label)
 

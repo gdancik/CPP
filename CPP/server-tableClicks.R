@@ -1,5 +1,26 @@
 # server-tableClicks.R (respond to table clicks and drop-down changes)
 
+# apply addClass or removeClass to all table ids
+# 'f' should be shinyjs::addClass or shinyjs::removeClass
+toggleTableClicks <- function(f) {
+  
+  f(id = 'diseaseResults', class = 'noclick')
+  f(id = 'cancerSelectionTable', class = 'noclick')
+  f(id = 'chemResults', class = 'noclick')
+  f(id = 'mutationResults', class = 'noclick')
+  f(id = 'cancerTermResults', class = 'noclick')
+  f(id = 'geneResults', class = 'noclick')
+  
+}
+
+enableTableClicks <- function() {
+      toggleTableClicks(shinyjs::removeClass)
+}
+
+disableTableClicks <- function() {
+    toggleTableClicks(shinyjs::addClass)
+}
+
 # update current selections - compare current selections with previous, and return
 # updated vector (we may add or remove selections, but should not double count)
 updateMeshSelections <- function(current, previous) {
@@ -8,6 +29,7 @@ updateMeshSelections <- function(current, previous) {
   }
   return (current)
 }
+
 
 # Given a set of 'ids', the table reactive will be updated
 #     ids = the currently selected ids

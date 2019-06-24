@@ -37,6 +37,7 @@ catn <- function(...) {
 
 source("functions.R", local = TRUE)
 source("setResults.R", local = TRUE)
+source("progress.R", local = TRUE)
 
 # some genes have duplicate IDs...we should combine, for now, remove
 library(dplyr)
@@ -111,6 +112,7 @@ shinyServer(function(input, output, session) {
     
   toggleMenus(FALSE)
   
+
   # shinyjs::runjs("
   #                if (navigator.userAgent.indexOf('Chrome') == -1) {
   #                   alert('For the best user experience, we recommend using the Google Chrome browser, available at: http://www.google.com/chrome/');
@@ -137,52 +139,49 @@ shinyServer(function(input, output, session) {
   observeEvent(input$btnNewSearch,{
     updateSelectizeInput(session, "geneInput", choices = geneIDs, selected = selected$geneID, server = TRUE)
     shinyjs::disable("btnGeneSearch")
+    shinyjs::removeClass(id = 'welcomeModal', class = 'hide')
   })
   
-  observeEvent(input$btnGeneSearch,{
 
-      cat("btnGeneSearch, geneInput = ", input$geneInput, "\n")
-    
-      #shinyjs::addClass(class = "cancel", select = "button.cancel")  
-    
-      if (CONFIG$AUTO.RUN) {
-        cat("updating..")
-        
-        #updateSelectizeInput(session, "geneInput", choices = geneIDs, selected =10 , server = TRUE)
-    
-        CONFIG$AUTO.RUN <- FALSE
-        toggleModal(session, "welcomeModal", toggle = "close")
-        return()
-     }
-    
-      if (is.null(input$geneInput) | input$geneInput == "") return()
-    
-      if (!is.null(selected$geneSymbol) && 
-          input$geneInput == selected$geneSymbol) {
-            return()
-      }
-    
-      toggleModal(session, "welcomeModal", toggle = "close")
-      reset("cancerType")
-      cat("toggle modal from btnGeneSearch\n")
-      toggleModal(session, "cancerTypeSetupModal", toggle = "open")
-      cat("opening select cancer type modal")  
-        
-  })
-  
     # on initial search
-    observeEvent(
-      {input$btnGeneSearch
-        },{
-        
-        resetReactiveValues()
+    observeEvent(input$btnGeneSearch,{
       
-        selected$geneID <- input$geneInput  
-        selected$geneSymbol <- geneID_to_symbol(input$geneInput)
-        getCancerTypes()
-        #respondToSelectionDrill()
-        toggleMenus(TRUE)
-        
+          cat("clicked btnGeneSearch, geneInput = ", input$geneInput, "\n")
+          
+          if (CONFIG$AUTO.RUN) {
+            cat("updating..")
+            
+            #updateSelectizeInput(session, "geneInput", choices = geneIDs, selected =10 , server = TRUE)
+            
+            CONFIG$AUTO.RUN <- FALSE
+            toggleModal(session, "welcomeModal", toggle = "close")
+            return()
+          }
+          
+          # do nothing if no valid gene is selected
+          if (is.null(input$geneInput) | input$geneInput == "") return()
+          if (!is.null(selected$geneSymbol) && 
+              input$geneInput == selected$geneSymbol) {
+            return()
+          }
+          
+          reset("cancerType")
+          resetReactiveValues()
+          
+          selected$geneID <- input$geneInput  
+          selected$geneSymbol <- geneID_to_symbol(input$geneInput)
+       
+          cat("get cancer types now...\n")
+          #wait()
+          shinyjs::removeClass('welcomeModalProgress', 'hide')
+          getCancerTypes()
+          toggleMenus(TRUE)
+          
+          shinyjs::addClass('welcomeModalProgress', 'hide')
+          toggleModal(session, "welcomeModal", toggle = "close")      
+          toggleModal(session, "cancerTypeSetupModal", toggle = "open")      
+          
+          
     })
     
     geneID_to_symbol <- function(id) {
@@ -308,6 +307,8 @@ shinyServer(function(input, output, session) {
   ###################################################################################################    
     respondToSelectionDrill <- function() {
       
+      disableTableClicks()
+      
       cat("respondToSelectionDrill\n")
     
       resetReactive(diseaseSummary)
@@ -333,7 +334,7 @@ shinyServer(function(input, output, session) {
       genes <- c(input$geneInput, geneSummary$selectedID)
     
       if (length(genes) > 1) {
-        shinyjs::html("bar-text", "Retrieving Articles for Selected Genes, please wait...")
+        setProgressBarText("Retrieving Articles for Selected Genes, please wait...")
         p3 <- getPMIDs("PubGene", "GeneID", genes, con, pmids)
         pmids <- intersectIgnoreNULL(pmids, p3$PMID)
       }
@@ -359,7 +360,7 @@ shinyServer(function(input, output, session) {
       
       # get PMIDs for Chem selection
       if (!is.null(chemSummary$selectedID)) {
-        shinyjs::html("bar-text", "Retrieving Articles for Selected Chemicals, please wait...")
+        setProgressBarText("Retrieving Articles for Selected Chemicals, please wait...")
         cat("Chem selection, getting PMIDS for: ", chemSummary$selectedID, "\n")
         p2 <- getPMIDs("PubChem", "meshID", chemSummary$selectedID, con, pmids)
         pmids <- intersectIgnoreNULL(pmids, p2$PMID)
@@ -367,7 +368,7 @@ shinyServer(function(input, output, session) {
       
       # get PMIDs for Mutation selection
       if (!is.null(mutationSummary$selectedID)) {
-        shinyjs::html("bar-text", "Retrieving Articles for Selected Mutations, please wait...")
+        setProgressBarText("Retrieving Articles for Selected Mutations, please wait...")
         cat("\n\n==========================================\nMutation selection, getting PMIDS for: ", mutationSummary$selectedID, "\n")
         p2 <- getPMIDs("PubMut", "MutID", mutationSummary$selectedID, con, pmids)
         cat("\n\n======================================\n\nnumber of articles with selected mutation = ", nrow(p2))
@@ -376,7 +377,7 @@ shinyServer(function(input, output, session) {
       
       # get PMIDs for Cancer Term Selection
       if (!is.null(cancerTermSummary$selectedID)) {
-        shinyjs::html("bar-text", "Retrieving Articles for Selected CancerTerms, please wait...")
+        setProgressBarText("Retrieving Articles for Selected CancerTerms, please wait...")
         cat("\n\n==========================================\nCancer Term selection, getting PMIDS for: ", cancerTermSummary$selectedID, "\n")
         p2 <- getPMIDs("PubCancerTerms", "TermID", cancerTermSummary$selectedID, con, pmids)
         cat("\n\n======================================\n\nnumber of articles with selected mutation = ", nrow(p2))
@@ -416,7 +417,7 @@ shinyServer(function(input, output, session) {
       getSummaries("Related Cancer Terms", con, getCancerTermSummaryByPMIDs, pmids, session, cancerTermSummary, "filterCancerTerms")
   
       # update geneSummary
-      shinyjs::html("bar-text", "Retrieving Related Genes, please wait...")
+      setProgressBarText("Retrieving Related Genes, please wait...")
       geneSummary$dat <- getGeneSummaryByPMIDs(pmids, con)
       setGeneResults(session, geneSummary$dat, geneSummary)
       #setResults(session, geneSummary$dat, geneSummary, "filterGenes")
@@ -433,6 +434,10 @@ shinyServer(function(input, output, session) {
         pmidList$pmids_initial <- pmidList$pmids
       }
       
+      # select current tab to update graphs on current page
+      updateCurrentStackedGraph()
+      enableTableClicks()
+      
     }
    
     output$test <- renderText({
@@ -448,7 +453,7 @@ shinyServer(function(input, output, session) {
       
       # get PMIDs for gene selection
       genes <- c(input$geneInput)
-      shinyjs::html("bar-text", "Retrieving Cancer Types for the selected Gene, please wait...")
+      setProgressBarText("Retrieving Cancer Types for the selected Gene, please wait...")
       
       # get PMIDs for selected gene
       con = dbConnect(MariaDB(), group = "CPP")

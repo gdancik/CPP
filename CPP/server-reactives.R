@@ -29,7 +29,6 @@ cancerSelectionSummary <- reactiveValues(dat = NULL, tree_ids = NULL, ids2 = NUL
 # reactive for currently selected gene symbol
 selected <- reactiveValues(geneID = NULL, geneSymbol = NULL)
 
-
 # reactive for pmids:
 #   pmids - current pmids to be displayed
 #   pmids_initial - pmids on initial search used to limit further queries

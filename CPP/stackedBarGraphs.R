@@ -52,8 +52,7 @@ getStackedResults <- function(sql_function, group) {
 }
 
 
-
-observeEvent(input$MainPage, {
+updateCurrentStackedGraph <- function() {
   if (input$MainPage == "Mutations") {
     plotStackedMutations()
   } else if (input$MainPage == "Drugs") {
@@ -63,6 +62,11 @@ observeEvent(input$MainPage, {
   } else if (input$MainPage == "Genes") {
     plotStackedGenes()
   }
+}
+
+
+observeEvent(input$MainPage, {
+  updateCurrentStackedGraph()
 })
 
 

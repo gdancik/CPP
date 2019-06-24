@@ -91,21 +91,7 @@ observe({
   cat("in cancer plot observe...\n")
   
   if (!is.null(diseaseSummary$dat)) {
-    
-    # TO DO: delete commented block below (commented out 6/19) 
-    # con = dbConnect(MariaDB(), group = "CPP")
-    # 
-    # qry <- paste0("select MeshID, TreeID from MeshTerms where MeshID IN ", 
-    #               cleanseList(diseaseSummary$dat$MeshID),
-    #               " AND MeshTerms.TreeID LIKE \"C04.%\";"
-    # )
-    # 
-    # cancerTerms <- dbGetQuery(con, qry)
-    # dbDisconnect(con)
-    # 
-    # x <- subset(diseaseSummary$dat, MeshID %in% cancerTerms$MeshID)
-    # 
-    
+  
     x <- diseaseSummary$dat
     x$Frequency <- as.double(x$Frequency)
 
