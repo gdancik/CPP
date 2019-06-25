@@ -109,8 +109,24 @@ commonStyles <- list(
                   position:sticky;
                   position:-webkit-sticky;
                   top:0;
-                  background:white;
-                  z-index:1000;
+                  //background:white;
+                  //z-index:1000;
+                }
+          
+                .shiny-notification {
+                    position: fixed;                    
+                    top: 5%;
+                    right: 20%;
+                    font-size: 1.3em;
+                    padding-left: 20px;
+                    padding-right: 20px;
+                    padding-top: 10px; 
+                    padding-bottom: 10px;
+                    border-style: solid;
+                    border-color: black;
+                    background-color: #f2dede;
+                    opacity: 1;
+                    font-weight: bold;
                 }
 
                 .graph-button {

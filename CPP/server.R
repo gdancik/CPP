@@ -44,7 +44,6 @@ library(dplyr)
 
 shinyServer(function(input, output, session) {
 
- 
   observe({
     output$log <- renderText(logFile$log)
     
@@ -112,7 +111,6 @@ shinyServer(function(input, output, session) {
     
   toggleMenus(FALSE)
   
-
   # shinyjs::runjs("
   #                if (navigator.userAgent.indexOf('Chrome') == -1) {
   #                   alert('For the best user experience, we recommend using the Google Chrome browser, available at: http://www.google.com/chrome/');
@@ -143,7 +141,7 @@ shinyServer(function(input, output, session) {
   })
   
 
-    # on initial search
+    # on gene search
     observeEvent(input$btnGeneSearch,{
       
           cat("clicked btnGeneSearch, geneInput = ", input$geneInput, "\n")
@@ -180,7 +178,6 @@ shinyServer(function(input, output, session) {
           shinyjs::addClass('welcomeModalProgress', 'hide')
           toggleModal(session, "welcomeModal", toggle = "close")      
           toggleModal(session, "cancerTypeSetupModal", toggle = "open")      
-          
           
     })
     
@@ -418,7 +415,15 @@ shinyServer(function(input, output, session) {
   
       # update geneSummary
       setProgressBarText("Retrieving Related Genes, please wait...")
-      geneSummary$dat <- getGeneSummaryByPMIDs(pmids, con)
+      catn("genes = ", genes)
+      catn('input = ', selected$geneID)
+      tmp <- getGeneSummaryByPMIDs(pmids, con)
+      catn("tmp = ")
+      print(head(tmp))
+      
+      m <- match(selected$geneSymbol, tmp$Symbol)
+      geneSummary$dat <- tmp[-m,]
+      
       setGeneResults(session, geneSummary$dat, geneSummary)
       #setResults(session, geneSummary$dat, geneSummary, "filterGenes")
   

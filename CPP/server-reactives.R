@@ -8,9 +8,11 @@ updateLog <- function(logFile, ...) {
 }
 
 # basic reactive structure for storing disease, chem, etc results tables
+# set not.refreshed to TRUE when selectedID is outdated (i.e., because of
+# change in table selection)
 createReactiveTable <- function(...) {
   reactiveValues(dat = NULL, selectedID = NULL,
-                 selectedTerm = NULL, graphData = NULL, ...)
+                 selectedTerm = NULL, graphData = NULL, refreshPending = NULL, ...)
 }
 
 
@@ -26,6 +28,9 @@ cancerTermSummary <- createReactiveTable()
 cancerSelectionSummary <- reactiveValues(dat = NULL, tree_ids = NULL, ids2 = NULL, highlightPending = NULL,
                                          selected1 = NULL, selected2 = NULL)
 
+
+
+
 # reactive for currently selected gene symbol
 selected <- reactiveValues(geneID = NULL, geneSymbol = NULL)
 
@@ -33,7 +38,6 @@ selected <- reactiveValues(geneID = NULL, geneSymbol = NULL)
 #   pmids - current pmids to be displayed
 #   pmids_initial - pmids on initial search used to limit further queries
 pmidList <- reactiveValues(pmids = NULL, pmids_initial = NULL)
-
 
 # resets reactive values in 'x' to NULL
 resetReactive <- function(x) {

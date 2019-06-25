@@ -12,7 +12,9 @@ observe ({
 
 displayGeneSummaryTable <- function() {
   
-  selected <- c(selected$geneSymbol, geneSummary$selectedTerm)
+  #selected <- c(selected$geneSymbol, geneSummary$selectedTerm)
+  selected <-  geneSummary$selectedTerm
+  
   cat("update gene summary, selected = ", selected, "\n")
   m <- match(selected, geneSummary$dat$Symbol)
   
@@ -20,10 +22,14 @@ displayGeneSummaryTable <- function() {
     selection = list(mode = "multiple", selected = m, target = "row")
     cat("selected gene rows = ", m, "\n")
   })
+
+  isolate({
   output$geneResults <- DT::renderDataTable(datatable(geneSummary$dat, rownames = FALSE,
                                                       selection = selection,
                                                       options = list(paging = FALSE, scrollY = 300)))
-  
+  cat("selected rows: ", input$geneResults_rows_selected)
+  })
+
 }
 
 
@@ -49,7 +55,11 @@ displayGeneSummaryTable <- function() {
 
 # generic function to display table with current selection
 updateTable <- function(resTable, columnName, tableID) {
-  
+ 
+  catn("in updateTable with", columnName, " and ", tableID)
+
+  #wait()
+
   if (is.null(resTable$dat)) {
     return()
   }
@@ -60,7 +70,8 @@ updateTable <- function(resTable, columnName, tableID) {
     m <- match(resTable$selectedID, resTable$dat[[columnName]])
     selection = list(mode = "multiple", selected = m, target = "row")
   })
-  
+ 
+ isolate({ 
   output[[tableID]] <- 
           DT::renderDataTable(datatable(x, rownames = FALSE, 
                                 selection = selection,
@@ -69,6 +80,11 @@ updateTable <- function(resTable, columnName, tableID) {
                                         )
                                 ) 
           )
+
+  catn("selected rows: ", input[[tableID]]$rows_selected)
+  catn('*********************')
+
+ })
 }
 
 #observe(updateTable(paSummary, "MeshID", "paResults"))
@@ -146,7 +162,9 @@ observe({
 
 # ids1 = selectedIDs,
 # ids2 = child IDs that will be colored
-
+# for 'cancerSelectionTable', set/allow multiple selections;
+#    otherwise color code 'selected' rows but do not enable
+#    selection
 displayCancerSelectionSummary <- function(dat, ids1, ids2, outputID = "cancerSelectionTable") {
   
   cat("\n\n")
@@ -163,21 +181,25 @@ displayCancerSelectionSummary <- function(dat, ids1, ids2, outputID = "cancerSel
   
   selection = list(mode = "multiple", selected = NULL, target = "row")
   
-  if (!is.null(ids1)) {
-    m <- match(ids1, dat$MeshID)
-    selection$selected = m
-  }
-  
   x <- dat
-  # if (is.null(x)) {
-  #   output[[outputID]] <- DT::renderDataTable(data.frame())
-  #   return()
-  # }
-  # 
-  
+
   x <- mutate(x, color = 0)
   x$color[x$MeshID %in% ids2] <- 1
   
+  # set selection
+  if (!is.null(ids1)) {
+    m <- match(ids1, dat$MeshID)
+    selection$selected = m
+    
+    if (outputID != 'cancerSelectionTable') {
+      x$color[m] <- 2
+      selection <- 'none'
+    }
+    
+  }
+
+  
+    
   # set selection, and hide the 'color' column
   dt <- datatable(x, rownames = FALSE,
                     selection = selection,
@@ -188,7 +210,8 @@ displayCancerSelectionSummary <- function(dat, ids1, ids2, outputID = "cancerSel
     
   # formatting table
   dt <- dt %>% formatStyle("color", target = "row", 
-                           backgroundColor = styleEqual(c("0","1"), c("white", "pink"))
+                           backgroundColor = styleEqual(c("0","1", "2"), c("white", "pink", "maroon")),
+                           color = styleEqual(c("0","1", "2"), c("black", "black", "white"))
                            )
   
   #output$cancerSelectionTable <- DT::renderDataTable(dt)

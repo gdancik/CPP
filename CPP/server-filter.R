@@ -13,6 +13,7 @@ observeEvent(input$filterModal,{
 })
 
 
+
 # observer to enable / disable Save Filter button
 observe({
 
@@ -50,19 +51,27 @@ updateFilters <- function(f,s_name) {
     }
  
     if (is.null(f)) {
-        x$selectedID <- NULL
-        x$selectedTerm <- NULL
+        isolate(x$selectedID <- NULL)
+        isolate(x$selectedTerm <- NULL)
     } else {
         cat("updating to: ", f, "\n")  
 
         g <- grep(f, x$selectedID)
     
-        x$selectedID <- f
-        x$selectedTerm <- x$selectedTerm[g]
+        isolate(x$selectedID <- f)
+        isolate(x$selectedTerm <- x$selectedTerm[g])
     }
 
-    assign(s_name, x, env = .GlobalEnv)
+    isolate(assign(s_name, x, env = .GlobalEnv))
     return(TRUE)
+}
+
+
+resetRefreshPending <- function() {
+          chemSummary$refreshPending <- NULL
+          mutationSummary$refreshPending <- NULL
+          cancerTermSummary$refreshPending <- NULL
+          geneSummary$refreshPending <- NULL
 }
 
 observeEvent(input$btnSaveFilters, {
@@ -75,10 +84,17 @@ observeEvent(input$btnSaveFilters, {
       f[[5]] <- updateFilters(input$filterGenes, "geneSummary")
 
       if (any(f)) {
+          catn("\n\nAPPLYING FILTER NOW...")
+          removeNotification('refreshNotification')
+          disableTableClicks()
           cat("closing modal...\n")
           toggleModal(session, "filterModal")
           cat("respond to selection ...\n")
-          respondToSelectionDrill() 
+          
+          resetRefreshPending()
+
+          respondToSelectionDrill()
+          enableTableClicks() 
       }
 
 })

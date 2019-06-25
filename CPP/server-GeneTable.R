@@ -14,6 +14,10 @@ geneSymbolToID <- function(symbols, GeneTable) {
              stringsAsFactors = FALSE)
 }
 
+geneIDToSymbol <- function(id, GeneTable) {
+    m <- match(id, GeneTable$GeneID)
+    return(GeneTable$SYMBOL[m])
+}
 
 geneIDs <- GeneTable$GeneID
 names(geneIDs) <- GeneTable$SYMBOL
