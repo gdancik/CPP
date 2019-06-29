@@ -12,7 +12,15 @@ observeEvent(input$filterModal,{
 
 })
 
-
+shinyjs::onclick('clearFilters', {
+  catn("clicked clearFilters")
+  shinyjs::enable("btnSaveFilters") 
+  setSelectInput(session, "filterDisease", NULL, NULL)
+  setSelectInput(session, "filterChem", NULL, NULL)
+  setSelectInput(session, "filterMutations", NULL, NULL)
+  setSelectInput(session, "filterCancerTerms", NULL, NULL)
+  setSelectInput(session, "filterGenes", NULL, NULL)
+})
 
 # observer to enable / disable Save Filter button
 observe({

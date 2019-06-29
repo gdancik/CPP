@@ -4,22 +4,43 @@
 
 source("abbreviate.R", local = TRUE)
 
-getStackedResults <- function(sql_function, group) {
-
-  if (is.null(diseaseSummary$dat)) {
+#### return data for stacked bar graph, with x1 = disease and
+# x2 specified by group
+# sql_function: sql function for each disease
+# diseases are those in cancerSelectionSummary$selected1 or if no
+#    selection, the top 10 diseases
+# group.filters: ids for additional filtering
+getStackedResults2 <- function(sql_function, group, group.filters) {
+  
+  if (is.null(diseaseSummary$dat) || nrow(diseaseSummary$dat) <= 0) {
     return(NULL)
   }
-
+  
   con = dbConnect(MariaDB(), group = "CPP")
   
-  cat("warning: NO FILTERS ARE APPLIED to Chemical stacked bar graph\n")
-  res <- sql_function(pmidList$pmids$PMID, con)
+
+  # select meshIDs and diseases
+  if (!is.null(cancerSelectionSummary$selected1)) {
+    meshIDs <- c(cancerSelectionSummary$selected1, cancerSelectionSummary$selected2)
+    m <- match(meshIDs, cancerSelectionSummary$dat$MeshID)
+    diseases <- cancerSelectionSummary$dat$Term[m]
+  } else {
+    meshIDs <- diseaseSummary$dat$MeshID
+    diseases <- diseaseSummary$dat$Term
+  }
+
+  # limit to 10
+  if (length(meshIDs) > 10) {
+    meshIDs <- meshIDs[1:10]
+    diseases <- diseaseSummary$dat$Term[1:10]
+  }
+    
+  res <- sql_function(pmidList$pmids$PMID, con, meshIDs, diseases)
   dbDisconnect(con)
   
   if (nrow(res) == 0) {
     return(NULL)
   }
-  
   
   
   # keep results for most frequent diseases
@@ -29,27 +50,36 @@ getStackedResults <- function(sql_function, group) {
   
   res2$Frequency <- as.double(res2$Frequency)
   
-  # keep results for most frequent groups
-  s <- split(res2$Frequency, res2[[group]])
-  s <- sapply(s, sum)
-  s <- sort(s, decreasing = TRUE)
+  keepThese <- group.filters
   
-  numGroups <- min(15, length(s))
-  keepThese <- names(s)[1:numGroups]
-  res2[[group]][!res2[[group]]%in%keepThese] <- NA
+  if (is.null(keepThese)) {
+    # keep results for most frequent groups
+    s <- split(res2$Frequency, res2[[group]])
+    s <- sapply(s, sum)
+    s <- sort(s, decreasing = TRUE)
+  
+    numGroups <- min(10, length(s))
+    keepThese <- names(s)[1:numGroups]
+    #res2[[group]][!res2[[group]]%in%keepThese] <- NA
+  }
   
   res2 <- filter(res2, res2[[group]] %in% keepThese)
   
   
-  #res2[[group]] <- abbreviate(res2[[group]], minlength = 10)
   
   #re-order bars
   sr <- split(res2$Frequency, res2$Disease)
   st <- sort(sapply(sr, sum))
   res2$Disease <- factor(res2$Disease, levels = names(st)[order(st)])
+  
+  s <- split(res2$Frequency, res2[[group]])
+  n <- names(sort(sapply(s, sum), decreasing = TRUE))
+  res2[[group]] <- factor(res2[[group]], levels = n)
+
   res2
   
 }
+
 
 
 updateCurrentStackedGraph <- function() {
@@ -70,12 +100,16 @@ observeEvent(input$MainPage, {
 })
 
 
+
 plotStackedChem <- reactive({
    cat("in chemical stacked bar observe...\n")
    msg <- "Summarizing chemicals, please wait..."
    showProgress(msg)
    shinyjs::html("bar-text", msg)
-   res2 <- getStackedResults(getChemByDiseaseContingency, "Chemical")
+ 
+#    res2 <- getStackedResults(getChemByDiseaseContingency, "Chemical")
+  
+   res2 <- getStackedResults2(getChemByDiseaseContingency2, "Term", chemSummary$selectedTerm)
    
    if (is.null(res2)) {
      output$chemGraph <- renderPlotly({}) 
@@ -83,12 +117,13 @@ plotStackedChem <- reactive({
      return()
    }
 
-   # abbreviate chemical labels
-   res2$Chemical <- abbreviate(res2$Chemical, minlength=25, dot = TRUE, strict = TRUE, named = FALSE)
-
+   # abbreviate chemical labels (refactor to keep order)
+   tmp <- abbreviate(res2$Term, minlength=25, dot = TRUE, strict = TRUE, named = FALSE)
+   tmp2 <- abbreviate(levels(res2$Term), minlength=25, dot = TRUE, strict = TRUE, named = FALSE)
+   res2$Term <- factor(tmp, levels = tmp2)
+   
    output$chemGraph <- renderPlotly({
-      stackedBarGraph(res2, "Disease", "Frequency", "Chemical", "Distribution of drug mentions by cancer (max 10 cancers and 15 drugs)",
-                      "Number of chemical mentions")
+      stackedBarGraph(res2, "Disease", "Frequency", "Term", "Drug mentions by cancer type")
     })
 
     hideProgress()
@@ -102,7 +137,7 @@ plotStackedMutations <- reactive({
   showProgress(msg)
   shinyjs::html("bar-text", msg)
   
-  res2 <- getStackedResults(getMutByDiseaseContingency, "Mutation")
+  res2 <- getStackedResults2(getMutByDiseaseContingency2, "Mutation", mutationSummary$selectedID)
   
   if (is.null(res2)) {
     output$mutGraph <- renderPlotly({})
@@ -111,8 +146,7 @@ plotStackedMutations <- reactive({
   }
   
   output$mutGraph <- renderPlotly({
-    stackedBarGraph(res2, "Disease", "Frequency", "Mutation", "Distribution of mutations by cancer (max 10 cancers and 15 drugs)",
-                    "Number of mutation mentions", abbreviate = FALSE)
+    stackedBarGraph(res2, "Disease", "Frequency", "Mutation", "Mutation mentions by cancer type", abbreviate = FALSE)
   })
   hideProgress()
   return()
@@ -127,7 +161,7 @@ plotStackedCancerTerms <- reactive({
   showProgress(msg)
   shinyjs::html("bar-text", msg)
   
-  res2 <- getStackedResults(getCancerTermsByDiseaseContingency, "Term")
+  res2 <- getStackedResults2(getCancerTermsByDiseaseContingency2, "Term", cancerTermSummary$selectedTerm)
   
   if (is.null(res2)) {
     output$cancerTermGraph <- renderPlotly({})
@@ -136,8 +170,7 @@ plotStackedCancerTerms <- reactive({
   }
   
   output$cancerTermGraph <- renderPlotly({
-    stackedBarGraph(res2, "Disease", "Frequency", "Term", "Distribution of Cancer Terms by cancer (max 10 cancers and 15 terms)",
-                    "Number of cancer term mentions", abbreviate = FALSE)
+    stackedBarGraph(res2, "Disease", "Frequency", "Term", "Cancer term mentions by cancer type", abbreviate = FALSE)
   })
   hideProgress()
   return()
@@ -152,7 +185,7 @@ plotStackedGenes <- reactive({
   showProgress(msg)
   shinyjs::html("bar-text", msg)
   
-  res2 <- getStackedResults(getGenesByDiseaseContingency, "Gene")
+  res2 <- getStackedResults2(getGenesByDiseaseContingency2, "Gene", geneSummary$selectedTerm)
  
   if (is.null(res2)) {
     output$geneGraph <- renderPlotly({})
@@ -179,8 +212,7 @@ plotStackedGenes <- reactive({
   }
 
   output$geneGraph <- renderPlotly({
-    stackedBarGraph(res2, "Disease", "Frequency", "Gene", "Distribution of additional genes by cancer (max 10 cancers and 15 terms)",
-                    "Number of gene mentions", abbreviate = FALSE)
+    stackedBarGraph(res2, "Disease", "Frequency", "Gene", "Additional gene mentions by cancer type", abbreviate = FALSE)
   })
   hideProgress()
   return()
@@ -188,26 +220,28 @@ plotStackedGenes <- reactive({
 
 # generates a stacked bar graph using ggplotly with specified data frame (res2)
 # res2 must be data.frame with columns corresponding to x,fill, and y
-stackedBarGraph <- function(res2, xname, yname, fillName, title, ylab, abbreviate = TRUE) {
+stackedBarGraph <- function(res2, xname, yname, fillName, title, ylab = "Number of articles", abbreviate = TRUE) {
   
   str <- paste0("gg <- ggplot(res2, aes(x=", xname, ", y = ", yname, ", fill = ", fillName, "))")
   eval(parse(text = str))
   
+  #save(gg, res2, abbreviate2, title, file = "gg.RData")
   #gg <- ggplot(res2, aes(x=x, y = y, fill = fill)) + 
   gg <- gg +  geom_bar(stat = "identity") + coord_flip() +
-    theme(plot.title = element_text(face = "bold"),  
-          axis.title = element_text(face = "bold"),
-          axis.text = element_text(face = "bold")) +
     ggtitle(title) +
     xlab("") + ylab(ylab) +
     theme_linedraw() + scale_x_discrete(label=function(x) abbreviate2(x, 2)) +
-    scale_y_discrete(label=function(x) abbreviate(x,4, dot = TRUE))
+    theme(plot.title = element_text(face = "bold"),  
+            #axis.title = element_text(face = "bold"),
+            #axis.text = element_text(face = "bold"),
+            legend.title = element_blank())
+    #scale_y_discrete(label=function(x) abbreviate(x,4, dot = TRUE))
   
   #scale_x_discrete(labels = function(x) str_wrap(x, width = 8)) 
   
   p <- ggplotly(gg, tooltip = c("x", "fill", "y"))
   #p <- ggplotly(gg, tooltip = "all")
-  return(p %>% config(displayModeBar = F) %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)))
+  return(p %>% config(displayModeBar = 'hover') %>% layout(xaxis=list(fixedrange=TRUE)) %>% layout(yaxis=list(fixedrange=TRUE)))
 }
 
 

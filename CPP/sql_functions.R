@@ -122,7 +122,7 @@ getCancerPMIDsbyMeshID <- function(con, GeneID, MeshID) {
 #     be returned
 # ids must already be in MySQL format ('id1','id2',etc)
 
-getPMIDs <- function(tblName, idType, ids, con, pmids, ids.AND = TRUE) {
+getPMIDs <- function(tblName, idType, ids, con, pmids, ids.AND = FALSE) {
   
   tblPMID <- paste0(tblName,".PMID")
   

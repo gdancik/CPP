@@ -14,10 +14,9 @@ library(shinycssloaders)
 
 CONFIG <- list(
   DEBUG = TRUE,
-  DEFAULT.GENE = "HRAS",
+  DEFAULT.GENE = "AGL",
   AUTO.RUN = FALSE
 )
-
 
 if (!CONFIG$DEBUG) {
 # comment out for debugging
@@ -177,7 +176,8 @@ shinyServer(function(input, output, session) {
           
           shinyjs::addClass('welcomeModalProgress', 'hide')
           toggleModal(session, "welcomeModal", toggle = "close")      
-          toggleModal(session, "cancerTypeSetupModal", toggle = "open")      
+          toggleModal(session, "cancerTypeSetupModal", toggle = "open")   
+          displayCancerSelectionSummary(cancerSelectionSummary$dat, NULL, NULL)
           
     })
     
@@ -336,24 +336,6 @@ shinyServer(function(input, output, session) {
         pmids <- intersectIgnoreNULL(pmids, p3$PMID)
       }
       
-      # # get PMIDS for Mesh Selection
-      # if (!is.null(diseaseSummary$selectedID)) {
-      #     shinyjs::html("bar-text", "Retrieving Articles for Selected Diseases, please wait...")
-      #     cat("Drill Down Disease selection, geting PMIDS for: ", diseaseSummary$selectedID, "\n")
-      #     #scan(what = character())
-      #     
-      #     # look at selected MeshIDs one at a time, because we need to 
-      #     # consider child mesh IDs for each
-      #     
-      #     for (meshID in diseaseSummary$selectedID) {
-      #         #cat("MeshID is: ", meshID, "....enter to continue\n")
-      #         #scan(what = character())
-      #         p1 <- getPMIDs("PubMesh", "MeshID", 
-      #                    getChildMeshIDs(con, meshID), 
-      #                    con, pmids, ids.AND = FALSE)
-      #         pmids <- intersectIgnoreNULL(pmids, p1$PMID)
-      #     }
-      # }
       
       # get PMIDs for Chem selection
       if (!is.null(chemSummary$selectedID)) {
@@ -397,9 +379,20 @@ shinyServer(function(input, output, session) {
       #getSummaries("Pharmacological Substances", con, getChemSummaryByPMIDs, pmids, session, paSummary, pa = TRUE)
 
       getSummaries("Cancer Types", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
-      
       cat("we got disease summaries")
+
+      # TO DO: make optional
       
+    
+      
+      if (!is.null(cancerSelectionSummary$selected1)) {
+          meshIDs <- c(cancerSelectionSummary$selected1, cancerSelectionSummary$selected2)
+          m <- match(meshIDs, diseaseSummary$dat$MeshID)
+          diseaseSummary$dat <- diseaseSummary$dat[m,]
+      }
+        
+        
+            
       #ids <- diseaseSummary$selectedID
       #terms <- diseaseSummary$selectedTerm
     

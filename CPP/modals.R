@@ -94,25 +94,23 @@ filterModal <- formatBSModal("filterModal", "Remove filters", "btnRemoveFilters"
                          
                          
   fluidRow(column(12,
-     HTML("<p>To remove a filter, delete the term from the dropdown menus below. Then click the 'Update filters' button to apply your changes.</p><br>")
+     HTML("<p>To remove a filter, delete the term from the dropdown menus below. Then click the 'Update filters' button to apply your changes.</p><br>
+          <p> <a id = 'clearFilters' style = 'font-size:1.1em' href = '#clearFilters'>Clear all filters</a></p></br>")
     )),
     fluidRow(
       shiny::column(width=4,
-                  selectInput("filterDisease", "Disease Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
+                    selectInput("filterCancerTerms", "Cancer term filters", choices = NULL, multiple = TRUE, selectize = TRUE)
       ),
       shiny::column(width=4,
-                    selectInput("filterCancerTerms", "Cancer Term Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
-      ),
-      shiny::column(width=4,
-                  selectInput("filterChem", "Chem Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
+                  selectInput("filterChem", "Drug filters", choices = NULL, multiple = TRUE, selectize = TRUE)
       )
     ),
     fluidRow(
       shiny::column(width=4,
-                  selectInput("filterMutations", "Mutation Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
+                  selectInput("filterMutations", "Mutation filters", choices = NULL, multiple = TRUE, selectize = TRUE)
       ),    
       shiny::column(width=4,
-                  selectInput("filterGenes", "Additional Gene Filters", choices = NULL, multiple = TRUE, selectize = TRUE)
+                  selectInput("filterGenes", "Additional gene filters", choices = NULL, multiple = TRUE, selectize = TRUE)
       )
     ), size = "large", cancelID = "btnCancelFilter"
 )

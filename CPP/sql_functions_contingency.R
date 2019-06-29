@@ -1,124 +1,105 @@
 
+##################################################################
+# Functions that create contingency table queries for a given
+# set of pmids and given set of meshIDs (m)
+##################################################################
 
-# Gets chemical counts for each disease
-getChemByDiseaseContingency <- function(pmids, con) {
-  pmids <- paste0("'",pmids,"'", collapse = ",")
-  
-  qry <- paste0("SELECT 
-  distinct DT.Term AS Disease, CT.Term as Chemical, Frequency
-  FROM
-  (SELECT 
-  TT.Disease AS Disease,
-  TT.Chem AS Chem,
-  COUNT(TT.Chem) AS Frequency
-  FROM
-  (SELECT 
-  PubChem.PMID AS PMID,
-  PubChem.MeshID AS Chem,
-  PubMesh.MeshID AS Disease
-  FROM
-  PubChem
-  INNER JOIN PubMesh ON PubMesh.PMID = PubChem.PMID
-  WHERE
-  PubChem.PMID IN (", pmids,  ")) AS TT
-  GROUP BY TT.Disease, TT.Chem) AS R
-  inner join MeshTerms as DT ON DT.MeshID = R.Disease
-  inner join PharmActionTerms as CT ON CT.MeshID = R.Chem
-  where DT.TreeID like 'C04.%'
-  ;")
-  
-  runQuery(con, qry, "Chem by Disease query:")
-  
+makeChemByDiseaseContingencyQuery <- function(pmids, m) {
+  paste0(
+    "SELECT 
+    PharmActionTerms.Term as Term, count(distinct PubChem.PMID) as Frequency
+    FROM PubChem
+    INNER JOIN PubMesh ON (PubChem.PMID = PubMesh.PMID)
+    INNER JOIN PharmActionTerms ON (PubChem.MeshID = PharmActionTerms.MeshID)
+    WHERE PubMesh.MeshID IN (",m,")
+    AND 
+    PubChem.PMID IN (",pmids, ")
+    group by Term;")
 }
 
-
-#mutations by disease (cancer only)
-getMutByDiseaseContingency <- function(pmids, con) {
-  pmids <- paste0("'",pmids,"'", collapse = ",")
-  qry <- paste0("SELECT 
-distinct DT.Term AS Disease, R.Mutation as Mutation, Frequency
-FROM
-(SELECT 
-  TT.Disease AS Disease,
-  TT.Mutation AS Mutation,
-  COUNT(TT.Mutation) AS Frequency
-  FROM
-  (SELECT 
-    PubMut.PMID AS PMID,
-    PubMut.MutID AS Mutation,
-    PubMesh.MeshID AS Disease
-    FROM
-    PubMut
-    INNER JOIN PubMesh ON PubMesh.PMID = PubMut.PMID
-    WHERE
-    PubMut.PMID IN (", pmids,  ")) AS TT
-  GROUP BY TT.Disease , TT.Mutation) AS R
-  inner join MeshTerms as DT ON DT.MeshID = R.Disease
-  where DT.TreeID like 'C04.%'
-  ;")
-  runQuery(con, qry, "Chem by Disease query:")
+makeCancerTermsByDiseaseContingencyQuery <- function(pmids, m) {
+  paste0(
+    "SELECT 
+    CancerTerms.Term as Term, count(distinct PubCancerTerms.PMID) as Frequency
+    FROM PubCancerTerms
+    INNER JOIN PubMesh ON (PubCancerTerms.PMID = PubMesh.PMID)
+    INNER JOIN CancerTerms ON (PubCancerTerms.TermID = CancerTerms.TermID)
+    WHERE PubMesh.MeshID IN (",m,")
+    AND 
+    PubCancerTerms.PMID IN (",pmids, ")
+    group by CancerTerms.Term;")
 }
 
-
-# Gets cancer term counts for each disease
-getCancerTermsByDiseaseContingency <- function(pmids, con) {
-  pmids <- paste0("'",pmids,"'", collapse = ",")
-  
-  qry <- paste0("SELECT 
-  distinct DT.Term AS Disease, CT.Term as Term, Frequency
-  FROM
-  (SELECT 
-    TT.Disease AS Disease,
-    TT.Term AS Term,
-    COUNT(TT.Term) AS Frequency
-    FROM
-    (SELECT 
-      PubCancerTerms.PMID AS PMID,
-      PubCancerTerms.TermID AS Term,
-      PubMesh.MeshID AS Disease
-      FROM
-      PubCancerTerms
-      INNER JOIN PubMesh ON PubMesh.PMID = PubCancerTerms.PMID
-      WHERE
- PubCancerTerms.PMID IN (", pmids,  ")) AS TT
-    GROUP BY TT.Disease, TT.Term) AS R
-  inner join MeshTerms as DT ON DT.MeshID = R.Disease
-  inner join CancerTerms as CT ON CT.TermID = R.Term
-  where DT.TreeID like 'C04.%'
-                ;")
-  runQuery(con, qry, "CancerTerm by Disease query:")
-  
-}
-
-# Gets gene counts for each disease
-getGenesByDiseaseContingency <- function(pmids, con) {
-  pmids <- paste0("'",pmids,"'", collapse = ",")
-  
-  qry <- paste0("SELECT 
-  distinct DT.Term AS Disease, CT.SYMBOL as Gene, Frequency
-  FROM
-  (SELECT 
-    TT.Disease AS Disease,
-    TT.Term AS Term,
-    COUNT(TT.Term) AS Frequency
-    FROM
-    (SELECT 
-      PubGene.PMID AS PMID,
-      PubGene.GeneID as Term,
-      PubMesh.MeshID AS Disease
-      FROM
-      PubGene
-      INNER JOIN PubMesh ON PubMesh.PMID = PubGene.PMID
-      WHERE
- PubGene.PMID IN (", pmids,  ")) AS TT
-    GROUP BY TT.Disease, TT.Term) AS R
-  inner join MeshTerms as DT ON DT.MeshID = R.Disease
-  inner join Genes as CT ON CT.GeneID = R.Term
-  where DT.TreeID like 'C04.%'
-                ;")
-  runQuery(con, qry, "Genes by Disease query:")
-  
+makeGenesByDiseaseContingencyQuery <- function(pmids, m) {
+  paste0(
+    "SELECT 
+    GENES.Symbol as Gene, count(distinct PubGene.PMID) as Frequency
+    FROM PubGene
+    INNER JOIN PubMesh ON (PubGene.PMID = PubMesh.PMID)
+    INNER JOIN GENES ON (PubGene.GeneID = GENES.GeneID)
+    WHERE PubMesh.MeshID IN (",m,")
+    AND 
+    PubGene.PMID IN (",pmids, ")
+    group by Gene;")
 }
 
 
 
+makeMutByDiseaseContingencyQuery <- function(pmids,m) {
+  paste0(
+    "SELECT 
+    MutID as Mutation, count(distinct PubMut.PMID) as Frequency
+    FROM PubMut
+    INNER JOIN PubMesh ON (PubMut.PMID = PubMesh.PMID)
+    WHERE PubMesh.MeshID IN (",m,")
+    AND 
+    PubMut.PMID IN (",pmids, ")
+    group by MutID;")
+}
+
+contingencyQueryByDisease <- function(pmids, con, meshIDs, diseases, makeQueryFunction) {
+  
+  t1 <- Sys.time()
+  
+  pmids <- paste0("'",pmids,"'", collapse = ",")
+  
+  all_res <- NULL
+  for (i in seq_along(meshIDs)) {
+    m <- meshIDs[i]
+    m <- getChildMeshIDs(con, m)
+    m <- paste0("'",m,"'", collapse = ",")
+    
+    qry <- makeQueryFunction(pmids, m)
+    
+    catn("Getting contingency for disease: ", diseases[i])
+    
+    res<- dbGetQuery(con, qry)
+    if (nrow(res) > 0) {
+      res <- cbind(Disease = diseases[i], res)
+      all_res <- rbind(all_res, res)
+    }
+    
+  }
+  t2 <- Sys.time()
+  print(t2-t1)
+  all_res
+}
+
+####################################################################
+# functions to query the database
+####################################################################
+getChemByDiseaseContingency2 <- function(pmids, con, meshIDs, diseases) {
+  contingencyQueryByDisease(pmids, con, meshIDs, diseases, makeChemByDiseaseContingencyQuery) 
+}
+
+getMutByDiseaseContingency2 <- function(pmids, con, meshIDs, diseases) {
+  contingencyQueryByDisease(pmids, con, meshIDs, diseases, makeMutByDiseaseContingencyQuery) 
+}
+
+getCancerTermsByDiseaseContingency2 <- function(pmids, con, meshIDs, diseases) {
+  contingencyQueryByDisease(pmids, con, meshIDs, diseases, makeCancerTermsByDiseaseContingencyQuery) 
+}
+
+getGenesByDiseaseContingency2 <- function(pmids, con, meshIDs, diseases) {
+  contingencyQueryByDisease(pmids, con, meshIDs, diseases, makeGenesByDiseaseContingencyQuery) 
+}

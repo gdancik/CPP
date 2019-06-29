@@ -94,12 +94,17 @@ updateSelectedMeshIDs2 <- function(ids, tblSummary, colName1 = "MeshID",
   
   isolate({
     selections <- ids
+    if (length(selections) == 0) {
+      selections <- NULL
+    }
+    save(selections, file = "selections.RData")
     catn("\ncall updateSelectedMeshIDs2 with selections:", selections)
     catn("tblSummary$selectedID: ", tblSummary$selectedID)
     catn("tblSummary$selectedTermS: ", tblSummary$selectedTerm)
    
     # if no change, return
     if (setequal(selections, tblSummary$selectedID)) {
+      catn("no change, returning...")
       return()
     }
     
@@ -115,13 +120,12 @@ updateSelectedMeshIDs2 <- function(ids, tblSummary, colName1 = "MeshID",
           catn("this should be checked")
         }
       }
-    } else if (is.null(ids) & !is.null(tblSummary$selectedID)) {
+    } else if (is.null(selections) & !is.null(tblSummary$selectedID)) {
       # the user has canceled all filters
       catn("setting selected terms and IDs to NULL")
       tblSummary$selectedTerm <- NULL
       tblSummary$selectedID <- NULL
     }
-    
   })
 }
 
@@ -380,13 +384,17 @@ observeEvent(input$geneResults_rows_selected, {
 #################################################
 shinyjs::onclick('btnRefresh', {
   catn("REFRESH THE RESULTS!!")
+  
+  catn("we have selected: ", input$chemResults_rows_selected)
   removeNotification(id = 'refreshNotification')
   disableTableClicks()
+  
   
   updateSelectedMeshIDs2(cancerTermSummary$dat$TermID[input$cancerTermResults_rows_selected], 
                         cancerTermSummary, "TermID", "Term")
   
   updateSelectedMeshIDs2(chemSummary$dat$MeshID[input$chemResults_rows_selected], chemSummary)  
+  
   updateSelectedMeshIDs2(mutationSummary$dat$MutID[input$mutationResults_rows_selected], mutationSummary, "MutID", NULL)
   
   terms <- geneSummary$dat$Symbol[input$geneResults_rows_selected]

@@ -152,7 +152,7 @@ commonHeader <- list(
   filterModal,
   graphSetupModalTerm,
   graphSetupModalChem,
-  graphSetupModalMut,
+ # graphSetupModalMut,
   cancerTypeSetupModal,
   
   # summary row
@@ -212,15 +212,15 @@ addTabPanel <- function(title, tableId, graphId = NULL) {
                              } else {
                                withSpinner(plotlyOutput(graphId), type = 3, 
                                            color.background = "white")  
-                             },
+                             }#,
                              # graph setup buttons
-                             if (graphId == "cancerTermGraph") {
-                               actionButton("btnGraphSetupTerm", "Graph Settings", class = "graph-button") 
-                             } else if (graphId == "chemGraph") {
-                               actionButton("btnGraphSetupChem", "Graph Settings", class = "graph-button")
-                             } else if (graphId == "mutGraph") {
-                               actionButton("btnGraphSetupMut", "Graph Settings", class = "graph-button")
-                             }
+                             # if (graphId == "cancerTermGraph") {
+                             #   actionButton("btnGraphSetupTerm", "Graph Settings", class = "graph-button") 
+                             # } else if (graphId == "chemGraph") {
+                             #   actionButton("btnGraphSetupChem", "Graph Settings", class = "graph-button")
+                             # } else if (graphId == "mutGraph") {
+                             #   actionButton("btnGraphSetupMut", "Graph Settings", class = "graph-button")
+                             # }
                )
              }
            ))

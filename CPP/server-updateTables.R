@@ -196,10 +196,11 @@ displayCancerSelectionSummary <- function(dat, ids1, ids2, outputID = "cancerSel
       selection <- 'none'
     }
     
+  } else if (outputID != 'cancerSelectionTable') {
+    selection <- 'none'
   }
 
   
-    
   # set selection, and hide the 'color' column
   dt <- datatable(x, rownames = FALSE,
                     selection = selection,
@@ -271,6 +272,16 @@ updateChildIDsForSelectedCancers <- function(){
 
 # change in drop down -- update table if different
 observeEvent(input$cancerType,{
+  
+    if (is.null(input$cancerType)) {
+      cat("NO SELECTION FOR CANCER TYPE!\n")
+      cancerSelectionSummary$ids2 <- NULL
+      cancerSelectionSummary$highlightPending <- NULL
+      displayCancerSelectionSummary(cancerSelectionSummary$dat, NULL, NULL)
+      return()
+    }
+  
+  
   # refreshTable if drop down and table selections differ
    refreshTable <- !setequal(input$cancerType, cancerSelectionSummary$dat$MeshID[input$cancerSelectionTable_rows_selected])
    
@@ -297,18 +308,9 @@ observeEvent(input$cancerType,{
      displayCancerSelectionSummary(cancerSelectionSummary$dat, input$cancerType, NULL)
    }
    
-})
+}, ignoreNULL = FALSE)
 
-# handle drop down when no selection
-observe({
-  if (is.null(input$cancerType)) {
-    cat("NO SELECTION FOR CANCER TYPE!\n")
-    cancerSelectionSummary$ids2 <- NULL
-    cancerSelectionSummary$highlightPending <- NULL
-    displayCancerSelectionSummary(cancerSelectionSummary$dat, NULL, NULL)
-  }
-  
-})
+
 
 # get child MeshIDs from input$cancerType
 getChildMeshIDsForSelectedCancers <- function() {
