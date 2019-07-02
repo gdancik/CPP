@@ -116,13 +116,15 @@ getCancerPMIDsbyMeshID <- function(con, GeneID, MeshID) {
 # getPMIDS - 
 # basic query is: select PMIDs from tblName where PMIDs in (pmids) AND
 #   tblName.idType in (ids)
-# if ids.AND is TRUE, then use group by and count to require that all
+# if ids.AND is "all", then use group by and count to require that all
 #     (ids) are found (e.g., if looking for articles mentioning both 
-#     breast and lung tumors). Otherwise all matches to (ids) will
+#     breast and lung tumors). Otherwise all matches to any (ids) will
 #     be returned
 # ids must already be in MySQL format ('id1','id2',etc)
 
 getPMIDs <- function(tblName, idType, ids, con, pmids, ids.AND = FALSE) {
+  
+  ids.AND = ids.AND == "all"
   
   tblPMID <- paste0(tblName,".PMID")
   
@@ -203,14 +205,14 @@ getMeshSummaryByPMIDs <- function(pmids, con) {
   
   res <- runQuery(con, str, "Mesh summary query:")
   
+  
+  
   # get terms
   treeIDs <- unique(res$TreeID)
   t <- paste0("'",treeIDs,"'", collapse = ",")
   str <- paste0("SELECT * from MeshTerms
                 WHERE TreeID IN (", t, ");")
   meshSummary <- dbGetQuery(con, str)
-  
-  
   
   # count number of unique articles for each set of ids
   countArticles <- function(ids) {

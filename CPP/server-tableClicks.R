@@ -60,6 +60,7 @@ updateSelectedMeshIDs <- function(ids, tblSummary, colName1 = "MeshID", colName2
           tblSummary$selectedTerm <-as.character(tblSummary$dat[[colName2]])[m[keep]]
           if (any(is.na(tblSummary$selectedTerm))) {
             cat("we have an NA, ", tblSummary$selectedTerm, "\n")
+            wait()
            # scan(what = character())
           }
       }
@@ -85,7 +86,7 @@ updateSelectedMeshIDs <- function(ids, tblSummary, colName1 = "MeshID", colName2
 #     if terms is specified, this will be used to to assign terms
 #     Note: only update IDs if there is a change
 #           ids are assigned to tblSummary$selectedIDs
-#           corresonding terms (from tblSummary$dat) assigned to tblSummary$selectedTerms
+#           corresponding terms (from tblSummary$dat) assigned to tblSummary$selectedTerms
 
 #assign geneIDs to tblSummary$selectedIDs
 
@@ -97,7 +98,7 @@ updateSelectedMeshIDs2 <- function(ids, tblSummary, colName1 = "MeshID",
     if (length(selections) == 0) {
       selections <- NULL
     }
-    save(selections, file = "selections.RData")
+    
     catn("\ncall updateSelectedMeshIDs2 with selections:", selections)
     catn("tblSummary$selectedID: ", tblSummary$selectedID)
     catn("tblSummary$selectedTermS: ", tblSummary$selectedTerm)
@@ -232,7 +233,7 @@ tableClickExpression <- function(inTblSummary, rows_selected,
       catn("currently selected ids: ", tblSummary$selectedID)
 
       # if filter has not changed, return
-      if (setequal(ids, tblSummary$selectedID)) {
+      if (setequal(ids, tblSummary$selectedID[tblSummary$selectedID %in% tblSummary$dat$colname1])) {
         tblSummary$refreshPending <- NULL
         if (!refreshPending()) {
           removeNotification('refreshNotification')
@@ -240,14 +241,7 @@ tableClickExpression <- function(inTblSummary, rows_selected,
         return()
       } else {
         tblSummary$refreshPending <- TRUE
-        showNotification("Your filters have changed!",
-                         div(hr(class = 'blue-button', style="height: 2px; margin-top: 10px; margin-bottom: 10px;"),
-                            div(style = 'width: 100%; display:inline-block; text-align:center',
-                              actionButton("btnRefresh", "Update", class = 'blue-button', style = 'width: 45%;'),
-                              HTML("&nbsp;&nbsp;"),
-                              actionButton("btnCancelRefresh", "Cancel", class = 'btn-danger', style = 'width: 45%;')
-                            )
-                         ), id = "refreshNotification", duration = NULL,  closeButton = FALSE)
+        refreshNotification()
       }
     }, list(inTblSummary = inTblSummary, rows_selected = rows_selected,
             colname1 = colname1, selectedID = selectedID)
@@ -385,47 +379,59 @@ observeEvent(input$geneResults_rows_selected, {
 shinyjs::onclick('btnRefresh', {
   catn("REFRESH THE RESULTS!!")
   
-  catn("we have selected: ", input$chemResults_rows_selected)
+  toggleModal(session, 'filterModal', toggle = 'open')
+  shinyjs::enable("btnSaveFilters")
   removeNotification(id = 'refreshNotification')
-  disableTableClicks()
   
+  # catn("we have selected: ", input$chemResults_rows_selected)
   
-  updateSelectedMeshIDs2(cancerTermSummary$dat$TermID[input$cancerTermResults_rows_selected], 
-                        cancerTermSummary, "TermID", "Term")
-  
-  updateSelectedMeshIDs2(chemSummary$dat$MeshID[input$chemResults_rows_selected], chemSummary)  
-  
-  updateSelectedMeshIDs2(mutationSummary$dat$MutID[input$mutationResults_rows_selected], mutationSummary, "MutID", NULL)
-  
-  terms <- geneSummary$dat$Symbol[input$geneResults_rows_selected]
-  ids <- geneSymbolToID(terms, GeneTable)$ID
-  updateSelectedMeshIDs2(ids, geneSummary, NULL, NULL, terms = terms)
-  
-  resetRefreshPending()
-  respondToSelectionDrill()
-  
-  enableTableClicks()
+  # disableTableClicks()
+  # 
+  # 
+  # updateSelectedMeshIDs2(cancerTermSummary$dat$TermID[input$cancerTermResults_rows_selected], 
+  #                       cancerTermSummary, "TermID", "Term")
+  # 
+  # updateSelectedMeshIDs2(chemSummary$dat$MeshID[input$chemResults_rows_selected], chemSummary)  
+  # 
+  # updateSelectedMeshIDs2(mutationSummary$dat$MutID[input$mutationResults_rows_selected], mutationSummary, "MutID", NULL)
+  # 
+  # terms <- geneSummary$dat$Symbol[input$geneResults_rows_selected]
+  # ids <- geneSymbolToID(terms, GeneTable)$ID
+  # updateSelectedMeshIDs2(ids, geneSummary, NULL, NULL, terms = terms)
+  # 
+  # removeNotification(id = 'refreshNotification')
+  # disableTableClicks()
+  # 
+  # resetRefreshPending()
+  # respondToSelectionDrill()
+  # 
+  # enableTableClicks()
 
   })
 
 #################################################
-# cancel filters - update selections and drill
+# cancel filters - this resets summary tables
+# to remove current selections
 #################################################
-shinyjs::onclick('btnCancelRefresh', {
-  catn("Cancel refresh!!")
-  removeNotification(id = 'refreshNotification')
-  
+
+invalidateAllSummaryTables <- function() {
   invalidateSummaryTable <- function(tbl) {
     tmp <- tbl$dat
     tbl$dat <- 4
     tbl$dat <- tmp
   }
-  
   invalidateSummaryTable(chemSummary)
   invalidateSummaryTable(mutationSummary)
   invalidateSummaryTable(geneSummary)
   invalidateSummaryTable(cancerTermSummary)
+}
 
+shinyjs::onclick('btnCancelRefresh', {
+  catn("Cancel refresh!!")
+  removeNotification(id = 'refreshNotification')
+  invalidateAllSummaryTables()
+  
+  
 })
 
 #####################################################################

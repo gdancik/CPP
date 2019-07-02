@@ -29,10 +29,13 @@ getStackedResults2 <- function(sql_function, group, group.filters) {
     diseases <- diseaseSummary$dat$Term
   }
 
+  msg <- NULL
+  
   # limit to 10
   if (length(meshIDs) > 10) {
     meshIDs <- meshIDs[1:10]
     diseases <- diseaseSummary$dat$Term[1:10]
+    msg <- "Note: Graph is limited to top 10 cancer types. Use filters to select specific cancer types"
   }
     
   res <- sql_function(pmidList$pmids$PMID, con, meshIDs, diseases)
@@ -57,12 +60,20 @@ getStackedResults2 <- function(sql_function, group, group.filters) {
     s <- split(res2$Frequency, res2[[group]])
     s <- sapply(s, sum)
     s <- sort(s, decreasing = TRUE)
-  
-    numGroups <- min(10, length(s))
-    keepThese <- names(s)[1:numGroups]
+    keepThese <- names(s)
     #res2[[group]][!res2[[group]]%in%keepThese] <- NA
   }
   
+  if (length(keepThese) > 10) {
+    notification2 <- TRUE
+    if (is.null(msg)) {
+        msg <- "Note: Graph is limited to top 10 terms. Use filters to select specific terms"
+    } else {
+      msg <- "Note: Graph is limited to top 10 cancer types / terms. Use filters to select specific ones"
+    }
+    keepThese <- keepThese[1:10]
+    
+  }
   res2 <- filter(res2, res2[[group]] %in% keepThese)
   
   
@@ -76,28 +87,70 @@ getStackedResults2 <- function(sql_function, group, group.filters) {
   n <- names(sort(sapply(s, sum), decreasing = TRUE))
   res2[[group]] <- factor(res2[[group]], levels = n)
 
+  if (!is.null(msg)) {  
+  showNotification(msg, duration = 6, closeButton = TRUE, type = "warning",
+                   id = "graphNotification")
+  }
+  
   res2
   
 }
 
+observeEvent(input$btnGenerateGraphCancerTerm, {
+  plotStackedCancerTerms()
+  shinyjs::hide("btnGenerateGraphCancerTerm")
+})
+
+observeEvent(input$btnGenerateGraphChem, {
+  plotStackedChem()
+  shinyjs::hide("btnGenerateGraphChem")
+})
+
+observeEvent(input$btnGenerateGraphMut, {
+  plotStackedMutations()
+  shinyjs::hide("btnGenerateGraphMut")
+})
+
+observeEvent(input$btnGenerateGraphGene, {
+  plotStackedGenes()
+  shinyjs::hide("btnGenerateGraphGene")
+})
 
 
-updateCurrentStackedGraph <- function() {
-  if (input$MainPage == "Mutations") {
-    plotStackedMutations()
-  } else if (input$MainPage == "Drugs") {
-    plotStackedChem()
-  } else if (input$MainPage == "Cancer Terms") {
-    plotStackedCancerTerms()
-  } else if (input$MainPage == "Genes") {
-    plotStackedGenes()
-  }
+
+## clear all Stacked Graphs
+clearStackedGraphs <- function(btnShow = TRUE){
+  output$chemGraph <- renderPlotly({}) 
+  output$mutGraph <- renderPlotly({})
+  output$geneGraph <- renderPlotly({})
+  output$cancerTermGraph <- renderPlotly({})
+  toggleStackedGraphButtons(FALSE)
 }
 
-
-observeEvent(input$MainPage, {
-  updateCurrentStackedGraph()
-})
+toggleStackedGraphButtons <- function(show = TRUE, depends = FALSE) {
+  f <- shinyjs::show
+  if (!show) {
+    f <- shinyjs::hide
+  }
+  
+  hasData <- function(x) {
+    !is.null(x) && nrow(x) > 0
+  }
+  
+  if (!depends || hasData(cancerTermSummary$dat)) {
+    f("btnGenerateGraphCancerTerm")
+  }
+  if (!depends || hasData(chemSummary$dat)) {
+    f("btnGenerateGraphChem")
+  }
+  if (!depends || hasData(mutationSummary$dat)) {
+    f("btnGenerateGraphMut")
+  }
+  if (!depends || hasData(geneSummary$dat)) {
+    f("btnGenerateGraphGene")
+  }
+  
+}
 
 
 

@@ -116,7 +116,7 @@ commonStyles <- list(
                 .shiny-notification {
                     position: fixed;                    
                     top: 5%;
-                    right: 20%;
+                    left: 75%;
                     font-size: 1.3em;
                     padding-left: 20px;
                     padding-right: 20px;
@@ -131,10 +131,13 @@ commonStyles <- list(
 
                 .graph-button {
                   font:bold 12px verdana;
-                  width:40%;
+                  width:60%;
+                  position: relative;
+                  bottom: 220px;
                   margin: 10px 32% 0 28%;
-                  background: #ddd;
-                  color:#464646;
+                  height: 50px;
+                  background-image: linear-gradient(#04519b,#044687 60%,#033769);
+                  color:#FFF;
                 }
 
                   ")),
@@ -150,11 +153,10 @@ commonHeader <- list(
 
   welcomeModal, 
   filterModal,
-  graphSetupModalTerm,
-  graphSetupModalChem,
- # graphSetupModalMut,
+  # graphSetupModalTerm,
+  # graphSetupModalChem,
   cancerTypeSetupModal,
-  
+  # 
   # summary row
   fluidRow(id = "summaryRow",
     #shiny::column(width = 2,
@@ -212,15 +214,17 @@ addTabPanel <- function(title, tableId, graphId = NULL) {
                              } else {
                                withSpinner(plotlyOutput(graphId), type = 3, 
                                            color.background = "white")  
-                             }#,
+                             },
                              # graph setup buttons
-                             # if (graphId == "cancerTermGraph") {
-                             #   actionButton("btnGraphSetupTerm", "Graph Settings", class = "graph-button") 
-                             # } else if (graphId == "chemGraph") {
-                             #   actionButton("btnGraphSetupChem", "Graph Settings", class = "graph-button")
-                             # } else if (graphId == "mutGraph") {
-                             #   actionButton("btnGraphSetupMut", "Graph Settings", class = "graph-button")
-                             # }
+                              if (graphId == "cancerTermGraph") {
+                                actionButton("btnGenerateGraphCancerTerm", "Generate graph", class = "graph-button") 
+                              } else if (graphId == "chemGraph") {
+                                actionButton("btnGenerateGraphChem", "Generate graph", class = "graph-button")
+                              } else if (graphId == "mutGraph") {
+                                actionButton("btnGenerateGraphMut", "Generate graph", class = "graph-button")
+                              } else if (graphId == "geneGraph") {
+                                actionButton("btnGenerateGraphGene", "Generate graph", class = "graph-button")
+                              } 
                )
              }
            ))

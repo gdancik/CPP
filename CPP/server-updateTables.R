@@ -61,6 +61,7 @@ updateTable <- function(resTable, columnName, tableID) {
   #wait()
 
   if (is.null(resTable$dat)) {
+    output[[tableID]] <- NULL
     return()
   }
   
@@ -87,8 +88,6 @@ updateTable <- function(resTable, columnName, tableID) {
  })
 }
 
-#observe(updateTable(paSummary, "MeshID", "paResults"))
-#observe(updateTable(diseaseSummary, "MeshID", "diseaseResults"))
 observe(updateTable(chemSummary, "MeshID", "chemResults"))
 observe(updateTable(mutationSummary, "MutID", "mutationResults"))
 observe(updateTable(cancerTermSummary, "TermID", "cancerTermResults"))
@@ -106,11 +105,12 @@ observe(
 observe({
   cat("in cancer plot observe...\n")
   
+  #wait()
   if (!is.null(diseaseSummary$dat)) {
   
     x <- diseaseSummary$dat
     x$Frequency <- as.double(x$Frequency)
-
+    
     output$cancerGraph <- renderPlot({
       
       # put levels in sorted order for plotting
@@ -138,8 +138,12 @@ observe({
               scale_x_discrete(labels = function(x) str_wrap(x, width = 15))
     })
     
-    output$cancerSummaryTable <- DT::renderDataTable(datatable(x, rownames = FALSE, selection = "none",
-                                                               options = list(paging = FALSE, scrollY = 300)))
+   # output$cancerSummaryTable <- DT::renderDataTable(datatable(x, rownames = FALSE, selection = "none",
+                          #                                     options = list(paging = FALSE, scrollY = 300)))
+  } else {
+    # catn("render NULL table")
+    # output$cancerSummaryTable <- DT::renderDataTable(iris)
+     output$cancerGraph <- NULL
   }
 })
 
@@ -174,6 +178,9 @@ displayCancerSelectionSummary <- function(dat, ids1, ids2, outputID = "cancerSel
   cat("\n\n")
   
   if (is.null(dat)) {
+    if (outputID != "cancerSelectionTable") {
+      output[[outputID]] <- NULL
+    }
     return()
   }
   
@@ -259,11 +266,13 @@ updateChildIDsForSelectedCancers <- function(){
     } else {
          msg <- NULL
     }
-    output$cancerSelectionMsg <- renderUI({
-      msg
-    })
+    
     cancerSelectionSummary$ids2 <- ids
   }
+  
+  output$cancerSelectionMsg <- renderUI({
+    msg
+  })
   
   return(ret)
 }

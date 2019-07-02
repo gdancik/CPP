@@ -42,11 +42,12 @@ formatBSModal<-function (id, title, trigger, applyID, ..., size, applyText = "Up
 
 
 welcomeModal <-  bsModal("welcomeModal",HTML("<i>Cancer Publication Portal</i>"), trigger = "btnNewSearch", size = "large",
-      p(strong("Instructions:"), "This is a beta version of a Cancer Publication Portal for summarizing and searching cancer-related literature.",
-        "To start, select a gene and click Search to summarize cancer publications for that gene. When the results are displayed, you can click on a row in any 
-        table to further filter the results. Filters can be removed by removing the term from the 
-        drop down box."),
-      p("Feedback is welcome, and can be sent to dancikg@easternct.edu"),
+      p(strong("Instructions:"), "Welcome to the Cancer Publication Portal for summarizing and searching cancer-related literature.",
+        "To start, select a gene and click the 'Summarize cancer types' button to select the cancer types you are interested in.
+        After selecting the cancer types of interest, articles will be summarized based on drugs, cancer terms, mutations, and additional genes
+        mentioned in article titles and abstracts. Additional filters can be applied by clicking on any of the tables.
+        "),
+      #p("Feedback is welcome, and can be sent to dancikg@easternct.edu"),
       
       fluidRow(column(12,
                progressDiv('welcomeModalProgress', 'welcomeModal-bar-text', "Summarizing cancer types, please wait..."))),
@@ -81,9 +82,11 @@ rm(a)
 
 
 
+## variables / functions for filterModal
+selectionTypeChoices <- rev(c("ALL selected terms" = "all",
+                              "ANY selected terms" = "any"))
 
-
-filterModal <- formatBSModal("filterModal", "Remove filters", "btnRemoveFilters", "btnSaveFilters",
+filterModal <- formatBSModal("filterModal", "Remove filters", "btnRemoveFilters", "btnSaveFilters", applyText = "Apply filters",
 
   conditionalPanel(condition="$('html').hasClass('shiny-busy')",
         HTML("<div class=\"progress\" style=\"z-index:1000; position: fixed; width: 95%; height:25px; !important\">
@@ -94,26 +97,58 @@ filterModal <- formatBSModal("filterModal", "Remove filters", "btnRemoveFilters"
                          
                          
   fluidRow(column(12,
-     HTML("<p>To remove a filter, delete the term from the dropdown menus below. Then click the 'Update filters' button to apply your changes.</p><br>
-          <p> <a id = 'clearFilters' style = 'font-size:1.1em' href = '#clearFilters'>Clear all filters</a></p></br>")
-    )),
+     HTML("<p>To remove a filter, delete the term from the dropdown menus below. Then click the 'Apply filters' button to apply your changes.</p><br>
+           <p> To clear all filters, click the 'Clear filters' button then the 'Apply filters' button to apply your changes.
+          </br><hr>" 
+     ))),
+    
+
     fluidRow(
       shiny::column(width=4,
-                    selectInput("filterCancerTerms", "Cancer term filters", choices = NULL, multiple = TRUE, selectize = TRUE)
+                    selectInput("filterCancerTerms", "Selected cancer terms", choices = NULL, multiple = TRUE, selectize = TRUE)            
       ),
       shiny::column(width=4,
-                  selectInput("filterChem", "Drug filters", choices = NULL, multiple = TRUE, selectize = TRUE)
+                    selectInput("filterCancerTermsType", "Search for", choices = selectionTypeChoices, selected = "any")
       )
     ),
+    
     fluidRow(
       shiny::column(width=4,
-                  selectInput("filterMutations", "Mutation filters", choices = NULL, multiple = TRUE, selectize = TRUE)
-      ),    
+                    selectInput("filterChem", "Selected drugs", choices = NULL, multiple = TRUE, selectize = TRUE)           
+      ), 
       shiny::column(width=4,
-                  selectInput("filterGenes", "Additional gene filters", choices = NULL, multiple = TRUE, selectize = TRUE)
+                    selectInput("filterChemType", "Search for", choices = selectionTypeChoices, selected = "any")
       )
-    ), size = "large", cancelID = "btnCancelFilter"
+    ),
+    
+    fluidRow(  
+      shiny::column(width=4,
+                    selectInput("filterMutations", "Selected mutations", choices = NULL, multiple = TRUE, selectize = TRUE)                    
+      ),
+      shiny::column(width=4,
+                    selectInput("filterMutationsType", "Search for", choices = selectionTypeChoices, selected = "any")
+      )
+    ),
+  
+    fluidRow(
+      shiny::column(width=4,
+                    selectInput("filterGenes", "Additional selected genes", choices = NULL, multiple = TRUE, selectize = TRUE)            
+      ),
+      shiny::column(width=4,
+                    selectInput("filterGenesType", "Gene filter type", choices = selectionTypeChoices, selected = "any")
+      )
+  ) , size = "large", cancelID = "btnCancelFilter"
 )
+
+filterModal$children[[1]]$children[[1]]$children[[3]]
+if (!filterModal$children[[1]]$children[[1]]$children[[3]]$attribs$class == 'modal-footer') {
+  stop("filterModal structure has changed")
+}
+filterModal$children[[1]]$children[[1]]$children[[3]]$children[[3]] <- 
+  actionButton('btnClearFilters', 'Clear filters', class = 'btn-danger')
+
+
+
 
 # modals for graph settings
 graphSetupModalTerm <- formatBSModal("graphSetupModalTerm", "Cancer Terms Graph Settings", "btnGraphSetupTerm", "btnUpdateGraphTerm",
@@ -190,12 +225,12 @@ graphSetupModalMut <- formatBSModal("graphSetupModalMut", "Mutations Graph Setti
                         )
 
 
-cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Select Cancer Types", "", "btnSelectCancerType", 
+cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Select cancer types", "", "btnSelectCancerType", 
                                       fluidRow(column(12,
+                                            uiOutput('cancerTypeSummaryHeader'),          
                                             progressDiv('cancerTypeProgress', 'cancerSelection-bar-text'),          
-                                                        
-                                                      HTML("<p>Select the desired cancer types by clicking on the table or by using the drop down below. 
-                                                           When you are finished, click the Submit button to retrieve summaries of your results. </br></br>\
+                                              HTML("<p>Select your desired cancer types by clicking on the table or by using the drop down below. 
+                                                           When you are finished, click the 'Retrieve' button to retrieve summaries of your results. </br></br>\
                                                            </p>")
                                                       )),
                                       fluidRow(
@@ -212,7 +247,8 @@ cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Select Cancer Typ
                                                conditionalPanel(condition="!$('html').hasClass('shiny-busy')",
                                                       style="padding-right:0px",
                                                       div(id = "cancerTypeDiv",
-                                                          selectInput("cancerType", "Selected cancer types: ", choices = NULL, multiple = TRUE, selectize = TRUE),
+                                                          selectizeInput("cancerType", "Selected cancer types: ", choices = NULL, multiple = TRUE,
+                                                                      options = list(placeholder = "(leave blank to search all articles)") ),
                                                             htmlOutput("cancerSelectionMsg")
                                                       )
                                                ))
@@ -235,3 +271,14 @@ hideProgress <- function() {
   shinyjs::addClass(id = 'cancerTypeProgress', class = 'hide')
 }
 
+
+refreshNotification <- function() {
+  showNotification("Your filters have changed!",
+                   div(hr(class = 'blue-button', style="height: 2px; margin-top: 10px; margin-bottom: 10px;"),
+                       div(style = 'width: 100%; display:inline-block; text-align:center',
+                           actionButton("btnRefresh", "View/Update", class = 'blue-button', style = 'width: 45%;'),
+                           HTML("&nbsp;&nbsp;"),
+                           actionButton("btnCancelRefresh", "Cancel", class = 'btn-danger', style = 'width: 45%;')
+                       )
+                   ), id = "refreshNotification", duration = NULL,  closeButton = FALSE)
+}

@@ -48,6 +48,7 @@ shinyServer(function(input, output, session) {
     
   })
 
+  ##toggleModal(session, "filterModal", "open")
   output$shinyTitle <- renderText("Cancer Publication Portal")
   
   source("server-reactives.R", local = TRUE)
@@ -64,12 +65,12 @@ shinyServer(function(input, output, session) {
   source("server-cancerTypeSetup.R", local = TRUE)
   
   # disable drop downs on startup
-  shinyjs::disable("filterDisease")
-  shinyjs::disable("filterChem")
-  shinyjs::disable("filterMutations")
-  shinyjs::disable("filterGenes")
-  shinyjs::disable("filterCancerTerms")
-  
+  # shinyjs::disable("filterDisease")
+  # shinyjs::disable("filterChem")
+  # shinyjs::disable("filterMutations")
+  # shinyjs::disable("filterGenes")
+  # shinyjs::disable("filterCancerTerms")
+   
   # add logPanel if in debug mode
   if (CONFIG$DEBUG) {
     appendTab("headerNavBarPage", 
@@ -115,7 +116,6 @@ shinyServer(function(input, output, session) {
   #                   alert('For the best user experience, we recommend using the Google Chrome browser, available at: http://www.google.com/chrome/');
   #                }
   # ")
-  
   
   observeEvent(input$geneInput, {
     if (is.null(input$geneInput) | input$geneInput == "") {
@@ -177,6 +177,17 @@ shinyServer(function(input, output, session) {
           shinyjs::addClass('welcomeModalProgress', 'hide')
           toggleModal(session, "welcomeModal", toggle = "close")      
           toggleModal(session, "cancerTypeSetupModal", toggle = "open")   
+          
+          
+            
+          output$cancerTypeSummaryHeader <- renderUI({
+            HTML(
+            paste0("<p style = 'font-size:1.1em'>Search for gene <b style='color:red'>", selected$geneSymbol,
+                   "</b> found <b>",isolate(nrow(pmidList$pmids_initial)), "</b> articles.</p>")
+            )
+          })
+          
+          
           displayCancerSelectionSummary(cancerSelectionSummary$dat, NULL, NULL)
           
     })
@@ -200,26 +211,47 @@ shinyServer(function(input, output, session) {
 #   here
 #################################################################
 
+    
    # creates HTML formatted string of currently selected filters
-   createFilterString <- function() {
-     l <- list("Cancer Types" = diseaseSummary,
-               "Drugs" = chemSummary,
-               Mutations = mutationSummary,
-               CancerTerms = cancerTermSummary,
-               "Additional Genes" = geneSummary)
-     s <- sapply(l, function(x) !is.null(x$selectedID))
+   createFilterString <- function(newlines = FALSE) {
+     l <- list("Cancer Types" = list(diseaseSummary, "any"),
+               "Drugs" = list(chemSummary, savedFilterValues$filterChemType),
+               Mutations = list(mutationSummary, savedFilterValues$filterMutationsType),
+               CancerTerms = list(cancerTermSummary,savedFilterValues$filterCancerTermsType),
+               "Additional Genes" = list(geneSummary, savedFilterValues$filterGenesType)
+     )
+               
+     s <- sapply(l, function(x) !is.null(x[[1]]$selectedID))
      f <- names(which(s))
      filterString <- ""
+     
+     get_desc <- function(x, i, label) {
+       x <- x[[i]]
+       if (length(x[[1]][[label]]) == 1) {
+         return(i)
+       }
+       paste0(i, "(", x[[2]], ")")
+     }
+     
      for (i in f) {
        label <- "selectedTerm"
        if (i == "Mutations") {
          label <- "selectedID"
        }
        if (filterString!= "") {
-         filterString = paste0(filterString, "; ")
+         if (newlines) {
+           filterString = paste0(filterString, "\n")
+         } else {
+           filterString = paste0(filterString, "; ")
+         }
        }
-       filterString <- paste0(filterString, "<b style='font-style:italic'>", i, "</b>: ", paste0(l[[i]][[label]], collapse = ", "))
+       filterString <- paste0(filterString, "<b style='font-style:italic'>", get_desc(l, i, label), "</b>: ", 
+                              paste0(l[[i]][[1]][[label]], collapse = ", "))
      }
+     
+     
+     #catn('filterString: ', filterString)
+     #wait()
      return(filterString)
    }
     
@@ -265,7 +297,7 @@ shinyServer(function(input, output, session) {
      
      # add cancer modal
      cancers <- paste0(cancers, " (<a href = '#' id = 'linkCancerTypeSetup' data-toggle='modal'
-                 data-target='#cancerTypeSetupModal'>View/Change</a>) ")
+                 data-target='#cancerTypeSetupModal'>view/change</a>) ")
      
      x <- paste0(x, cancers)
      
@@ -281,8 +313,12 @@ shinyServer(function(input, output, session) {
        x <- gsub("found", "with additional filters found", x)
        x <- paste0(x, "</br>Current filters 
                    (<a href = '#' id = 'btnRemoveFilters' data-toggle='modal'
-                      data-target='#filterModal'>Remove</a>): ")
+                      data-target='#filterModal'>remove/options</a>): ")
         x <- paste0(x, filterString)
+     } else {
+       # x <- paste0(x, "</br>No filters selected  
+       #             (<a href = '#' id = 'btnFilterOptions' data-toggle='modal'
+       #             data-target='#filterModal2'>Filter options</a>): ")
      }
      
      x<- paste0("<span style='font-size:1.1em'>", x, "</span>")
@@ -292,6 +328,15 @@ shinyServer(function(input, output, session) {
     
    
    
+   # if no results, update pmidList, return TRUE, and generate alert
+   noResults <- function(x) {
+     if (is.null(x) || length(x) == 0) {
+       shinyjs::alert("No articles match your current filters. Modify your filters and search again")
+       pmidList$pmids <- data.frame(PMID = x)
+       return(TRUE)
+     }
+     return(FALSE)
+   }
    
   ###################################################################################################    
   # This is the main function that drives db queries, and works as follows:
@@ -309,6 +354,10 @@ shinyServer(function(input, output, session) {
       cat("respondToSelectionDrill\n")
     
       resetReactive(diseaseSummary)
+      diseaseSummary$dat <- NULL
+      
+      clearStackedGraphs()
+      resetSummaryData()
       
       # hide/clear articles
     
@@ -323,17 +372,33 @@ shinyServer(function(input, output, session) {
       cat("got connection\n")
       
       pmids <- pmidList$pmids_initial$PMID
+      
+      if (is.null(pmids)) {
+        stop("pmids should not be NULL in drill down")
+      }
+      
       catn("initial pmids:")
       catn(pmids)
       
       cat("pmids = ", pmids, "\n")
       # get PMIDs for gene selection
-      genes <- c(input$geneInput, geneSummary$selectedID)
+      
+      catn("filter genes type: ", input$filterGenesType)
+      catn("filter mut type: ", input$filterMutationsType)
+      catn("filter chem type: ", input$filterChemType)
+      catn("filter cancer terms type: ", input$filterCancerTermsType)
+      
+      genes <- c(geneSummary$selectedID)
+      
+      catn("in drill down, genes = ", genes)
     
-      if (length(genes) > 1) {
+      if (length(genes) > 0) {
         setProgressBarText("Retrieving Articles for Selected Genes, please wait...")
-        p3 <- getPMIDs("PubGene", "GeneID", genes, con, pmids)
+        p3 <- getPMIDs("PubGene", "GeneID", genes, con, pmids, savedFilterValues$filterGenesType)
         pmids <- intersectIgnoreNULL(pmids, p3$PMID)
+        if (noResults(pmids)) {
+          return()
+        }
       }
       
       
@@ -341,26 +406,35 @@ shinyServer(function(input, output, session) {
       if (!is.null(chemSummary$selectedID)) {
         setProgressBarText("Retrieving Articles for Selected Chemicals, please wait...")
         cat("Chem selection, getting PMIDS for: ", chemSummary$selectedID, "\n")
-        p2 <- getPMIDs("PubChem", "meshID", chemSummary$selectedID, con, pmids)
+        p2 <- getPMIDs("PubChem", "meshID", chemSummary$selectedID, con, pmids, savedFilterValues$filterChemType)
         pmids <- intersectIgnoreNULL(pmids, p2$PMID)
+        if (noResults(pmids)) {
+          return()
+        }
       }
       
       # get PMIDs for Mutation selection
       if (!is.null(mutationSummary$selectedID)) {
         setProgressBarText("Retrieving Articles for Selected Mutations, please wait...")
         cat("\n\n==========================================\nMutation selection, getting PMIDS for: ", mutationSummary$selectedID, "\n")
-        p2 <- getPMIDs("PubMut", "MutID", mutationSummary$selectedID, con, pmids)
+        p2 <- getPMIDs("PubMut", "MutID", mutationSummary$selectedID, con, pmids, savedFilterValues$filterMutationsType)
         cat("\n\n======================================\n\nnumber of articles with selected mutation = ", nrow(p2))
         pmids <- intersectIgnoreNULL(pmids, p2$PMID)
+        if (noResults(pmids)) {
+          return()
+        }
       }
       
       # get PMIDs for Cancer Term Selection
       if (!is.null(cancerTermSummary$selectedID)) {
         setProgressBarText("Retrieving Articles for Selected CancerTerms, please wait...")
         cat("\n\n==========================================\nCancer Term selection, getting PMIDS for: ", cancerTermSummary$selectedID, "\n")
-        p2 <- getPMIDs("PubCancerTerms", "TermID", cancerTermSummary$selectedID, con, pmids)
+        p2 <- getPMIDs("PubCancerTerms", "TermID", cancerTermSummary$selectedID, con, pmids, savedFilterValues$filterCancerTermsType)
         cat("\n\n======================================\n\nnumber of articles with selected mutation = ", nrow(p2))
         pmids <- intersectIgnoreNULL(pmids, p2$PMID)
+        if (noResults(pmids)) {
+          return()
+        }
       }
       
       if (length(pmids) == 0) {
@@ -380,19 +454,14 @@ shinyServer(function(input, output, session) {
 
       getSummaries("Cancer Types", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
       cat("we got disease summaries")
-
-      # TO DO: make optional
-      
-    
       
       if (!is.null(cancerSelectionSummary$selected1)) {
-          meshIDs <- c(cancerSelectionSummary$selected1, cancerSelectionSummary$selected2)
+          meshIDs <- unique(c(cancerSelectionSummary$selected1, cancerSelectionSummary$selected2))
           m <- match(meshIDs, diseaseSummary$dat$MeshID)
+          m <- m[!is.na(m)]
           diseaseSummary$dat <- diseaseSummary$dat[m,]
       }
-        
-        
-            
+      
       #ids <- diseaseSummary$selectedID
       #terms <- diseaseSummary$selectedTerm
     
@@ -402,14 +471,15 @@ shinyServer(function(input, output, session) {
         skipIDs <- c('D009370', 'D009371')  # keep Neoplasms
         diseaseSummary$dat <- diseaseSummary$dat [!diseaseSummary$dat$MeshID %in% skipIDs,]
       }
+      
+      
       getSummaries("Related Chemicals", con, getChemSummaryByPMIDs, pmids, session, chemSummary, "filterChem", pa = TRUE)
       getSummaries("Related Mutations", con, getMutationSummaryByPMIDs, pmids, session, mutationSummary, "filterMutations")
       getSummaries("Related Cancer Terms", con, getCancerTermSummaryByPMIDs, pmids, session, cancerTermSummary, "filterCancerTerms")
   
       # update geneSummary
       setProgressBarText("Retrieving Related Genes, please wait...")
-      catn("genes = ", genes)
-      catn('input = ', selected$geneID)
+      
       tmp <- getGeneSummaryByPMIDs(pmids, con)
       catn("tmp = ")
       print(head(tmp))
@@ -417,7 +487,7 @@ shinyServer(function(input, output, session) {
       m <- match(selected$geneSymbol, tmp$Symbol)
       geneSummary$dat <- tmp[-m,]
       
-      setGeneResults(session, geneSummary$dat, geneSummary)
+      #setGeneResults(session, geneSummary$dat, geneSummary)
       #setResults(session, geneSummary$dat, geneSummary, "filterGenes")
   
       dbDisconnect(con)
@@ -432,9 +502,9 @@ shinyServer(function(input, output, session) {
         pmidList$pmids_initial <- pmidList$pmids
       }
       
-      # select current tab to update graphs on current page
-      updateCurrentStackedGraph()
       enableTableClicks()
+      
+      toggleStackedGraphButtons(TRUE, depends = TRUE)
       
     }
    
@@ -476,11 +546,11 @@ shinyServer(function(input, output, session) {
       
       cancerSelectionSummary$tree_ids <- dbGetQuery(con, qry)
       
+      tree_ids <- cancerSelectionSummary$tree_ids
+      
       dbDisconnect(con)
       
      
-      
-      
       # skip Neoplasms by Histologic types, Neoplasms by Site, and Neoplasms
       skipIDs <- c('D009370', 'D009371', 'D009369')
       skipIDs <- c('D009370', 'D009371')

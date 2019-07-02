@@ -1,6 +1,6 @@
 
 writeDownloadHeader <- function(header, file) {
-  f <- createFilterString()
+  f <- createFilterString(newlines = TRUE)
   cancers <- createCancerString()
 
   if (is.null(cancers)) {
@@ -26,9 +26,14 @@ writeDownloadHeader <- function(header, file) {
   if (f == "") {
     return()
   }
-  f <- paste0("# All from ", f, "\n")
   
-  write(f, file, append = TRUE)
+  catn("f = ")
+  catn(f)
+  
+  f <- strsplit(f, "\n")[[1]]
+  f2 <- paste0("\"# ", f, "\"")
+  write(f2, file, append = TRUE)
+  write("\n", file, append = TRUE)
   
 }
 
