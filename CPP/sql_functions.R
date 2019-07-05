@@ -271,10 +271,10 @@ getMutationSummaryByPMIDs <- function(pmids, con) {
   
   pmids <- paste0("'",pmids,"'", collapse = ",")
   
-  str <- paste0("select count(MutID) as Frequency, MutID from\n",
-                "PubMut where PubMut.PMID IN ", paste0("(", pmids, ")\n"),
+  str <- paste0("select count(PubMut.MutID) as Frequency, PubMut.MutID, MutGene.Genes as 'Genes*' from\n",
+                "PubMut inner join MutGene on (MutGene.MutID = PubMut.MutID) where PubMut.PMID IN ", paste0("(", pmids, ")\n"),
                 "group by PubMut.MutID ORDER BY count(PubMut.MutID) desc;")
-
+  
   runQuery(con, str, "Mut summary query:")
   
 }

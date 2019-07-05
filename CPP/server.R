@@ -13,8 +13,8 @@ library(stringr)
 library(shinycssloaders)
 
 CONFIG <- list(
-  DEBUG = TRUE,
-  DEFAULT.GENE = "AGL",
+  DEBUG = FALSE,
+  DEFAULT.GENE = "EGFR",
   AUTO.RUN = FALSE
 )
 
@@ -554,6 +554,7 @@ shinyServer(function(input, output, session) {
       # skip Neoplasms by Histologic types, Neoplasms by Site, and Neoplasms
       skipIDs <- c('D009370', 'D009371', 'D009369')
       skipIDs <- c('D009370', 'D009371')
+      
       mesh <- mesh [!mesh$MeshID %in% skipIDs,]
       
       cancerSelectionSummary$dat <- mesh

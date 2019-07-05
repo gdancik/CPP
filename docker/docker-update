@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "$0" != "docker/docker-update" ]; then
+if [ "$0" != "./docker/docker-update" ]; then
     echo "Error must run this command from CPP directory using docker/docker-update"
     exit 
 fi
