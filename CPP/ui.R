@@ -312,8 +312,23 @@ shinyUI(
   
   navbarPage(title = 'Cancer Publication Portal',
              id = "headerNavBarPage", 
+             
+             
     tabPanel("Home",
           
+             tags$head(HTML(
+               "<!-- Global site tag (gtag.js) - Google Analytics -->
+                <script async src='https://www.googletagmanager.com/gtag/js?id=UA-62826724-4'></script>
+               <script>
+               window.dataLayer = window.dataLayer || [];
+               function gtag(){dataLayer.push(arguments);}
+               gtag('js', new Date());
+               
+               gtag('config', 'UA-62826724-4');
+               </script>
+               "
+             )),
+             
           commonHeader, 
           fluidRow(column(style='border-right: 1px solid',width = 12,
           tabsetPanel(id = "MainPage",

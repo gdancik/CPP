@@ -8,7 +8,7 @@ fi
 d=$(date +"%Y_%m_%d")
 
 echo "creating docker container running shinyCPP"
-id=`docker run -d gdancik/cpp`
+id=`docker run -td gdancik/cpp`
 echo "container id is $id" 
 
 echo "deleting /root/CPP/* from container"
@@ -19,3 +19,7 @@ docker cp CPP $id:/root/
 
 echo "saving image as gdancik/cpp:$d"
 docker commit $id gdancik/cpp:$d
+
+echo "stopping docker container $d"
+docker stop $id
+

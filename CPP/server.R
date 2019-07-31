@@ -14,7 +14,7 @@ library(shinycssloaders)
 
 CONFIG <- list(
   DEBUG = FALSE,
-  DEFAULT.GENE = "EGFR",
+  DEFAULT.GENE = "AGL",
   AUTO.RUN = FALSE
 )
 
