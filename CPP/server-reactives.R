@@ -33,8 +33,6 @@ cancerSelectionSummary <- reactiveValues(dat = NULL, tree_ids = NULL, ids2 = NUL
                                          selected1 = NULL, selected2 = NULL)
 
 
-
-
 # reactive for currently selected gene symbol
 selected <- reactiveValues(geneID = NULL, geneSymbol = NULL)
 

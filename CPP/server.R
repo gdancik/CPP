@@ -1,6 +1,7 @@
 # Cancer Publication Portal
 
 library(shiny)
+library(V8)
 library(DT) # requires development version for single row selection with datatables
 library(DBI)
 library(RMariaDB)
@@ -13,7 +14,7 @@ library(stringr)
 library(shinycssloaders)
 
 CONFIG <- list(
-  DEBUG = FALSE,
+  DEBUG = TRUE,
   DEFAULT.GENE = "AGL",
   AUTO.RUN = FALSE
 )
@@ -63,6 +64,7 @@ shinyServer(function(input, output, session) {
   source("server-filter.R", local = TRUE)
   source("server-graphSetup.R", local = TRUE)
   source("server-cancerTypeSetup.R", local = TRUE)
+  source("server-geneSearch.R", local = TRUE)
   
   # disable drop downs on startup
   # shinyjs::disable("filterDisease")
@@ -70,7 +72,10 @@ shinyServer(function(input, output, session) {
   # shinyjs::disable("filterMutations")
   # shinyjs::disable("filterGenes")
   # shinyjs::disable("filterCancerTerms")
-   
+  
+
+  
+  
   # add logPanel if in debug mode
   if (CONFIG$DEBUG) {
     appendTab("headerNavBarPage", 
@@ -83,11 +88,15 @@ shinyServer(function(input, output, session) {
     shinyjs::click("btnGeneSearch")
   }
   
+  shinyjs::hide('invalidGeneOutput')
+  
   # set home page results to NULL (otherwise you will see spinner)
   output$cancerSummaryTable <- renderDataTable(NULL)
   output$cancerGraph <- renderPlot(NULL)
   
 #  lastTab <<- "Home"
+  
+  updateSelectInput(session, 'testing', choices = GeneTable$SYMBOL)
   
   toggleMenus <-function(show) {
     
@@ -117,85 +126,7 @@ shinyServer(function(input, output, session) {
   #                }
   # ")
   
-  observeEvent(input$geneInput, {
-    if (is.null(input$geneInput) | input$geneInput == "") {
-      return()
-    }
-    symbol <- geneID_to_symbol(input$geneInput)
-    msg <- paste0("prev: ", symbol, " curr: ", selected$geneSymbol )
-    #shinyjs::alert(msg)
-    if (!is.null(selected$geneSymbol) && symbol == selected$geneSymbol) {
-      shinyjs::disable("btnGeneSearch")
-    } 
-    else {
-      shinyjs::enable("btnGeneSearch")
-    }
-    
-  })
-  
-  observeEvent(input$btnNewSearch,{
-    updateSelectizeInput(session, "geneInput", choices = geneIDs, selected = selected$geneID, server = TRUE)
-    shinyjs::disable("btnGeneSearch")
-    shinyjs::removeClass(id = 'welcomeModal', class = 'hide')
-  })
-  
 
-    # on gene search
-    observeEvent(input$btnGeneSearch,{
-      
-          cat("clicked btnGeneSearch, geneInput = ", input$geneInput, "\n")
-          
-          if (CONFIG$AUTO.RUN) {
-            cat("updating..")
-            
-            #updateSelectizeInput(session, "geneInput", choices = geneIDs, selected =10 , server = TRUE)
-            
-            CONFIG$AUTO.RUN <- FALSE
-            toggleModal(session, "welcomeModal", toggle = "close")
-            return()
-          }
-          
-          # do nothing if no valid gene is selected
-          if (is.null(input$geneInput) | input$geneInput == "") return()
-          if (!is.null(selected$geneSymbol) && 
-              input$geneInput == selected$geneSymbol) {
-            return()
-          }
-          
-          reset("cancerType")
-          resetReactiveValues()
-          
-          selected$geneID <- input$geneInput  
-          selected$geneSymbol <- geneID_to_symbol(input$geneInput)
-       
-          cat("get cancer types now...\n")
-          #wait()
-          shinyjs::removeClass('welcomeModalProgress', 'hide')
-          getCancerTypes()
-          toggleMenus(TRUE)
-          
-          shinyjs::addClass('welcomeModalProgress', 'hide')
-          toggleModal(session, "welcomeModal", toggle = "close")      
-          toggleModal(session, "cancerTypeSetupModal", toggle = "open")   
-          
-          
-            
-          output$cancerTypeSummaryHeader <- renderUI({
-            HTML(
-            paste0("<p style = 'font-size:1.1em'>Search for gene <b style='color:red'>", selected$geneSymbol,
-                   "</b> found <b>",isolate(nrow(pmidList$pmids_initial)), "</b> articles.</p>")
-            )
-          })
-          
-          
-          displayCancerSelectionSummary(cancerSelectionSummary$dat, NULL, NULL)
-          
-    })
-    
-    geneID_to_symbol <- function(id) {
-      GeneTable$SYMBOL[GeneTable$GeneID == id]      
-    }
-  
     # returns intersection of x and y but if x is NULL return y
     intersectIgnoreNULL <- function(x,y) {
       if (is.null(x)) {

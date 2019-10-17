@@ -10,6 +10,12 @@ source("addDeps.R")
 source("ui-about.R")
 source("modals.R")
 
+jsCode <- "shinyjs.setReadOnly = function(id) {
+  document.getElementById(id).setAttribute('readonly', 'readonly');
+}"
+
+#jsCode <- "shinyjs.setAttribute = function(id, attr, value){alert('hi')};"
+
 commonStyles <- list(
   includeCSS('www/ecsu.css'),
   HTML("<link href='https://fonts.googleapis.com/css?family=Courgette' rel='stylesheet' type='text/css'>"),
@@ -143,7 +149,7 @@ commonStyles <- list(
                   ")),
 
               #modal styles  
-              tags$head(tags$style("button.close, button.cancel {display:none}")),
+              tags$head(tags$style("button.close, #welcomeModal button.cancel {display:none}")),
               tags$head(tags$style("#cancerTypeDiv {min-height: 20em; max-height: 30em; overflow-y: auto;}"))
   
 )
@@ -153,6 +159,7 @@ commonHeader <- list(
 
   welcomeModal, 
   filterModal,
+  multiGeneSummaryModal,
   # graphSetupModalTerm,
   # graphSetupModalChem,
   cancerTypeSetupModal,
@@ -348,7 +355,8 @@ shinyUI(
       tabAbout,
     
     # activate shinyJS
-    useShinyjs()
+    useShinyjs(),
+    shinyjs::extendShinyjs(text = jsCode)
     
       #logPanel()
   ) # end navbarPage

@@ -3,7 +3,7 @@
 
 GeneTable <- read.csv("data/human_genes.csv")
 GeneTable$SYMBOL <- as.character(GeneTable$SYMBOL)
-
+GeneTable$lower <- tolower(GeneTable$SYMBOL)
 dups <- (GeneTable %>% count(SYMBOL) %>% filter(n > 1))$SYMBOL
 GeneTable <- GeneTable %>% filter(!SYMBOL %in% dups)
 rownames(GeneTable) <- GeneTable$SYMBOL
@@ -31,6 +31,8 @@ if (is.na(id)) {
    id <- 178
 }
 updateSelectizeInput(session, "geneInput", choices = geneIDs, selected = id, server = TRUE)
+
+
 
 #  toggleModal(session, "welcomeModal")
 

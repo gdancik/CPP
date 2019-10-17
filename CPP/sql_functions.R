@@ -284,7 +284,7 @@ getMutationSummaryByPMIDs <- function(pmids, con) {
 getGeneSummaryByPMIDs <- function(pmids, con) {
   
   pmids <- paste0("'",pmids,"'", collapse = ",")
-  
+
   str <- paste0("select count(TT.GeneID) as Frequency, TT.SYMBOL as Symbol FROM\n",
   "(select PubGene.PMID, Genes.GeneID, Genes.SYMBOL from Genes\n",
     "inner join PubGene ON PubGene.GeneID = Genes.GeneID\n",
@@ -295,6 +295,21 @@ getGeneSummaryByPMIDs <- function(pmids, con) {
   runQuery(con, str, "Gene summary query:", file = "genes.sql")
   
 }
+
+
+getGeneSummaryForSelectedGeneIDs <- function(geneIDs, con) {
+  
+  geneIDs <- paste0("'",geneIDs,"'", collapse = ",")
+  str <- paste0("select PubGene.GeneID, SYMBOL as Symbol,", 
+                "count(PMID) as Frequency from PubGene\n", 
+                "inner join Genes ON Genes.GeneID = PubGene.GeneID\n",
+                "where PubGene.GeneID in", paste0("(", geneIDs, ")"),"\n",
+                "group by GeneID order by Frequency desc;")
+                
+  runQuery(con, str)
+}
+
+
 
 
 # returns Mesh Summary table for vector of pmids
