@@ -16,6 +16,8 @@ getStackedResults2 <- function(sql_function, group, group.filters) {
     return(NULL)
   }
   
+  
+  disableTableClicks()
   con = dbConnect(MariaDB(), group = "CPP")
   
 
@@ -42,6 +44,7 @@ getStackedResults2 <- function(sql_function, group, group.filters) {
   dbDisconnect(con)
   
   if (nrow(res) == 0) {
+    enableTableClicks()
     return(NULL)
   }
   
@@ -92,6 +95,8 @@ getStackedResults2 <- function(sql_function, group, group.filters) {
                    id = "graphNotification")
   }
   
+  enableTableClicks()
+  
   res2
   
 }
@@ -116,6 +121,11 @@ observeEvent(input$btnGenerateGraphGene, {
   shinyjs::hide("btnGenerateGraphGene")
 })
 
+observeEvent(input$btnGenerateGraphMultiGene, {
+  plotStackedMultiGenes()
+  shinyjs::hide("btnGenerateGraphMultiGene")
+})
+
 
 
 ## clear all Stacked Graphs
@@ -124,6 +134,7 @@ clearStackedGraphs <- function(btnShow = TRUE){
   output$mutGraph <- renderPlotly({})
   output$geneGraph <- renderPlotly({})
   output$cancerTermGraph <- renderPlotly({})
+  output$multiGeneGraph <- renderPlotly({})
   toggleStackedGraphButtons(FALSE)
 }
 
@@ -148,6 +159,9 @@ toggleStackedGraphButtons <- function(show = TRUE, depends = FALSE) {
   }
   if (!depends || hasData(geneSummary$dat)) {
     f("btnGenerateGraphGene")
+  }
+  if (!depends || hasData(multiGeneSummary$dat)) {
+    f("btnGenerateGraphMultiGene")
   }
   
 }
@@ -230,8 +244,31 @@ plotStackedCancerTerms <- reactive({
 })
 
 
-plotStackedGenes <- reactive({
+
+
+plotStackedMultiGenes <- reactive({
+  cat("in multiGene stacked bar observe...\n")
+  msg <- "Summarizing selected genes, please wait..."
+  showProgress(msg)
+  shinyjs::html("bar-text", msg)
   
+  res2 <- getStackedResults2(getMutByDiseaseContingency2, "Mutation", mutationSummary$selectedID)
+  
+  if (is.null(res2)) {
+    output$multiGenesGraph <- renderPlotly({})
+    hideProgress()
+    return()
+  }
+  
+  output$multiGenesGraph <- renderPlotly({
+    stackedBarGraph(res2, "Disease", "Frequency", "Gene", "Gene mentions by cancer type", abbreviate = FALSE)
+  })
+  hideProgress()
+  return()
+})
+
+
+getStackedGenes <- reactive({
   cat("in Genes stacked bar observe...\n")
   
   msg <- "Summarizing genes, please wait..."
@@ -239,6 +276,12 @@ plotStackedGenes <- reactive({
   shinyjs::html("bar-text", msg)
   
   res2 <- getStackedResults2(getGenesByDiseaseContingency2, "Gene", geneSummary$selectedTerm)
+  res2
+})
+
+plotStackedGenes <- reactive({
+  
+  res2 <- getStackedGenes()
  
   if (is.null(res2)) {
     output$geneGraph <- renderPlotly({})
@@ -246,7 +289,7 @@ plotStackedGenes <- reactive({
     return()
   }
 
-  gene <- isolate(input$geneInput)
+  gene <- selected$geneID
 
   if (!is.null(gene)) {
    print(gene)
@@ -254,7 +297,7 @@ plotStackedGenes <- reactive({
 
    symbol <- trimws(geneID_to_symbol(gene)) 
 
-   res2 <- dplyr::filter(res2, Gene!=symbol)
+   res2 <- dplyr::filter(res2, !Gene %in% symbol)
 
   }
 
@@ -270,6 +313,38 @@ plotStackedGenes <- reactive({
   hideProgress()
   return()
 })
+
+
+plotStackedMultiGenes <- reactive({
+  
+  res2 <- getStackedGenes()
+  
+  if (is.null(res2)) {
+    output$multiGeneGraph <- renderPlotly({})
+    hideProgress()
+    return()
+  }
+  
+    
+  symbol <- selected$geneSymbol
+  
+  res2 <- dplyr::filter(res2, Gene%in%symbol)
+    
+
+  if (nrow(res2) == 0) {
+    output$multiGeneGraph <- renderPlotly({})
+    hideProgress()
+    return()
+  }
+  
+  output$multiGeneGraph <- renderPlotly({
+    stackedBarGraph(res2, "Disease", "Frequency", "Gene", "Gene mentions by cancer type", abbreviate = FALSE)
+  })
+  hideProgress()
+  return()
+})
+
+
 
 # generates a stacked bar graph using ggplotly with specified data frame (res2)
 # res2 must be data.frame with columns corresponding to x,fill, and y

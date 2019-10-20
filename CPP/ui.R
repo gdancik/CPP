@@ -149,7 +149,7 @@ commonStyles <- list(
                   ")),
 
               #modal styles  
-              tags$head(tags$style("button.close, #welcomeModal button.cancel {display:none}")),
+              tags$head(tags$style("button.close, #welcomeModal button.cancel, #cancerTypeSetupModal button.cancel {display:none}")),
               tags$head(tags$style("#cancerTypeDiv {min-height: 20em; max-height: 30em; overflow-y: auto;}"))
   
 )
@@ -159,7 +159,6 @@ commonHeader <- list(
 
   welcomeModal, 
   filterModal,
-  multiGeneSummaryModal,
   # graphSetupModalTerm,
   # graphSetupModalChem,
   cancerTypeSetupModal,
@@ -231,7 +230,9 @@ addTabPanel <- function(title, tableId, graphId = NULL) {
                                 actionButton("btnGenerateGraphMut", "Generate graph", class = "graph-button")
                               } else if (graphId == "geneGraph") {
                                 actionButton("btnGenerateGraphGene", "Generate graph", class = "graph-button")
-                              } 
+                              } else if (graphId == 'multiGeneGraph') {
+                                actionButton("btnGenerateGraphMultiGene", "Generate graph", class = "graph-button")
+                              }
                )
              }
            ))
@@ -342,10 +343,11 @@ shinyUI(
             #addTabPanel('Cancer Types', "cancerSummaryTable"),
             #addTabPanel('Treatments', "paResults"),
             addTabPanel("Cancer Types", "diseaseResults", "cancerGraph"),
+            addTabPanel("Selected Genes", "multiGeneResults", "multiGeneGraph"),
             addTabPanel("Cancer Terms", "cancerTermResults", "cancerTermGraph"),
             addTabPanel('Drugs', 'chemResults', "chemGraph"),
             addTabPanel("Mutations", "mutationResults", "mutGraph"),
-            addTabPanel("Genes", "geneResults", "geneGraph"),
+            addTabPanel("Additional Genes", "geneResults", "geneGraph"),
             addDownloadsTabPanel("Download"),
             tabPanel("Articles", articlesPanel())
 

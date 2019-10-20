@@ -53,7 +53,7 @@ welcomeModal <-  bsModal("welcomeModal",HTML("<i>Cancer Publication Portal</i>")
 
       hr(class = "blue-button", style="height: 2px"),
       HTML("<p>Note: <i>CPP</i> uses official gene symbols. Check your genes or lookup invalid symbols from 
-             <a href = 'https://www.genenames.org/tools/multi-symbol-checker/'>genenames.org</a>.</p>"),
+             <a href = 'https://www.genenames.org/tools/multi-symbol-checker/' target = '_blank'>genenames.org</a>.</p>"),
       
       fluidRow(
         column(2, style="padding-right:0px",
@@ -72,25 +72,25 @@ welcomeModal <-  bsModal("welcomeModal",HTML("<i>Cancer Publication Portal</i>")
       fluidRow(
         br(),
         column(4, style = "padding-right:0px",
-               textAreaInput('multiGeneInput', label = 'Select multiple genes',
-                              value = "",
-                              placeholder = 'Enter multiple genes, separated by spaces or one per line', rows = 10,
+               textAreaInput('multiGeneInput', label = 'Select multiple genes (500 max)',
+                              value = "CD24\nHRAS",
+                              placeholder = 'Enter multiple genes, separated by spaces or one per line', rows = 6,
                               resize = "none")
         ),
         
         column(4, style = "padding-right:0px",
                
-               textAreaInput('invalidGeneOutput', label = 'Invalid genes', rows = 10,
+               textAreaInput('invalidGeneOutput', label = 'Invalid genes', rows = 6,
                              resize = "none"))#,
         #column(2),
       ), fluidRow(
         column(4, style = "padding-right:0px", 
                div(width = "100%",
-                 actionButton("btnMultiGeneSearch", "Process multiple genes", class = "blue-button",
-                              style = "width:100%;", disabled = "dfdisabled")
+                 actionButton("btnMultiGeneSearch", "Summarize Cancer Types", class = "blue-button",
+                              style = "width:100%;")
                )
         ), column(4, style = "padding-right:0px;padding-top: 7px;padding-bottom: 7px;text-align:center",
-                  htmlOutput('multiGeneMsg')
+                  htmlOutput('multiInvalidGeneMsg')
         )
       ) 
   )
@@ -105,25 +105,6 @@ a$class <- paste(a$class, "cancel")
 welcomeModal$children[[1]]$children[[1]]$children[[3]]$children[[1]]$attribs <- a
 welcomeModal$children[[1]]$children[[1]]$children[[3]]$children[[1]]$attribs$id <- 'btnWelcomeCancel'
 rm(a)
-
-
-multiGeneSummaryModal <- formatBSModal('multiGeneSummary', "Processing multiple genes", 
-                                 trigger = 'btnMultiGeneSearch', 'btnMultiGeneCancerSummary',
-    br(),
-    p("The table below shows the results..."), br(),
-    
-    fluidRow(
-      column(6,
-          withSpinner(DT::dataTableOutput("multiGeneSummaryTable"), type = 3,
-                                             color.background = "white")
-      )
-    
-    ), applyText = "Summarize cancer types", cancelID = "cancelMultiGeneSummary", size = "large"
-)
-                                 
-                                 
-
-
 
 
 ## variables / functions for filterModal

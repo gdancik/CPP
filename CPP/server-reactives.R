@@ -22,6 +22,7 @@ chemSummary <- createReactiveTable()
 #paSummary <- createReactiveTable()
 mutationSummary <- createReactiveTable()
 geneSummary <- createReactiveTable()
+multiGeneSummary <- reactiveValues(dat = NULL)
 cancerTermSummary <- createReactiveTable()
 
 
@@ -33,8 +34,28 @@ cancerSelectionSummary <- reactiveValues(dat = NULL, tree_ids = NULL, ids2 = NUL
                                          selected1 = NULL, selected2 = NULL)
 
 
+
 # reactive for currently selected gene symbol
 selected <- reactiveValues(geneID = NULL, geneSymbol = NULL)
+
+# returns the number of selected genes
+selectedGeneLength <- reactive({
+  return(length(selected$geneID))
+})
+
+selectedGeneName <- reactive({
+  
+  print("getting name..")
+  n <- length(selected$geneSymbol)
+  cat('n =', n, '\n')
+  
+  if (n <= 5) {
+    return(paste0(selected$geneSymbol, collapse = ", "))
+  }
+  
+  genes <- paste0(selected$geneSymbol[1:3], collapse = ", ")
+  return(paste0(genes, " and ", n-3, " more genes"))
+})
 
 # reactive for pmids:
 #   pmids - current pmids to be displayed
@@ -50,6 +71,8 @@ resetReactive <- function(x, val = NULL) {
 
 resetReactiveValues <- function() {
   
+  cat("RESETTING REACTIVES...\n")
+  
   logFile$log <- NULL
   resetReactive(savedFilterValues, "any")
   resetReactive(selected)
@@ -59,9 +82,9 @@ resetReactiveValues <- function() {
   resetReactive(chemSummary)
   resetReactive(mutationSummary)
   resetReactive(cancerTermSummary)
-
-  cat("RESETTING REACTIVES...\n")
+  resetReactive(multiGeneSummary)
   resetReactive(cancerSelectionSummary)
+  
   #resetReactive(paSummary)
 }
 
@@ -72,4 +95,5 @@ resetSummaryData <-function() {
   mutationSummary$dat <- NULL
   geneSummary$dat <- NULL
   cancerTermSummary$dat <- NULL
+  multiGeneSummary$dat <- NULL
 }

@@ -32,6 +32,21 @@ displayGeneSummaryTable <- function() {
 
 }
 
+# update multiGeneSummaryTable
+observe({
+
+  t <- multiGeneSummary$dat
+  
+  if (is.null(t)) {
+    return()
+  }
+  
+  output$multiGeneResults <- DT::renderDataTable(datatable(t[,-1],rownames = FALSE,
+                                                              options = list(paging = FALSE, scrollY = 300),
+                                                              selection = "none"
+  ))
+
+})
 
 ##################################################################
 # update PMID table
@@ -183,8 +198,6 @@ displayCancerSelectionSummary <- function(dat, ids1, ids2, outputID = "cancerSel
     }
     return()
   }
-  
-  #wait()
   
   selection = list(mode = "multiple", selected = NULL, target = "row")
   

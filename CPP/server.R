@@ -213,8 +213,14 @@ shinyServer(function(input, output, session) {
      if (is.null(selected$geneSymbol)) {
        return()
      }
-     x <- paste0("Search for gene <b style='color:red'>", selected$geneSymbol,
+     x <- paste0("Search for gene <b style='color:red'>", selectedGeneName(),
                  "</b> found <b>",nrow(pmidList$pmids), "</b> articles.")
+     
+     if (selectedGeneLength() > 1) {
+       showTab('MainPage', 'Selected Genes')
+     } else {
+       hideTab('MainPage', 'Selected Genes')
+     }
      
      cancers <- createCancerString(4)
      if (is.null(cancers)) {
@@ -258,7 +264,6 @@ shinyServer(function(input, output, session) {
     })
     
    
-   
    # if no results, update pmidList, return TRUE, and generate alert
    noResults <- function(x) {
      if (is.null(x) || length(x) == 0) {
@@ -268,6 +273,21 @@ shinyServer(function(input, output, session) {
      }
      return(FALSE)
    }
+   
+   shinyjs::onclick('linkViewMultiGene',{
+     
+     print("")
+     print('click')
+     print("")
+     
+     con = dbConnect(MariaDB(), group = "CPP")
+     multiGeneSummary$dat <- getGeneSummaryForSelectedGeneIDs(selected$geneID, con, pmidList$pmids$PMID)
+     dbDisconnect(con)  
+     
+     # add 0 results?
+      
+   })
+   
    
   ###################################################################################################    
   # This is the main function that drives db queries, and works as follows:
@@ -282,7 +302,7 @@ shinyServer(function(input, output, session) {
       
       disableTableClicks()
       
-      cat("respondToSelectionDrill\n")
+      cat("\n\nrespondToSelectionDrill\n")
     
       resetReactive(diseaseSummary)
       diseaseSummary$dat <- NULL
@@ -292,9 +312,6 @@ shinyServer(function(input, output, session) {
       
       # hide/clear articles
     
-      if (is.null(input$geneInput)) {
-        cat("NULL\n")
-      }
       num <- 0
       p1 <- list(PMID=NULL); p2 <- list(PMID=NULL); p3 <- list(PMID=NULL)
       
@@ -333,17 +350,6 @@ shinyServer(function(input, output, session) {
       }
       
       
-      # get PMIDs for Chem selection
-      if (!is.null(chemSummary$selectedID)) {
-        setProgressBarText("Retrieving Articles for Selected Chemicals, please wait...")
-        cat("Chem selection, getting PMIDS for: ", chemSummary$selectedID, "\n")
-        p2 <- getPMIDs("PubChem", "meshID", chemSummary$selectedID, con, pmids, savedFilterValues$filterChemType)
-        pmids <- intersectIgnoreNULL(pmids, p2$PMID)
-        if (noResults(pmids)) {
-          return()
-        }
-      }
-      
       # get PMIDs for Mutation selection
       if (!is.null(mutationSummary$selectedID)) {
         setProgressBarText("Retrieving Articles for Selected Mutations, please wait...")
@@ -355,6 +361,7 @@ shinyServer(function(input, output, session) {
           return()
         }
       }
+      
       
       # get PMIDs for Cancer Term Selection
       if (!is.null(cancerTermSummary$selectedID)) {
@@ -368,60 +375,26 @@ shinyServer(function(input, output, session) {
         }
       }
       
+      # get PMIDs for Chem selection
+      if (!is.null(chemSummary$selectedID)) {
+        setProgressBarText("Retrieving Articles for Selected Chemicals, please wait...")
+        cat("Chem selection, getting PMIDS for: ", chemSummary$selectedID, "\n")
+        p2 <- getPMIDs("PubChem", "meshID", chemSummary$selectedID, con, pmids, savedFilterValues$filterChemType)
+        pmids <- intersectIgnoreNULL(pmids, p2$PMID)
+        if (noResults(pmids)) {
+          return()
+        }
+      }
+      
       if (length(pmids) == 0) {
         #dbDisconnect(con)
         pmidList$pmids <- data.frame(PMID = pmids)
         cat("NO RESULTS -- SHOULD BE CHECKED!")
         # don't stop here because this is now possible
         # if user updates cancer types but keeps filters
-        
         pmids <- "NULL"
+        return()
       }
-      
-      cat("updating summaries...\n")
-      
-      catn("get mesh summary...\n")
-      #getSummaries("Pharmacological Substances", con, getChemSummaryByPMIDs, pmids, session, paSummary, pa = TRUE)
-
-      getSummaries("Cancer Types", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
-      cat("we got disease summaries")
-      
-      if (!is.null(cancerSelectionSummary$selected1)) {
-          meshIDs <- unique(c(cancerSelectionSummary$selected1, cancerSelectionSummary$selected2))
-          m <- match(meshIDs, diseaseSummary$dat$MeshID)
-          m <- m[!is.na(m)]
-          diseaseSummary$dat <- diseaseSummary$dat[m,]
-      }
-      
-      #ids <- diseaseSummary$selectedID
-      #terms <- diseaseSummary$selectedTerm
-    
-      # skip Neoplasms by Site and Neoplasms
-      if (nrow(diseaseSummary$dat) > 0) {
-        #skipIDs <- c('D009370', 'D009371', 'D009369')
-        skipIDs <- c('D009370', 'D009371')  # keep Neoplasms
-        diseaseSummary$dat <- diseaseSummary$dat [!diseaseSummary$dat$MeshID %in% skipIDs,]
-      }
-      
-      
-      getSummaries("Related Chemicals", con, getChemSummaryByPMIDs, pmids, session, chemSummary, "filterChem", pa = TRUE)
-      getSummaries("Related Mutations", con, getMutationSummaryByPMIDs, pmids, session, mutationSummary, "filterMutations")
-      getSummaries("Related Cancer Terms", con, getCancerTermSummaryByPMIDs, pmids, session, cancerTermSummary, "filterCancerTerms")
-  
-      # update geneSummary
-      setProgressBarText("Retrieving Related Genes, please wait...")
-      
-      tmp <- getGeneSummaryByPMIDs(pmids, con)
-      catn("tmp = ")
-      print(head(tmp))
-      
-      m <- match(selected$geneSymbol, tmp$Symbol)
-      geneSummary$dat <- tmp[-m,]
-      
-      #setGeneResults(session, geneSummary$dat, geneSummary)
-      #setResults(session, geneSummary$dat, geneSummary, "filterGenes")
-  
-      dbDisconnect(con)
       
       #update PMIDs
       if (pmids == 'NULL') {
@@ -429,29 +402,36 @@ shinyServer(function(input, output, session) {
       }
       pmidList$pmids <- data.frame(PMID = pmids)
       
+      getSummaries("Cancer Types", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
+      formatCancerSummaries()
+      
+      dbDisconnect(con)
+      
       if (is.null(pmidList$pmids_initial)) {
         pmidList$pmids_initial <- pmidList$pmids
       }
       
-      enableTableClicks()
+      page <- isolate(input$MainPage)
+      catn('page is: ', page)
       
-      toggleStackedGraphButtons(TRUE, depends = TRUE)
+      updateTabsetPanel(session, 'MainPage', 'Articles')
+      updateTabsetPanel(session, 'MainPage', page)
+      
       
     }
+   
    
     output$test <- renderText({
         HTML("<h2> how are you? </h2>")
     })
     
     # gets cancer types following initial gene selection
-    getCancerTypes <- function() {
-      
-      if (is.null(input$geneInput)) {
-        return()
-      }
+    # but limit to 200000 PMIDs
+    # return TRUE if successful or FALSE if exceeds limit or no results found
+    getCancerTypes <- function(limit = 200000) {
       
       # get PMIDs for gene selection
-      genes <- c(input$geneInput)
+      genes <- selected$geneID
       setProgressBarText("Retrieving Cancer Types for the selected Gene, please wait...")
       
       # get PMIDs for selected gene
@@ -459,10 +439,18 @@ shinyServer(function(input, output, session) {
       p3 <- getPMIDs("PubGene", "GeneID", genes, con, NULL)
       pmids <- p3$PMID
       
-      if (length(pmids) == 0) {
+      n <- length(pmids)
+        
+      if (n == 0) {
         dbDisconnect(con)
         cat("NO RESULTS -- SHOULD BE CHECKED!")
-        return()
+        return(FALSE)
+      } else if (n > limit) {
+        dbDisconnect(con)
+        msg <- paste0('Limit exceeded: your gene list has >200,000 results.\n\n',
+                      'Reduce the number of genes in your list and search again.')
+        shinyjs::alert(msg)
+        return(FALSE)
       }
       
       # get Mesh IDs
@@ -500,4 +488,88 @@ shinyServer(function(input, output, session) {
       
     }
 
+    
+    
+    # format cancer summaries by restricting to selected types and removing
+    # Neoplasms by site, etc
+    formatCancerSummaries <- function() {
+      if (!is.null(cancerSelectionSummary$selected1)) {
+        meshIDs <- unique(c(cancerSelectionSummary$selected1, cancerSelectionSummary$selected2))
+        m <- match(meshIDs, diseaseSummary$dat$MeshID)
+        m <- m[!is.na(m)]
+        diseaseSummary$dat <- diseaseSummary$dat[m,]
+      }
+      
+      # skip Neoplasms by Site and Neoplasms
+      if (nrow(diseaseSummary$dat) > 0) {
+        #skipIDs <- c('D009370', 'D009371', 'D009369')
+        skipIDs <- c('D009370', 'D009371')  # keep Neoplasms (unknown)
+        diseaseSummary$dat <- diseaseSummary$dat [!diseaseSummary$dat$MeshID %in% skipIDs,]
+      }
+    }
+    
+    observeEvent(input$MainPage, {
+      
+      cat('clicked on: ', input$MainPage, '\n')
+      
+      disableTableClicks()
+      pmids <- pmidList$pmids$PMID
+      
+      if (input$MainPage == "Cancer Types" && is.null(diseaseSummary$dat)) {
+        
+        con = dbConnect(MariaDB(), group = "CPP")
+        getSummaries("Cancer Types", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
+        formatCancerSummaries()
+        dbDisconnect(con)
+        toggleStackedGraphButtons(TRUE, depends = TRUE)
+        
+      } else if (input$MainPage == "Selected Genes" && is.null(multiGeneSummary$dat)) {
+        
+        if (length(selected$geneID) > 1) {
+          con = dbConnect(MariaDB(), group = "CPP")
+          multiGeneSummary$dat <- getGeneSummaryForSelectedGeneIDs(selected$geneID, con, pmidList$pmids$PMID)
+          dbDisconnect(con)
+          toggleStackedGraphButtons(TRUE, depends = TRUE)
+          
+        }
+        
+      } else if (input$MainPage == "Cancer Terms" && is.null(cancerTermSummary$dat)) {
+        
+        con = dbConnect(MariaDB(), group = "CPP")
+        getSummaries("Related Cancer Terms", con, getCancerTermSummaryByPMIDs, pmids, session, cancerTermSummary, "filterCancerTerms")
+        dbDisconnect(con)
+        toggleStackedGraphButtons(TRUE, depends = TRUE)
+        
+      } else if (input$MainPage == "Drugs" && is.null(chemSummary$dat)) {
+        
+        con = dbConnect(MariaDB(), group = "CPP")
+        getSummaries("Related Chemicals", con, getChemSummaryByPMIDs, pmids, session, chemSummary, "filterChem", pa = TRUE)
+        dbDisconnect(con)
+        toggleStackedGraphButtons(TRUE, depends = TRUE)
+        
+      } else if (input$MainPage == "Mutations" && is.null(mutationSummary$dat)) {
+        
+        con = dbConnect(MariaDB(), group = "CPP")
+        getSummaries("Related Mutations", con, getMutationSummaryByPMIDs, pmids, session, mutationSummary, "filterMutations")
+        dbDisconnect(con)
+        toggleStackedGraphButtons(TRUE, depends = TRUE)
+        
+      } else if (input$MainPage == "Additional Genes" && is.null(geneSummary$dat)) {
+        
+        con = dbConnect(MariaDB(), group = "CPP")
+        setProgressBarText("Summarizing Gene Frequencies, please wait...")
+        tmp <- getGeneSummaryByPMIDs(pmids, con)
+        m <- match(selected$geneSymbol, tmp$Symbol)
+        geneSummary$dat <- tmp[-m[!is.na(m)],]
+        dbDisconnect(con)
+        toggleStackedGraphButtons(TRUE, depends = TRUE)
+        
+      }
+    
+      enableTableClicks()
+      
+    }, ignoreInit = TRUE)
+    
+    
+    
 })

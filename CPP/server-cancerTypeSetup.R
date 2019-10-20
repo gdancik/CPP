@@ -31,17 +31,18 @@ observeEvent(input$btnSelectCancerType, {
   ids <- getChildMeshIDsForSelectedCancers()
   cat("children: ", ids, "\n")
   
-  
   isolate(cancerSelectionSummary$selected1 <- input$cancerType)
   isolate(cancerSelectionSummary$selected2 <- ids)
   
   meshIDs <- unique(c(input$cancerType, ids))
   
+  genes <- selected$geneID
+  
   con = dbConnect(MariaDB(), group = "CPP")
   if (!is.null(meshIDs)) {
-    pmidList$pmids_initial = getCancerPMIDsbyMeshID(con, cleanse(input$geneInput), cleanseList(meshIDs))
+    pmidList$pmids_initial = getCancerPMIDsbyMeshID(con, cleanseList(genes), cleanseList(meshIDs))
   } else {
-    pmidList$pmids_initial <- getPMIDs("PubGene", "GeneID", input$geneInput, con, NULL)
+    pmidList$pmids_initial <- getPMIDs("PubGene", "GeneID", genes, con, NULL)
   }
   
   dbDisconnect(con)

@@ -96,6 +96,7 @@ getMutByDiseaseContingency2 <- function(pmids, con, meshIDs, diseases) {
   contingencyQueryByDisease(pmids, con, meshIDs, diseases, makeMutByDiseaseContingencyQuery) 
 }
 
+
 getCancerTermsByDiseaseContingency2 <- function(pmids, con, meshIDs, diseases) {
   contingencyQueryByDisease(pmids, con, meshIDs, diseases, makeCancerTermsByDiseaseContingencyQuery) 
 }

@@ -2,6 +2,7 @@
 # queries DB for summaries and sets the drop down results
 #######################################################################################
 
+source('sql_functions.R')
 ####################################################################################################
 # calls 'query_function' to query database
 ####################################################################################################
@@ -13,13 +14,6 @@ getSummaries <- function(msg, con, query_function, pmids, session, resTable, sel
 }
 
 
-# sets unique disease results and updates drop down
-# setGeneResults <-function(session, res, geneSummary) {
-#   cat("setting gene results...")
-#   
-#   isolate({
-#     #geneSummary$dat <- res
-#     #setSelectInput(session, "filterGenes", geneSummary$selectedTerm, geneSummary$selectedTerm)
-#     
-#   })
-# }
+
+
+

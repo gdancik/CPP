@@ -106,7 +106,7 @@ getCancerPMIDsbyMeshID <- function(con, GeneID, MeshID) {
   str <- paste0("select distinct PubGene.PMID from PubGene\n",
                 "inner join PubMesh ON PubMesh.PMID = PubGene.PMID\n",
                 "inner join MeshTerms ON PubMesh.MeshID = MeshTerms.MeshID\n",
-                "where GeneID = ", GeneID, " and PubMesh.MeshID IN" , MeshID);
+                "where GeneID IN ", GeneID, " and PubMesh.MeshID IN" , MeshID);
   
   runQuery(con, str, "get cancer PMIDs with query limited to user selection of cancer types")
   
@@ -120,7 +120,6 @@ getCancerPMIDsbyMeshID <- function(con, GeneID, MeshID) {
 #     (ids) are found (e.g., if looking for articles mentioning both 
 #     breast and lung tumors). Otherwise all matches to any (ids) will
 #     be returned
-# ids must already be in MySQL format ('id1','id2',etc)
 
 getPMIDs <- function(tblName, idType, ids, con, pmids, ids.AND = FALSE) {
   
@@ -157,37 +156,6 @@ getPMIDs <- function(tblName, idType, ids, con, pmids, ids.AND = FALSE) {
 
 
 # returns Mesh Summary table for vector of pmids
-# no longer used -- see next function
-
-getMeshSummaryByPMIDs <- function(pmids, con) {
-  pmids <- paste0("'",pmids,"'", collapse = ",")
-  
-  str <- paste0("SELECT count(TT.MeshID) as Frequency,
-     TT.MeshID, TT.Term, TT.TreeID
-     FROM
-     (SELECT
-       PubMesh.PMID,
-       MeshTerms.MeshID,
-       MeshTerms.Term,
-       MeshTerms.TreeID
-       FROM
-       PubMesh
-       INNER JOIN MeshTerms ON MeshTerms.MeshID = PubMesh.MeshID
-       WHERE
-       PubMesh.PMID IN (", pmids, ")
-       GROUP BY PubMesh.PMID , MeshTerms.MeshID , MeshTerms.Term , MeshTerms.TreeID) AS TT
-       WHERE TT.TreeID LIKE 'C04%'
-       GROUP BY TT.MeshID , TT.Term , TT.TreeID;")
-
-  res <- runQuery(con, str, "Mesh summary query:")
-
-  a<-countChildTreeIDs(res)
-  a
-  
-}
-
-
-# returns Mesh Summary table for vector of pmids
 # version 2 which counts unique articles
 getMeshSummaryByPMIDs <- function(pmids, con) {
 
@@ -203,7 +171,7 @@ getMeshSummaryByPMIDs <- function(pmids, con) {
                 WHERE
                 PubMesh.PMID IN (", pmids, ") and MeshTerms.TreeID LIKE 'C04%';")
   
-  res <- runQuery(con, str, "Mesh summary query:")
+  res <- runQuery(con, str, "Mesh summary query:", "mesh.sql")
   
   
   
@@ -268,7 +236,7 @@ getChemSummaryByPMIDs <- function(pmids, con, pa = FALSE) {
 
 # returns Chem Summary table for vector of pmids
 getMutationSummaryByPMIDs <- function(pmids, con) {
-  
+
   pmids <- paste0("'",pmids,"'", collapse = ",")
   
   str <- paste0("select count(PubMut.MutID) as Frequency, PubMut.MutID, MutGene.Genes as 'Gene (Inferred)' from\n",
@@ -297,15 +265,26 @@ getGeneSummaryByPMIDs <- function(pmids, con) {
 }
 
 
-getGeneSummaryForSelectedGeneIDs <- function(geneIDs, con) {
+
+# count number of articles per gene, limited to pmids if selected
+getGeneSummaryForSelectedGeneIDs <- function(geneIDs, con, pmids = NULL) {
   
   geneIDs <- paste0("'",geneIDs,"'", collapse = ",")
-  str <- paste0("select PubGene.GeneID, SYMBOL as Symbol,", 
-                "count(PMID) as Frequency from PubGene\n", 
+  
+  if (!is.null(pmids)) {
+    pmids <- paste0("'",pmids,"'", collapse = ",")
+    pmids <- paste0('AND PMID IN (',pmids,')\n')
+  }
+  
+  str <- paste0("select PubGene.GeneID, count(PMID) as Frequency,", 
+                "SYMBOL as Symbol from PubGene\n", 
                 "inner join Genes ON Genes.GeneID = PubGene.GeneID\n",
                 "where PubGene.GeneID in", paste0("(", geneIDs, ")"),"\n",
+                pmids,
                 "group by GeneID order by Frequency desc;")
-                
+  
+  print(str)
+  
   runQuery(con, str)
 }
 
