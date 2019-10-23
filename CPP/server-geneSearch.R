@@ -206,3 +206,18 @@ validateGenes <- reactive({
   }
   
 })
+
+
+observeEvent(input$multiGeneFile, {
+  cat("look at file")
+  if (is.null(input$multiGeneFile)) {
+    return()
+  }
+  genes <- read.csv(input$multiGeneFile$datapath, nrows = 1000, header = FALSE, as.is = 1)
+  if (ncol(genes) > 1) {
+    shinyjs::alert('Invalid format: gene file should have a single column')
+    return()
+  }
+  updateTextAreaInput(session, 'multiGeneInput', value = paste0(genes$V1, collapse = "\n"))
+  
+})

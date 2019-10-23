@@ -70,30 +70,41 @@ welcomeModal <-  bsModal("welcomeModal",HTML("<i>Cancer Publication Portal</i>")
         h4('- OR- ', style = 'padding-left:15px')
       ),
       fluidRow(
-        br(),
         column(4, style = "padding-right:0px",
                textAreaInput('multiGeneInput', label = 'Select multiple genes (500 max)',
-                              value = "CD24\nHRAS",
-                              placeholder = 'Enter multiple genes, separated by spaces or one per line', rows = 6,
-                              resize = "none")
+                              value = "",
+                              placeholder = 'Enter multiple genes, separated by spaces or one per line', 
+                                rows = 6, resize = "none")
         ),
-        
         column(4, style = "padding-right:0px",
-               
-               textAreaInput('invalidGeneOutput', label = 'Invalid genes', rows = 6,
-                             resize = "none"))#,
-        #column(2),
-      ), fluidRow(
+               textAreaInput('invalidGeneOutput', label = HTML("<span style = 'color:red'>Invalid Genes</span>"), 
+                                                               rows = 6)
+        )
+      ),
+      
+      fluidRow(
+        h4('- OR- ', style = 'padding-left:15px')
+      ),
+      
+      fluidRow(
+        column(4, style = "padding-left:15px",
+          fileInput("multiGeneFile", "Upload genes from file (500 max)",
+                  accept = c(
+                    "text/csv",
+                    "text/comma-separated-values,text/plain",
+                    ".csv")
+          )
+        ),
         column(4, style = "padding-right:0px", 
                div(width = "100%",
-                 actionButton("btnMultiGeneSearch", "Summarize Cancer Types", class = "blue-button",
-                              style = "width:100%;")
+                   HTML("<label style = 'visibility:hidden'>hi</label>"),
+                   actionButton("btnMultiGeneSearch", "Summarize Cancer Types", class = "blue-button",
+                                style = "width:100%;", disabled = 'disabled')
                )
-        ), column(4, style = "padding-right:0px;padding-top: 7px;padding-bottom: 7px;text-align:center",
-                  htmlOutput('multiInvalidGeneMsg')
         )
-      ) 
-  )
+      )
+)
+  
 
 # prevent outside click of modal to close it
 welcomeModal$attribs$`data-keyboard`= "false" 

@@ -68,7 +68,7 @@ observe({
   if (is.null(diseaseSummary$dat)) {
     return()
   }
-
+  
   if (setequal(input$cancerType, cancerSelectionSummary$selected1)) {
     shinyjs::disable('btnSelectCancerType')
   } else {

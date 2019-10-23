@@ -121,8 +121,8 @@ commonStyles <- list(
           
                 .shiny-notification {
                     position: fixed;                    
-                    top: 5%;
-                    left: 75%;
+                    top: 15%;
+                    left: 65%;
                     font-size: 1.3em;
                     padding-left: 20px;
                     padding-right: 20px;

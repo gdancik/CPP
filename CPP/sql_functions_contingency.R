@@ -64,22 +64,32 @@ contingencyQueryByDisease <- function(pmids, con, meshIDs, diseases, makeQueryFu
   pmids <- paste0("'",pmids,"'", collapse = ",")
   
   all_res <- NULL
-  for (i in seq_along(meshIDs)) {
-    m <- meshIDs[i]
-    m <- getChildMeshIDs(con, m)
-    m <- paste0("'",m,"'", collapse = ",")
-    
-    qry <- makeQueryFunction(pmids, m)
-    
-    catn("Getting contingency for disease: ", diseases[i])
-    
-    res<- dbGetQuery(con, qry)
-    if (nrow(res) > 0) {
-      res <- cbind(Disease = diseases[i], res)
-      all_res <- rbind(all_res, res)
-    }
-    
-  }
+
+  withProgress(message = 'Generating stacked bar graph, please wait...',
+                value = 0, {
+
+                 n <- length(meshIDs)
+                 for (i in seq_along(meshIDs)) {
+                   m <- meshIDs[i]
+                   m <- getChildMeshIDs(con, m)
+                   m <- paste0("'",m,"'", collapse = ",")
+                   
+                   qry <- makeQueryFunction(pmids, m)
+                   
+                   catn("Getting contingency for disease: ", diseases[i])
+                   
+                   res<- dbGetQuery(con, qry)
+                   if (nrow(res) > 0) {
+                     res <- cbind(Disease = diseases[i], res)
+                     all_res <- rbind(all_res, res)
+                   }
+                   
+                   incProgress(1/n)
+                }
+                   
+  })
+  
+
   t2 <- Sys.time()
   print(t2-t1)
   all_res

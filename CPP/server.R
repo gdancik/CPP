@@ -14,7 +14,7 @@ library(stringr)
 library(shinycssloaders)
 
 CONFIG <- list(
-  DEBUG = TRUE,
+  DEBUG = FALSE,
   DEFAULT.GENE = "AGL",
   AUTO.RUN = FALSE
 )
@@ -513,63 +513,115 @@ shinyServer(function(input, output, session) {
       cat('clicked on: ', input$MainPage, '\n')
       
       disableTableClicks()
-      pmids <- pmidList$pmids$PMID
       
-      if (input$MainPage == "Cancer Types" && is.null(diseaseSummary$dat)) {
+      if (input$MainPage == "Cancer Types") {
         
-        con = dbConnect(MariaDB(), group = "CPP")
-        getSummaries("Cancer Types", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
-        formatCancerSummaries()
-        dbDisconnect(con)
-        toggleStackedGraphButtons(TRUE, depends = TRUE)
+        updateCancerTypesSummary()
         
-      } else if (input$MainPage == "Selected Genes" && is.null(multiGeneSummary$dat)) {
+      } else if (input$MainPage == "Selected Genes" && length(selected$geneID) > 1) {
         
-        if (length(selected$geneID) > 1) {
-          con = dbConnect(MariaDB(), group = "CPP")
-          multiGeneSummary$dat <- getGeneSummaryForSelectedGeneIDs(selected$geneID, con, pmidList$pmids$PMID)
-          dbDisconnect(con)
-          toggleStackedGraphButtons(TRUE, depends = TRUE)
-          
-        }
+          updateSelectedGenesSummary()
         
-      } else if (input$MainPage == "Cancer Terms" && is.null(cancerTermSummary$dat)) {
+      } else if (input$MainPage == "Cancer Terms") {
         
-        con = dbConnect(MariaDB(), group = "CPP")
-        getSummaries("Related Cancer Terms", con, getCancerTermSummaryByPMIDs, pmids, session, cancerTermSummary, "filterCancerTerms")
-        dbDisconnect(con)
-        toggleStackedGraphButtons(TRUE, depends = TRUE)
+          updateCancerTermsSummary()
         
-      } else if (input$MainPage == "Drugs" && is.null(chemSummary$dat)) {
+      } else if (input$MainPage == "Drugs") {
         
-        con = dbConnect(MariaDB(), group = "CPP")
-        getSummaries("Related Chemicals", con, getChemSummaryByPMIDs, pmids, session, chemSummary, "filterChem", pa = TRUE)
-        dbDisconnect(con)
-        toggleStackedGraphButtons(TRUE, depends = TRUE)
+          updateChemicalSummary()
         
-      } else if (input$MainPage == "Mutations" && is.null(mutationSummary$dat)) {
+      } else if (input$MainPage == "Mutations") {
         
-        con = dbConnect(MariaDB(), group = "CPP")
-        getSummaries("Related Mutations", con, getMutationSummaryByPMIDs, pmids, session, mutationSummary, "filterMutations")
-        dbDisconnect(con)
-        toggleStackedGraphButtons(TRUE, depends = TRUE)
+          updateMutationSummary()
         
-      } else if (input$MainPage == "Additional Genes" && is.null(geneSummary$dat)) {
+      } else if (input$MainPage == "Additional Genes") {
         
-        con = dbConnect(MariaDB(), group = "CPP")
-        setProgressBarText("Summarizing Gene Frequencies, please wait...")
-        tmp <- getGeneSummaryByPMIDs(pmids, con)
-        m <- match(selected$geneSymbol, tmp$Symbol)
-        geneSummary$dat <- tmp[-m[!is.na(m)],]
-        dbDisconnect(con)
-        toggleStackedGraphButtons(TRUE, depends = TRUE)
+          updateAdditionalGenesSummary()
         
       }
     
       enableTableClicks()
       
     }, ignoreInit = TRUE)
+
     
+  
+
     
+updateCancerTypesSummary <- function() {
+  if (!is.null(diseaseSummary$dat)) {
+    return()
+  }
+  pmids <- pmidList$pmids$PMID
+  con = dbConnect(MariaDB(), group = "CPP")
+  getSummaries("Cancer Types", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
+  formatCancerSummaries()
+  dbDisconnect(con)
+  #toggleStackedGraphButtons(graph = "btnGenerateGraphCancerTypes")
+}
+    
+
+updateSelectedGenesSummary <- function() {
+  if (!is.null(multiGeneSummary$dat)) {
+    return()
+  }
+  pmids <- pmidList$pmids$PMID
+  con = dbConnect(MariaDB(), group = "CPP")
+  multiGeneSummary$dat <- getGeneSummaryForSelectedGeneIDs(selected$geneID, con, pmidList$pmids$PMID)
+  dbDisconnect(con)
+  toggleStackedGraphButtons(graph = "btnGenerateGraphMultiGene")
+}
+
+updateCancerTermsSummary <- function() {
+  if (!is.null(cancerTermSummary$dat)) {
+    return()
+  }
+  pmids <- pmidList$pmids$PMID
+  con = dbConnect(MariaDB(), group = "CPP")
+  getSummaries("Related Cancer Terms", con, getCancerTermSummaryByPMIDs, pmids, session, cancerTermSummary, "filterCancerTerms")
+  dbDisconnect(con)
+  toggleStackedGraphButtons(graph = "btnGenerateGraphCancerTerm")
+  
+  
+}
+    
+updateChemicalSummary <- function() {
+  if (!is.null(chemSummary$dat)) {
+    return()
+  }
+  pmids <- pmidList$pmids$PMID
+  con = dbConnect(MariaDB(), group = "CPP")
+  getSummaries("Related Chemicals", con, getChemSummaryByPMIDs, pmids, session, chemSummary, "filterChem", pa = TRUE)
+  dbDisconnect(con)
+  toggleStackedGraphButtons(graph = "btnGenerateGraphChem")
+}
+
+updateMutationSummary <- function() {
+  if (!is.null(mutationSummary$dat)) {
+    return()
+  }
+  pmids <- pmidList$pmids$PMID
+  con = dbConnect(MariaDB(), group = "CPP")
+  getSummaries("Related Mutations", con, getMutationSummaryByPMIDs, pmids, session, mutationSummary, "filterMutations")
+  dbDisconnect(con)
+  toggleStackedGraphButtons(graph = "btnGenerateGraphMut")
+}
+    
+updateAdditionalGenesSummary <- function() {
+  
+  if (!is.null(geneSummary$dat)) {
+    return()
+  }
+  
+  pmids <- pmidList$pmids$PMID
+  con = dbConnect(MariaDB(), group = "CPP")
+  setProgressBarText("Summarizing Gene Frequencies, please wait...")
+  tmp <- getGeneSummaryByPMIDs(pmids, con)
+  m <- match(selected$geneSymbol, tmp$Symbol)
+  geneSummary$dat <- tmp[-m[!is.na(m)],]
+  dbDisconnect(con)
+  toggleStackedGraphButtons(graph = "btnGenerateGraphGene")
+}
+
     
 })

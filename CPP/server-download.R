@@ -16,7 +16,7 @@ writeDownloadHeader <- function(header, file) {
   #   f <- paste0("\"# Summary for ", selected$geneSymbol, " with filters: ", f, "\"")
   # }
   
-  h <- paste0("# ", header, "\n# Selected gene: ", selected$geneSymbol)
+  h <- paste0("# ", header, "\n\"# Selected gene: ", selectedGeneName(), "\"")
   cancers <- paste0("\"# ", cancers, "\"") 
   f <- gsub("<.+?>", "", f)
   
@@ -50,6 +50,7 @@ output$downloadPMIDs <- downloadHandler(
 output$downloadCancerTypesData <- downloadHandler(
       "cancerTypesSummary.csv",
       content = function(file) {
+        updateCancerTypesSummary()
         writeDownloadHeader("Cancer Type Summary", file)
         write.table(diseaseSummary$dat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
       },
@@ -60,6 +61,7 @@ output$downloadCancerTypesData <- downloadHandler(
 output$downloadCancerTermsData <- downloadHandler(
   "cancerTerms.csv",
   content = function(file) {
+    updateCancerTermsSummary()
     writeDownloadHeader("Cancer Terms Summary", file)
     write.table(cancerTermSummary$dat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
   },
@@ -70,6 +72,7 @@ output$downloadCancerTermsData <- downloadHandler(
 output$downloadDrugTreatmentsData <- downloadHandler(
   "drugSummary.csv",
   content = function(file) {
+    updateChemicalSummary()
     writeDownloadHeader("Drug Summary", file)
     write.table(chemSummary$dat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
   },
@@ -79,6 +82,7 @@ output$downloadDrugTreatmentsData <- downloadHandler(
 output$downloadMutationsData <- downloadHandler(
   "mutationSummary.csv",
   content = function(file) {
+    updateMutationSummary()
     writeDownloadHeader("Mutation Summary", file)
     write.table(mutationSummary$dat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
   },
@@ -88,6 +92,7 @@ output$downloadMutationsData <- downloadHandler(
 output$downloadGenesData <- downloadHandler(
   "geneSummary.csv",
   content = function(file) {
+    updateAdditionalGenesSummary()
     writeDownloadHeader("Gene Summary", file)
     write.table(geneSummary$dat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
   },

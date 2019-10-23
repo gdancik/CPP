@@ -18,7 +18,6 @@ progressDiv <- function(div.id, span.id, span.text = 'Processing, please wait...
 
 # update both the cancerTypeSetUpModal and main progress bars
 setProgressBarText <- function(txt) {
-
     shinyjs::html("bar-text", txt)
     shinyjs::html("cancerSelection-bar-text", txt)
 }

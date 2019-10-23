@@ -91,7 +91,7 @@ getStackedResults2 <- function(sql_function, group, group.filters) {
   res2[[group]] <- factor(res2[[group]], levels = n)
 
   if (!is.null(msg)) {  
-  showNotification(msg, duration = 6, closeButton = TRUE, type = "warning",
+  showNotification(msg, duration = 6, closeButton = TRUE,
                    id = "graphNotification")
   }
   
@@ -135,12 +135,17 @@ clearStackedGraphs <- function(btnShow = TRUE){
   output$geneGraph <- renderPlotly({})
   output$cancerTermGraph <- renderPlotly({})
   output$multiGeneGraph <- renderPlotly({})
-  toggleStackedGraphButtons(FALSE)
+  toggleStackedGraphButtons(hide = TRUE)
 }
 
-toggleStackedGraphButtons <- function(show = TRUE, depends = FALSE) {
+
+# toggles graph buttons
+# buttons are always closed, but only shown if there is data
+# type is a specific type or "all" for all of them
+toggleStackedGraphButtons <- function(hide = FALSE, graph = "all") {
+
   f <- shinyjs::show
-  if (!show) {
+  if (hide) {
     f <- shinyjs::hide
   }
   
@@ -148,20 +153,29 @@ toggleStackedGraphButtons <- function(show = TRUE, depends = FALSE) {
     !is.null(x) && nrow(x) > 0
   }
   
-  if (!depends || hasData(cancerTermSummary$dat)) {
-    f("btnGenerateGraphCancerTerm")
+  if ( graph %in% c("all", "btnGenerateGraphCancerTerm") && 
+       (hasData(cancerTermSummary$dat) || hide)) {
+        f("btnGenerateGraphCancerTerm")
   }
-  if (!depends || hasData(chemSummary$dat)) {
-    f("btnGenerateGraphChem")
+  
+  if ( graph %in% c("all", "btnGenerateGraphChem") && 
+       (hasData(chemSummary$dat) || hide)) {
+        f("btnGenerateGraphChem")
   }
-  if (!depends || hasData(mutationSummary$dat)) {
-    f("btnGenerateGraphMut")
+  
+  if ( graph %in% c("all", "btnGenerateGraphMut") &&
+      (hasData(mutationSummary$dat) || hide)) {
+        f("btnGenerateGraphMut")
   }
-  if (!depends || hasData(geneSummary$dat)) {
-    f("btnGenerateGraphGene")
+  
+  if (graph %in% c("all", "btnGenerateGraphGene") &&
+      (hasData(geneSummary$dat) || hide)) {
+        f("btnGenerateGraphGene")
   }
-  if (!depends || hasData(multiGeneSummary$dat)) {
-    f("btnGenerateGraphMultiGene")
+  
+  if (graph %in% c("all", "btnGenerateGraphMultiGene") &&
+      (hasData(multiGeneSummary$dat) || hide)) {
+        f("btnGenerateGraphMultiGene")
   }
   
 }
