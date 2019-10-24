@@ -38,6 +38,23 @@ writeDownloadHeader <- function(header, file) {
 }
 
 
+output$saveCancerTypes <- downloadHandler(
+  "selectedCancerTypes.csv",
+  content = function(file) {
+    choices <- cancerSelectionChoices()
+    
+    m <- match(input$cancerType, choices)
+    choices <- choices[m]
+    write.table(data.frame(unlist(choices), names(choices), row.names = NULL), file, sep = ",", row.names = FALSE, col.names = FALSE)  
+    
+    msg <- paste0("Cancer types saved to your download directory")
+    showNotification(msg, duration = 4, closeButton = TRUE,
+                     id = "fileSaveNotification", type = "message")
+    
+  },
+  contentType = "text/csv"
+)
+
 output$downloadPMIDs <- downloadHandler(
       "pmids.csv",
       content = function(file) {

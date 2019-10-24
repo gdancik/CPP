@@ -392,14 +392,9 @@ shinyServer(function(input, output, session) {
         cat("NO RESULTS -- SHOULD BE CHECKED!")
         # don't stop here because this is now possible
         # if user updates cancer types but keeps filters
-        pmids <- "NULL"
         return()
       }
       
-      #update PMIDs
-      if (pmids == 'NULL') {
-        pmids <- NULL
-      }
       pmidList$pmids <- data.frame(PMID = pmids)
       
       getSummaries("Cancer Types", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
@@ -444,13 +439,13 @@ shinyServer(function(input, output, session) {
       if (n == 0) {
         dbDisconnect(con)
         cat("NO RESULTS -- SHOULD BE CHECKED!")
-        return(FALSE)
+        return(NULL)
       } else if (n > limit) {
         dbDisconnect(con)
         msg <- paste0('Limit exceeded: your gene list has >200,000 results.\n\n',
                       'Reduce the number of genes in your list and search again.')
         shinyjs::alert(msg)
-        return(FALSE)
+        return(NULL)
       }
       
       # get Mesh IDs

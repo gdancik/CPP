@@ -55,6 +55,8 @@ observeEvent(input$btnSelectCancerType, {
   hideProgress()
   enableTableClicks()
   
+  reset('cancerTypeFile')
+  
 })
 
 # ## update btnSelectCancerType based on current selection
@@ -62,9 +64,13 @@ observe({
   label <- "Retrieve summaries for selected cancer types"
   if (is.null(input$cancerType)) {
     label <- "Retrieve summaries for all cancer types"
+    catn('hide')
+    shinyjs::hide('saveCancerTypes')
+  } else {
+    shinyjs::show('saveCancerTypes')
   }
   updateActionButton(session, "btnSelectCancerType", label)
-
+  
   if (is.null(diseaseSummary$dat)) {
     return()
   }
@@ -77,6 +83,31 @@ observe({
 
 })
 
+
+
+observeEvent(input$cancerTypeFile, {
+  cat("look at file")
+  if (is.null(input$cancerTypeFile)) {
+    return()
+  }
+  types <- read.csv(input$cancerTypeFile$datapath, nrows = 1000, header = FALSE, as.is = 1)
+  if (ncol(types) > 2) {
+    shinyjs::alert('Invalid format: gene file should have Mesh IDs in first column')
+    return()
+  }
+  
+  choices <- cancerSelectionChoices()
+  
+  if (!any(types$V1 %in% choices)) {
+    shinyjs::alert('File does not contain any cancer types for current selection')
+  }
+  
+  updateSelectInput(session, "cancerType", choices = choices, 
+                    selected = types$V1)
+  
+  #updateTextAreaInput(session, 'multiGeneInput', value = paste0(genes$V1, collapse = "\n"))
+  
+})
 
 
 

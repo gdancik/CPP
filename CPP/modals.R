@@ -43,7 +43,7 @@ formatBSModal<-function (id, title, trigger, applyID, ..., size, applyText = "Up
 
 welcomeModal <-  bsModal("welcomeModal",HTML("<i>Cancer Publication Portal</i>"), trigger = "btnNewSearch", size = "large",
       p(strong("Instructions:"), "Welcome to the Cancer Publication Portal for summarizing and searching cancer-related literature.",
-        "To start, select a gene and click the 'Summarize cancer types' button to select the cancer types you are interested in.
+        "To start, select a gene or genes and click the 'Summarize cancer types' button to select the cancer types you are interested in.
         After selecting the cancer types of interest, articles will be summarized based on drugs, cancer terms, mutations, and additional genes
         mentioned in article titles and abstracts. Additional filters can be applied by clicking on any of the tables."),
         
@@ -265,7 +265,8 @@ cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Select cancer typ
                                       fluidRow(column(12,
                                             uiOutput('cancerTypeSummaryHeader'),          
                                             progressDiv('cancerTypeProgress', 'cancerSelection-bar-text'),          
-                                              HTML("<p>Select your desired cancer types by clicking on the table or by using the drop down below. 
+                                              HTML("<p>Select your desired cancer types by clicking on the table or by using the drop down below. You may also
+                                                       upload your cancer types from a file, and Download your selected cancer types for future use.
                                                            When you are finished, click the 'Retrieve' button to retrieve summaries of your results. </br></br>\
                                                            </p>")
                                                       )),
@@ -278,16 +279,25 @@ cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Select cancer typ
                                         column(1),
                                         
                                         column(5, 
-                                               
                                                fluidRow(
                                                conditionalPanel(condition="!$('html').hasClass('shiny-busy')",
                                                       style="padding-right:0px",
                                                       div(id = "cancerTypeDiv",
-                                                          selectizeInput("cancerType", "Selected cancer types: ", choices = NULL, multiple = TRUE,
-                                                                      options = list(placeholder = "(leave blank to search all articles)") ),
+                                                          selectizeInput("cancerType", "Selected cancer types:", choices = NULL, multiple = TRUE,
+                                                                      options = list(placeholder = "(leave blank to search all articles)")),
+                                                          downloadLink('saveCancerTypes', 'Save selected cancer types to file'),
                                                             htmlOutput("cancerSelectionMsg")
                                                       )
-                                               ))
+                                               ),
+                                               fluidRow(
+                                                          fileInput("cancerTypeFile", "Upload cancer types (must include MeshIDs in first column)",
+                                                                    accept = c(
+                                                                      "text/csv",
+                                                                      "text/comma-separated-values,text/plain",
+                                                                      ".csv")
+                                                          )
+                                                      )
+                                                )
                                         )
                                       ),
                                       
@@ -295,6 +305,11 @@ cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Select cancer typ
                                       cancelID = "btnCancelCancerType", escape = FALSE
 )
 
+
+##########################################################################
+# Add download button to footer
+
+##########################################################################
 
 showProgress <- function(msg = NULL) {
   if (!is.null(msg)) {

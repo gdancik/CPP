@@ -121,7 +121,7 @@ cancerSummaryByGenes <- function(geneID) {
   shinyjs::removeClass('welcomeModalProgress', 'hide')
   validSearch <- getCancerTypes()
   
-  if (!validSearch) {
+  if (is.null(validSearch)) {
     shinyjs::addClass('welcomeModalProgress', 'hide')
     resetReactiveValues()
     shinyjs::addClass(id = "btnWelcomeCancel", class = "cancel")

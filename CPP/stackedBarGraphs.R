@@ -91,7 +91,7 @@ getStackedResults2 <- function(sql_function, group, group.filters) {
   res2[[group]] <- factor(res2[[group]], levels = n)
 
   if (!is.null(msg)) {  
-  showNotification(msg, duration = 6, closeButton = TRUE,
+  showNotification(msg, duration = 4, closeButton = TRUE,
                    id = "graphNotification")
   }
   
