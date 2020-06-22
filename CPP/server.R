@@ -1,6 +1,11 @@
 # Cancer Publication Portal
 
-library(shiny)
+lib.loc <- NULL
+lib.loc <- "/Users/dancikg/RESEARCH/research_easternct/work/GenePubViewer/DCAST/Github/CPP/lib"
+
+
+library(shiny, lib.loc = lib.loc)  # needs shiny_1.2.0
+
 library(V8)
 library(DT) # requires development version for single row selection with datatables
 library(DBI)
@@ -11,7 +16,8 @@ library(rclipboard)
 #install_version("plotly", version = "4.6.0", repos = "http://cran.us.r-project.org")
 library(plotly) # need development version 
 library(stringr)
-library(shinycssloaders)
+library(shinycssloaders, lib.loc = lib.loc)
+
 
 CONFIG <- list(
   DEBUG = FALSE,

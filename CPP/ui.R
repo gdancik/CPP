@@ -1,8 +1,11 @@
-library(shiny)
+
+lib.loc <- NULL
+lib.loc <- "/Users/dancikg/RESEARCH/research_easternct/work/GenePubViewer/DCAST/Github/CPP/lib"
+
 library(shinyBS)
 library(shinydashboard)
 library(shinyjs)
-library(shinycssloaders)
+library(shinycssloaders, lib.loc = lib.loc)
 library(plotly)
 library(rclipboard)
 
@@ -320,8 +323,7 @@ shinyUI(
   
   navbarPage(title = 'Cancer Publication Portal',
              id = "headerNavBarPage", 
-             
-             
+    
     tabPanel("Home",
           
              tags$head(HTML(
