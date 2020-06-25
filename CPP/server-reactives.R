@@ -1,6 +1,8 @@
 # server-reactives.R
 
 
+NEW_SEARCH <- TRUE
+
 logFile <- reactiveValues(log = NULL)
 updateLog <- function(logFile, ...) {
   l = list(...)
@@ -17,13 +19,14 @@ createReactiveTable <- function(...) {
 
 
 # reactives to deal with results tables
-diseaseSummary <- createReactiveTable(initialized = NULL)
+diseaseSummary <- createReactiveTable()
 chemSummary <- createReactiveTable()
 #paSummary <- createReactiveTable()
 mutationSummary <- createReactiveTable()
 geneSummary <- createReactiveTable()
 multiGeneSummary <- reactiveValues(dat = NULL)
 cancerTermSummary <- createReactiveTable()
+
 
 
 savedFilterValues <- reactiveValues(filterGenesType = "any",filterChemType = "any",

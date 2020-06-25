@@ -20,9 +20,8 @@ library(shinycssloaders, lib.loc = lib.loc)
 
 
 CONFIG <- list(
-  DEBUG = FALSE,
-  DEFAULT.GENE = "AGL",
-  AUTO.RUN = FALSE
+  DEBUG = TRUE,
+  DEFAULT.GENE = "AGL"
 )
 
 if (!CONFIG$DEBUG) {
@@ -30,7 +29,6 @@ if (!CONFIG$DEBUG) {
   cat <- function(...){invisible()}
   print <- function(...){invisible()}
 }
-
 
 wait <- function() {
   cat("Press a key to continue...")
@@ -44,6 +42,7 @@ catn <- function(...) {
 source("functions.R", local = TRUE)
 source("setResults.R", local = TRUE)
 source("progress.R", local = TRUE)
+source("tabResults.R", local = TRUE)
 
 # some genes have duplicate IDs...we should combine, for now, remove
 library(dplyr)
@@ -51,11 +50,22 @@ library(dplyr)
 shinyServer(function(input, output, session) {
 
   observe({
+    catn('observe the logFile...')
     output$log <- renderText(logFile$log)
-    
   })
 
-  ##toggleModal(session, "filterModal", "open")
+  
+  observeEvent(input$headerNavBarPage, {
+    if (input$headerNavBarPage == 'Results' && NEW_SEARCH) {
+      shinyjs::click('btnTest')
+      NEW_SEARCH <<- FALSE
+    } 
+  })
+               
+  #toggleModal(session, "cancerTypeSetupModal", "open")
+  
+  #toggleModal(session, "filterModal", "open")
+  
   output$shinyTitle <- renderText("Cancer Publication Portal")
   
   source("server-reactives.R", local = TRUE)
@@ -71,15 +81,13 @@ shinyServer(function(input, output, session) {
   source("server-graphSetup.R", local = TRUE)
   source("server-cancerTypeSetup.R", local = TRUE)
   source("server-geneSearch.R", local = TRUE)
-  
+
   # disable drop downs on startup
   # shinyjs::disable("filterDisease")
   # shinyjs::disable("filterChem")
   # shinyjs::disable("filterMutations")
   # shinyjs::disable("filterGenes")
   # shinyjs::disable("filterCancerTerms")
-  
-
   
   
   # add logPanel if in debug mode
@@ -88,11 +96,9 @@ shinyServer(function(input, output, session) {
               tabPanel("Log", verbatimTextOutput("log"))  )
   }
   
+  
   # set up welcome modal and auto run if specified
-  toggleModal(session, "welcomeModal", toggle = "open")
-  if (CONFIG$AUTO.RUN) {
-    shinyjs::click("btnGeneSearch")
-  }
+#  toggleModal(session, "welcomeModal", toggle = "open")
   
   shinyjs::hide('invalidGeneOutput')
   
@@ -102,7 +108,7 @@ shinyServer(function(input, output, session) {
   
 #  lastTab <<- "Home"
   
-  updateSelectInput(session, 'testing', choices = GeneTable$SYMBOL)
+  #updateSelectInput(session, 'testing', choices = GeneTable$SYMBOL)
   
   toggleMenus <-function(show) {
     
@@ -125,12 +131,6 @@ shinyServer(function(input, output, session) {
   }
     
   toggleMenus(FALSE)
-  
-  # shinyjs::runjs("
-  #                if (navigator.userAgent.indexOf('Chrome') == -1) {
-  #                   alert('For the best user experience, we recommend using the Google Chrome browser, available at: http://www.google.com/chrome/');
-  #                }
-  # ")
   
 
     # returns intersection of x and y but if x is NULL return y
@@ -418,9 +418,7 @@ shinyServer(function(input, output, session) {
       updateTabsetPanel(session, 'MainPage', 'Articles')
       updateTabsetPanel(session, 'MainPage', page)
       
-      
     }
-   
    
     output$test <- renderText({
         HTML("<h2> how are you? </h2>")
@@ -490,7 +488,6 @@ shinyServer(function(input, output, session) {
     }
 
     
-    
     # format cancer summaries by restricting to selected types and removing
     # Neoplasms by site, etc
     formatCancerSummaries <- function() {
@@ -510,7 +507,7 @@ shinyServer(function(input, output, session) {
     }
     
     observeEvent(input$MainPage, {
-      
+      catn('observing Main Page...')
       cat('clicked on: ', input$MainPage, '\n')
       
       disableTableClicks()
@@ -624,5 +621,4 @@ updateAdditionalGenesSummary <- function() {
   toggleStackedGraphButtons(graph = "btnGenerateGraphGene")
 }
 
-    
 })

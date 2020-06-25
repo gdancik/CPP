@@ -1,26 +1,6 @@
 ##########################################################
 # Handle a New Search
 ##########################################################
-observeEvent(input$btnNewSearch,{
-  
-  selectedSingle = selectedMulti = ""
-  
-  if (length(selected$geneID) == 1) {
-    selectedSingle = selected$geneID
-  } else {
-    selectedMulti <- paste0(selected$geneSymbol, collapse = '\n')
-  }
-  
-  updateSelectizeInput(session, "geneInput", choices = geneIDs, selected = selectedSingle, server = TRUE)
-  
-
-  
-  updateTextAreaInput(session, "multiGeneInput", value = selectedMulti)
-
-  shinyjs::disable("btnGeneSearch")
-  shinyjs::removeClass(id = 'welcomeModal', class = 'hide')
-})
-
 
 geneID_to_symbol <- function(id) {
   GeneTable$SYMBOL[GeneTable$GeneID %in% id]      
@@ -31,44 +11,44 @@ geneID_to_symbol <- function(id) {
 ##########################################################
 
 observeEvent(input$geneInput, {
+  catn('observeEvent geneInput...')
   if (is.null(input$geneInput) | input$geneInput == "") {
+    catn("disable...")
     shinyjs::disable("btnGeneSearch")
+    catn("done...")
     return()
   }
   
   if (selectedGeneLength() > 1) {
+    catn("enable...")
     shinyjs::enable("btnGeneSearch")
+    catn("done...")
     return()
   }
   
+  catn('get symbol and msg...')
   symbol <- geneID_to_symbol(input$geneInput)
   msg <- paste0("prev: ", symbol, " curr: ", selected$geneSymbol )
+  catn('done')
   
   #shinyjs::alert(msg)
   if (!is.null(selected$geneSymbol) && symbol == selected$geneSymbol) {
+    catn('disable...')
     shinyjs::disable("btnGeneSearch")
+    catn('done')
   } 
   else {
+    catn('enable btnGeneSearch...')
     shinyjs::enable("btnGeneSearch")
+    catn('done...')
   }
-
-})
+  
+}, ignoreInit = TRUE)
 
 
 # on single gene search
 observeEvent(input$btnGeneSearch,{
-  
   cat("clicked btnGeneSearch, geneInput = ", input$geneInput, "\n")
-  
-  if (CONFIG$AUTO.RUN) {
-    cat("updating..")
-    
-    #updateSelectizeInput(session, "geneInput", choices = geneIDs, selected =10 , server = TRUE)
-    
-    CONFIG$AUTO.RUN <- FALSE
-    toggleModal(session, "welcomeModal", toggle = "close")
-    return()
-  }
   
   # do nothing if no valid gene is selected
   if (is.null(input$geneInput) | input$geneInput == "") return()
@@ -77,11 +57,18 @@ observeEvent(input$btnGeneSearch,{
     return()
   }
   
-  cancerSummaryByGenes(input$geneInput)
+  updateTextAreaInput(session, "multiGeneInput", value = "")
   
-  shinyjs::addClass(id = "btnCancelCancerType", class = "cancel")
+  commonGeneSearch(input$geneInput)
   
-})
+  #cancerSummaryByGenes(input$geneInput)
+  
+  #shinyjs::addClass(id = "btnCancelCancerType", class = "cancel")
+  #shinyjs::enable('btnSelectCancerType')
+  shinyjs::disable('btnGeneSearch')
+  
+  
+}, ignoreInit = TRUE)
 
 
 # on multi gene search
@@ -102,24 +89,34 @@ observeEvent(input$btnMultiGeneSearch,{
     return()
   } 
   
-  cancerSummaryByGenes(genes$ids)
+  commonGeneSearch(genes$ids)
+  updateSelectizeInput(session, "geneInput", choices = geneIDs, 
+                                            selected = "", server = TRUE)
+
+}, ignoreInit = TRUE)
+
+
+commonGeneSearch <- function(gid) {
+  cancerSummaryByGenes(gid)
+  
   shinyjs::addClass(id = "btnCancelCancerType", class = "cancel")
-
-})
-
+  shinyjs::enable('btnSelectCancerType')
+}
 
 # process and display cancerSummary for specified geneIDs
 cancerSummaryByGenes <- function(geneID) {
 
   reset("cancerType")
   resetReactiveValues()
+  NEW_SEARCH <<- TRUE
 
   isolate(selected$geneID <- geneID)  
   isolate(selected$geneSymbol <- geneID_to_symbol(geneID))
   
-  #wait()
   shinyjs::removeClass('welcomeModalProgress', 'hide')
+  
   validSearch <- getCancerTypes()
+  
   
   if (is.null(validSearch)) {
     shinyjs::addClass('welcomeModalProgress', 'hide')
@@ -128,13 +125,14 @@ cancerSummaryByGenes <- function(geneID) {
     return()
   }
   
-  
   toggleMenus(TRUE)
 
   shinyjs::addClass('welcomeModalProgress', 'hide')
-  toggleModal(session, "welcomeModal", toggle = "close")      
-  toggleModal(session, "cancerTypeSetupModal", toggle = "open")   
+  
+  updateNavbarPage(session, "headerNavBarPage", "Results")
+  
 
+  catn('set cancerTypeSummaryHeader...')
   output$cancerTypeSummaryHeader <- renderUI({
     HTML(
       paste0("<p style = 'font-size:1.1em'>Search for gene <b style='color:red'>", selectedGeneName(),
@@ -142,7 +140,9 @@ cancerSummaryByGenes <- function(geneID) {
     )
   })
 
+  catn('displayCancerSelectionSummary')
   displayCancerSelectionSummary(cancerSelectionSummary$dat, NULL, NULL)
+
 
 }
 
@@ -209,7 +209,7 @@ validateGenes <- reactive({
 
 
 observeEvent(input$multiGeneFile, {
-  cat("look at file")
+  catn('observeEvent multiGeneFile...')
   if (is.null(input$multiGeneFile)) {
     return()
   }
@@ -220,4 +220,4 @@ observeEvent(input$multiGeneFile, {
   }
   updateTextAreaInput(session, 'multiGeneInput', value = paste0(genes$V1, collapse = "\n"))
   
-})
+}, ignoreInit = TRUE)

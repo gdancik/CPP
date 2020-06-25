@@ -102,31 +102,34 @@ getStackedResults2 <- function(sql_function, group, group.filters) {
 }
 
 observeEvent(input$btnGenerateGraphCancerTerm, {
+  catn('observeEvent GenerateGraphCanerTerm')
   plotStackedCancerTerms()
   shinyjs::hide("btnGenerateGraphCancerTerm")
-})
+}, ignoreInit = TRUE)
 
 observeEvent(input$btnGenerateGraphChem, {
+  catn('observeEvent GenerateGraphChem')
   plotStackedChem()
   shinyjs::hide("btnGenerateGraphChem")
-})
+}, ignoreInit = TRUE)
 
 observeEvent(input$btnGenerateGraphMut, {
+  catn('observeEvent GenerateGraphMut ')
   plotStackedMutations()
   shinyjs::hide("btnGenerateGraphMut")
-})
+}, ignoreInit = TRUE)
 
 observeEvent(input$btnGenerateGraphGene, {
+  catn('observeEvent GenerateGraphGene')
   plotStackedGenes()
   shinyjs::hide("btnGenerateGraphGene")
-})
+}, ignoreInit = TRUE)
 
 observeEvent(input$btnGenerateGraphMultiGene, {
+  catn('observeEvent GenerateGraphMultiGene')
   plotStackedMultiGenes()
   shinyjs::hide("btnGenerateGraphMultiGene")
-})
-
-
+}, ignoreInit = TRUE)
 
 ## clear all Stacked Graphs
 clearStackedGraphs <- function(btnShow = TRUE){

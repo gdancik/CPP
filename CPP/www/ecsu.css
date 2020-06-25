@@ -4,11 +4,13 @@ color:#FFF;
 font-size:25px;
 }
 
+.welcome {
+    margin-left: 2%;
+    margin-right:2%;
+}
 
 logo{
-
-
-color: #FFFFFF;
+  color: #FFFFFF;
 }
 
 td {

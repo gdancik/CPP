@@ -8,6 +8,9 @@ dups <- (GeneTable %>% count(SYMBOL) %>% filter(n > 1))$SYMBOL
 GeneTable <- GeneTable %>% filter(!SYMBOL %in% dups)
 rownames(GeneTable) <- GeneTable$SYMBOL
 
+o <- order(GeneTable$SYMBOL)
+GeneTable <- GeneTable[o,]
+
 geneSymbolToID <- function(symbols, GeneTable) {
   m <- match(symbols, GeneTable$SYMBOL)
   data.frame(Symbol = as.character(symbols), ID = as.character(GeneTable$GeneID)[m],
@@ -30,9 +33,8 @@ if (is.na(id)) {
    alert(msg)
    id <- 178
 }
-updateSelectizeInput(session, "geneInput", choices = geneIDs, selected = id, server = TRUE)
 
-
-
-#  toggleModal(session, "welcomeModal")
+CONFIG$DEFAULT.GENE <- id
+updateSelectizeInput(session, "geneInput", choices = sort(geneIDs), 
+                                          selected = id, server = TRUE)
 

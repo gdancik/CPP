@@ -255,20 +255,24 @@ tableClickExpression <- function(inTblSummary, rows_selected,
 
 # Drugs
 observeEvent(input$chemResults_rows_selected, {
+  catn('chemResults_rows_selected...')
   tableClickExpression(quote(chemSummary), quote(chemResults_rows_selected))
   }, handler.quoted = TRUE, ignoreNULL = FALSE, ignoreInit = TRUE)
 
 # cancerTermSummary
 observeEvent(input$cancerTermResults_rows_selected, {
+  catn('cancerTermResults_rows_selected...')
   tableClickExpression(quote(cancerTermSummary), quote(cancerTermResults_rows_selected), colname1 = quote(TermID))
   }, handler.quoted = TRUE, ignoreNULL = FALSE, ignoreInit = TRUE)
 
 # mutationSummary
 observeEvent(input$mutationResults_rows_selected, {
+  catn('mutationResults_rows_selected...')
   tableClickExpression(quote(mutationSummary), quote(mutationResults_rows_selected), colname1 = quote(MutID))
 }, handler.quoted = TRUE, ignoreNULL = FALSE, ignoreInit = TRUE)
 
 observeEvent(input$geneResults_rows_selected, {
+  catn('geneResults_rows_selected...')
   tableClickExpression(quote(geneSummary), quote(geneResults_rows_selected), colname1 = quote(Symbol), selectedID = quote(selectedTerm))
 }, handler.quoted = TRUE, ignoreNULL = FALSE, ignoreInit = TRUE)
 

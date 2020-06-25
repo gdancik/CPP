@@ -4,6 +4,7 @@
 
 # when modal opens following gene search
 observeEvent(input$cancerTypeSetupModal,{
+  catn('observe cancerTypeSetupModal...')
   a <- cancerSelectionSummary$selected1
   catn("open modal, set selected to: ", cancerSelectionSummary$selected1)
   updateSelectInput(session, "cancerType", choices = cancerSelectionChoices(), 
@@ -12,13 +13,12 @@ observeEvent(input$cancerTypeSetupModal,{
   if (is.null(diseaseSummary$dat)) {
     shinyjs::enable('btnSelectCancerType')
   }
-})
+}, ignoreInit = TRUE)
 
 
 # when modal opens from select cancer button
 observeEvent(input$btnSelectCancerType, {
-  
-  cat("searching for gene btnSelectCancertype selection...\n")
+  cat("observe searching for gene btnSelectCancertype selection...\n")
   disableTableClicks()
   shinyjs::disable('btnSelectCancerType')
   showProgress()
@@ -51,33 +51,39 @@ observeEvent(input$btnSelectCancerType, {
   
   respondToSelectionDrill()
   
-  toggleModal(session, "cancerTypeSetupModal",  toggle = "close")
   hideProgress()
-  enableTableClicks()
-  
   reset('cancerTypeFile')
   
-})
+  shinyjs::click('btnCancelCancerType')
+  enableTableClicks()
+  
+  
+}, ignoreInit = TRUE)
 
 # ## update btnSelectCancerType based on current selection
 observe({
+  catn("observe for update btnSelectCancerType...")
   label <- "Retrieve summaries for selected cancer types"
   if (is.null(input$cancerType)) {
     label <- "Retrieve summaries for all cancer types"
-    catn('hide')
     shinyjs::hide('saveCancerTypes')
   } else {
     shinyjs::show('saveCancerTypes')
   }
+  
   updateActionButton(session, "btnSelectCancerType", label)
+  catn('btnSelectCancerType is updated...')
   
   if (is.null(diseaseSummary$dat)) {
+    catn('returning...')
     return()
   }
   
   if (setequal(input$cancerType, cancerSelectionSummary$selected1)) {
+    catn('disable')
     shinyjs::disable('btnSelectCancerType')
   } else {
+    catn('enable')
     shinyjs::enable('btnSelectCancerType')
   }
 
@@ -86,7 +92,7 @@ observe({
 
 
 observeEvent(input$cancerTypeFile, {
-  cat("look at file")
+  catn("observeEvent cancerTypeFile...")
   if (is.null(input$cancerTypeFile)) {
     return()
   }
@@ -107,8 +113,4 @@ observeEvent(input$cancerTypeFile, {
   
   #updateTextAreaInput(session, 'multiGeneInput', value = paste0(genes$V1, collapse = "\n"))
   
-})
-
-
-
-
+}, ignoreInit = TRUE)

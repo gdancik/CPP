@@ -56,6 +56,7 @@ setSelectInput <- function(session, id, choices, terms) {
 
 
 observeEvent(input$filterModal,{
+  catn('observeEvent filterModal...')
   #shinyjs::disable("btnSaveFilters") 
   
   #setSelectInput(session, "filterDisease", diseaseSummary$selectedID, diseaseSummary$selectedTerm)
@@ -92,15 +93,13 @@ observeEvent(input$filterModal,{
   # setSelectInput(session, "filterGenes", geneSummary$selectedID, geneSummary$selectedTerm)
   # 
   
-  
-
-})
+}, ignoreInit = TRUE)
 
 
 
 
 observeEvent(input$btnClearFilters, {
-  catn("clicked clearFilters")
+  catn("observeEvent, clicked clearFilters")
   setSelectInput(session, "filterDisease", NULL, NULL)
   setSelectInput(session, "filterChem", NULL, NULL)
   setSelectInput(session, "filterMutations", NULL, NULL)
@@ -109,7 +108,7 @@ observeEvent(input$btnClearFilters, {
   
   #shinyjs::click('btnSaveFilters')
   
-})
+}, ignoreInit = TRUE)
 
 # observer to enable / disable Save Filter button
 # observe({
@@ -195,7 +194,7 @@ saveFilterValuesAndCheck <- function(n) {
 
 
 observeEvent(input$btnSaveFilters, {
-
+      catn('observeEvent btnSaveFilters...')
       f1 <- vector("logical", 4)
       f1[[1]] <- saveFilterValuesAndCheck('filterGenesType')
       f1[[2]] <- saveFilterValuesAndCheck('filterChemType')
@@ -224,7 +223,7 @@ observeEvent(input$btnSaveFilters, {
         toggleModal(session, "filterModal", toggle = "close")
       }
 
-})
+}, ignoreInit = TRUE)
 
 
 # selectionTypeChoices <- rev(c("ALL selected terms" = "all",

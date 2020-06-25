@@ -21,6 +21,7 @@ output$clip <- renderUI({
 
 # display message following clipboard copy
 observeEvent(input$clipbtn,{
+    catn('observeEvent clipbtn...')
     msg <- paste(length(pmidList$pmids$PMID), "PMIDs copied to the clipboard") 
     shinyjs::alert(msg)
-})
+}, ignoreInit = TRUE)

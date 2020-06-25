@@ -2,6 +2,7 @@
 
 #update geneTable
 observe ({
+  catn('observe for displayGeneSummaryTable...')
   
   if (is.null(geneSummary$dat)) {
     return()
@@ -34,7 +35,7 @@ displayGeneSummaryTable <- function() {
 
 # update multiGeneSummaryTable
 observe({
-
+  catn('observe for multiGeneSummaryTable...')
   t <- multiGeneSummary$dat
   
   if (is.null(t)) {
@@ -103,15 +104,25 @@ updateTable <- function(resTable, columnName, tableID) {
  })
 }
 
-observe(updateTable(chemSummary, "MeshID", "chemResults"))
-observe(updateTable(mutationSummary, "MutID", "mutationResults"))
-observe(updateTable(cancerTermSummary, "TermID", "cancerTermResults"))
+observe({
+  catn('observe for update chem summary table...')
+  updateTable(chemSummary, "MeshID", "chemResults")
+})
 
-observe(
+observe({
+  catn('observe for update mutation summary table...')
+  updateTable(mutationSummary, "MutID", "mutationResults")
+})
+
+observe({
+  catn('observe for update cancerTerm summary table...')
+  updateTable(cancerTermSummary, "TermID", "cancerTermResults")
+})
+
+observe({
+  catn('observe for cancerSelectionSummary...')
   displayCancerSelectionSummary(diseaseSummary$dat, cancerSelectionSummary$selected1, cancerSelectionSummary$selected2, "diseaseResults")
-)
-
-
+})
 
 
 ##################################################################
@@ -160,6 +171,7 @@ observe({
     # output$cancerSummaryTable <- DT::renderDataTable(iris)
      output$cancerGraph <- NULL
   }
+  print("done cancer plot observe")
 })
 
 
@@ -248,6 +260,7 @@ cancerSelectionChoices <- function() {
 
 # observe any changes to the table and update
 observe ({
+  catn('observe cancerSelectionTable_rows_selected')
   m <- input$cancerSelectionTable_rows_selected
   selected <- NULL
   if (!is.null(m)) {
@@ -294,6 +307,7 @@ updateChildIDsForSelectedCancers <- function(){
 
 # change in drop down -- update table if different
 observeEvent(input$cancerType,{
+    catn('observeEvent cancerType...')
   
     if (is.null(input$cancerType)) {
       cat("NO SELECTION FOR CANCER TYPE!\n")
@@ -330,7 +344,7 @@ observeEvent(input$cancerType,{
      displayCancerSelectionSummary(cancerSelectionSummary$dat, input$cancerType, NULL)
    }
    
-}, ignoreNULL = FALSE)
+}, ignoreNULL = FALSE, ignoreInit = TRUE)
 
 
 
