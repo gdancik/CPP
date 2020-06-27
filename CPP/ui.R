@@ -14,7 +14,7 @@ source("ui-about.R")
 source("modals.R")
 source("welcome.R")
 source("addTabPanel.R")
-source("tabResults.R")
+#source("tabResults.R")
 
 jsCode <- "shinyjs.setReadOnly = function(id) {
   document.getElementById(id).setAttribute('readonly', 'readonly');
@@ -107,7 +107,6 @@ commonStyles <- list(
                   color: darkblue;
                   }
                   
-                  
                   .navbar-default .navbar-nav > .active > li > ul > li > a, .navbar-default .navbar-nav > .active > li > ul > li > a:focus, .navbar-default .navbar-nav > .active > li > ul > li > a:hover {
                   color: white;
                   background-color: maroon
@@ -155,19 +154,21 @@ commonStyles <- list(
                   ")),
 
               #modal styles  
-              tags$head(tags$style("button.close, #welcomeModal button.cancel, #cancerTypeSetupModal button.cancel {display:none}")),
+              #tags$head(tags$style("button.close, #welcomeModal button.cancel, #cancerTypeSetupModal button.cancel {display:none}")),
               tags$head(tags$style("#cancerTypeDiv {min-height: 20em; max-height: 30em; overflow-y: auto;}"))
   
 )
 
-
-
 shinyUI(
   
-  navbarPage(title = 'Cancer Publication Portal',
+  navbarPage(title = HTML('<a style = "color:white" href = "/">Cancer Publication Portal</a>'),
+             windowTitle = "Cancer Publication Portal",
              id = "headerNavBarPage", 
+             
+             header =  commonModals,  # need to be common for toggleModal to work on tabResults
     
     tabPanel('Search', 
+             actionButton("btnTest", "click me"),
              commonStyles,
              tags$head(HTML(
                "<!-- Global site tag (gtag.js) - Google Analytics -->
@@ -181,9 +182,10 @@ shinyUI(
                </script>
                "
              )),
-             div(class = "welcome", welcomePage)),
+             #div(class = "welcome", welcomePage)),
+             welcomePage),
     
-      tabResults,
+      #tabResults,
       tabAbout,
     
     # activate shinyJS

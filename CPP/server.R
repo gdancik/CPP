@@ -49,24 +49,20 @@ library(dplyr)
 
 shinyServer(function(input, output, session) {
 
+  hideTab('headerNavBarPage', 'Results')
+  
+  
   observe({
     catn('observe the logFile...')
     output$log <- renderText(logFile$log)
   })
 
-  
-  observeEvent(input$headerNavBarPage, {
-    if (input$headerNavBarPage == 'Results' && NEW_SEARCH) {
-      shinyjs::click('btnTest')
-      NEW_SEARCH <<- FALSE
-    } 
+  observeEvent(input$btnTest, {
+    catn("click it", input$btnTest)
+    #toggleModal(session, "testmodal", "open")
+    #toggleModal(session, "cancerTypeSetupModal", "open")
+    #showTab('headerNavBarPage', 'Results')
   })
-               
-  #toggleModal(session, "cancerTypeSetupModal", "open")
-  
-  #toggleModal(session, "filterModal", "open")
-  
-  output$shinyTitle <- renderText("Cancer Publication Portal")
   
   source("server-reactives.R", local = TRUE)
   source("server-articles.R", local = TRUE)
@@ -78,10 +74,11 @@ shinyServer(function(input, output, session) {
   source("stackedBarGraphs.R", local = TRUE)
   source("server-download.R", local = TRUE)
   source("server-filter.R", local = TRUE)
-  source("server-graphSetup.R", local = TRUE)
   source("server-cancerTypeSetup.R", local = TRUE)
   source("server-geneSearch.R", local = TRUE)
 
+  #clearStackedGraphs(FALSE)
+  
   # disable drop downs on startup
   # shinyjs::disable("filterDisease")
   # shinyjs::disable("filterChem")
@@ -148,7 +145,6 @@ shinyServer(function(input, output, session) {
 #   here
 #################################################################
 
-    
    # creates HTML formatted string of currently selected filters
    createFilterString <- function(newlines = FALSE) {
      l <- list("Cancer Types" = list(diseaseSummary, "any"),
@@ -309,7 +305,7 @@ shinyServer(function(input, output, session) {
       disableTableClicks()
       
       cat("\n\nrespondToSelectionDrill\n")
-    
+  
       resetReactive(diseaseSummary)
       diseaseSummary$dat <- NULL
       
@@ -506,7 +502,15 @@ shinyServer(function(input, output, session) {
       }
     }
     
-    observeEvent(input$MainPage, {
+    observeEvent(input$headerNavBarPage, {
+      catn("observing headerNavBarPage")
+      if (input$headerNavBarPage == "Results" && 
+          input$MainPage == "Cancer Types") {
+          updateCancerTypesSummary()
+      }
+    })
+    
+    observeEvent(input$MainPage , {
       catn('observing Main Page...')
       cat('clicked on: ', input$MainPage, '\n')
       
@@ -514,6 +518,7 @@ shinyServer(function(input, output, session) {
       
       if (input$MainPage == "Cancer Types") {
         
+        cat("updating...\n")
         updateCancerTypesSummary()
         
       } else if (input$MainPage == "Selected Genes" && length(selected$geneID) > 1) {
@@ -543,18 +548,18 @@ shinyServer(function(input, output, session) {
     }, ignoreInit = TRUE)
 
     
-  
 
-    
 updateCancerTypesSummary <- function() {
   if (!is.null(diseaseSummary$dat)) {
     return()
   }
+  
   pmids <- pmidList$pmids$PMID
   con = dbConnect(MariaDB(), group = "CPP")
   getSummaries("Cancer Types", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
   formatCancerSummaries()
   dbDisconnect(con)
+  
   #toggleStackedGraphButtons(graph = "btnGenerateGraphCancerTypes")
 }
     
@@ -563,23 +568,25 @@ updateSelectedGenesSummary <- function() {
   if (!is.null(multiGeneSummary$dat)) {
     return()
   }
+  
   pmids <- pmidList$pmids$PMID
   con = dbConnect(MariaDB(), group = "CPP")
   multiGeneSummary$dat <- getGeneSummaryForSelectedGeneIDs(selected$geneID, con, pmidList$pmids$PMID)
   dbDisconnect(con)
   toggleStackedGraphButtons(graph = "btnGenerateGraphMultiGene")
+  
 }
 
 updateCancerTermsSummary <- function() {
   if (!is.null(cancerTermSummary$dat)) {
     return()
   }
+  
   pmids <- pmidList$pmids$PMID
   con = dbConnect(MariaDB(), group = "CPP")
   getSummaries("Related Cancer Terms", con, getCancerTermSummaryByPMIDs, pmids, session, cancerTermSummary, "filterCancerTerms")
   dbDisconnect(con)
   toggleStackedGraphButtons(graph = "btnGenerateGraphCancerTerm")
-  
   
 }
     
@@ -587,6 +594,7 @@ updateChemicalSummary <- function() {
   if (!is.null(chemSummary$dat)) {
     return()
   }
+  
   pmids <- pmidList$pmids$PMID
   con = dbConnect(MariaDB(), group = "CPP")
   getSummaries("Related Chemicals", con, getChemSummaryByPMIDs, pmids, session, chemSummary, "filterChem", pa = TRUE)
@@ -603,6 +611,7 @@ updateMutationSummary <- function() {
   getSummaries("Related Mutations", con, getMutationSummaryByPMIDs, pmids, session, mutationSummary, "filterMutations")
   dbDisconnect(con)
   toggleStackedGraphButtons(graph = "btnGenerateGraphMut")
+  
 }
     
 updateAdditionalGenesSummary <- function() {

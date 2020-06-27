@@ -35,6 +35,6 @@ if (is.na(id)) {
 }
 
 CONFIG$DEFAULT.GENE <- id
-updateSelectizeInput(session, "geneInput", choices = sort(geneIDs), 
+updateSelectizeInput(session, "geneInput", choices = geneIDs, 
                                           selected = id, server = TRUE)
 

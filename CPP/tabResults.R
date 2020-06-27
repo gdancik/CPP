@@ -5,12 +5,6 @@
 
 commonResults <- list(
   
-  # welcomeModal, 
-  filterModal,
-  # graphSetupModalTerm,
-  # graphSetupModalChem,
-  cancerTypeSetupModal,
-  # 
   # summary row
   fluidRow(id = "summaryRow",
            #shiny::column(width = 2,
@@ -28,27 +22,31 @@ commonResults <- list(
   hr(style = "padding: 0px; margin: 0px"),
   
   fluidRow(shiny::column(width = 12,
-                         div(style = "position: relative; width: 100%; height: 10px", 
-                             conditionalPanel(condition="$('html').hasClass('shiny-busy')",
-                                              HTML("<div class=\"progress\" style=\"position: fixed;  width: 100%; height:50px; z-index:1000; !important\">
+                         # div(style = "position: relative; width: 100%; height: 10px", 
+                         #     conditionalPanel(condition="$('html').hasClass('shiny-busy')",
+                         #                      
+                         #                      ))
+                         #     ),
+    div(style = "position: relative; width: 100%; height: 10px",
+        HTML("<div id = 'progress-bar-results' class=\"progress\" style=\"position: fixed;  width: 100%; height:50px; z-index:1000; !important\">
                                                    <div class=\"progress-bar progress-bar-striped active\" role=\"progressbar\" aria-valuenow=\"100\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"opacity: 1; width:100%\" !important>
-                                                   </br>
-                                                   <span id=\"bar-text\" style = \"font-size:2em\"><b>Loading, please wait...</b></span>
-                                                   </div>
-                                                   </div>")
-                                              )
-                                              ))
-                             ),
+             </br>
+             <span id=\"bar-text\" style = \"font-size:2em\"><b>Loading, please wait...</b></span>
+             </div>
+             </div>")
+        ))
+    ),                     
+  
   br()
                          )
 
 
 tabResults <- tabPanel("Results",
                        commonResults,
-                       actionButton('btnTest', 'Click',
-                                    `data-toggle`="modal",
-                                    `data-target`="#cancerTypeSetupModal",
-                                    style = "display:none;"),
+                       # actionButton('btnLaunchCancerTypes', 'Click',
+                       #              `data-toggle`="modal",
+                       #              `data-target`="#cancerTypeSetupModal",
+                       #              style = "display:none;"),
                        fluidRow(column(style='border-right: 1px solid',width = 12,
                                        tabsetPanel(id = "MainPage",
                                                    #addTabPanel('Cancer Types', "cancerSummaryTable"),

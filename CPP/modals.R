@@ -1,5 +1,13 @@
 source("progress.R")
 
+################################################################
+# is issue in actionButton -- comment out for now
+
+# get rid of cancel class in last button
+# no size
+################################################################
+
+
 # from shinyGEO, includes cancel button with applyID; cancelID is optional id of cancel button
 formatBSModal<-function (id, title, trigger, applyID, ..., size, applyText = "Update filters", 
                          cancelID = NULL, escape = TRUE) 
@@ -12,12 +20,13 @@ formatBSModal<-function (id, title, trigger, applyID, ..., size, applyText = "Up
     else if (size == "small") {
       size = "modal-sm"
     }
+    
     size <- paste("modal-dialog", size)
   }
   else {
     size <- "modal-dialog"
   }
-  t <- bsTag <- shiny::tags$div(class = "modal sbs-modal fade", `data-backdrop` = 'static',
+  t <- bsTag <- shiny::tags$div(class = "modal sbs-modal fade", #`data-backdrop` = 'static',
                            id = id, tabindex = "-1", `data-sbs-trigger` = trigger, 
                            shiny::tags$div(class = size, 
                                            shiny::tags$div(class = "modal-content", 
@@ -52,8 +61,7 @@ filterModal <- formatBSModal("filterModal", "Remove filters", "btnRemoveFilters"
                          <span id=\"modal-bar-text\"><b>Applying filters, please wait...</b></span>
                                                </div></div>")
   ),
-                         
-                         
+    
   fluidRow(column(12,
      HTML("<p>To remove a filter, delete the term from the dropdown menus below. Then click the 'Apply filters' button to apply your changes.</p><br>
            <p> To clear all filters, click the 'Clear filters' button then the 'Apply filters' button to apply your changes.
@@ -105,133 +113,71 @@ if (!filterModal$children[[1]]$children[[1]]$children[[3]]$attribs$class == 'mod
 filterModal$children[[1]]$children[[1]]$children[[3]]$children[[3]] <- 
   actionButton('btnClearFilters', 'Clear filters', class = 'btn-danger')
 
+########################################################
+# common modals
+########################################################
 
+# cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Select cancer types", "notrigger44", "btnSelectCancerType",
+#                                       size = "large"#, applyText = "Retrieve summaries for all cancer types",
+#                                       #cancelID = "btnCancelCancerType", escape = TRUE
+#                                       )
 
+#commonModals <- cancerTypeSetupModal
 
-# modals for graph settings
-graphSetupModalTerm <- formatBSModal("graphSetupModalTerm", "Cancer Terms Graph Settings", "btnGraphSetupTerm", "btnUpdateGraphTerm",
-
-                      fluidRow(column(12, 
-                            HTML("<p>Selection boxes below show default graph settings (15 most frequent terms in 10 most frequent cancers) or your\
-                                    previous customized settings. <br><br>Tune the graph by choosing among all mentioned cancer types and terms for the gene. \
-                                    You can add a term by clicking on its selection box and choosing from the dropdown menu below \
-                                    (you can start typing the term to find it in the list).\
-                                    You can also remove current selection by deleting the term in the selection box. <br><br>\
-                                    When you are done, click the 'Update graph' button to apply your changes.\
-                                 We do not recommend choosing more than 10 cancer types and more than 15 cancer terms. </p><br>")
-                             )),
-                      actionButton("defaultCterms", "Restore Defaults", class = "btn btn-info"),
-                      actionButton("clearCterms", "Clear", class = "btn btn-secondary"),
-                      hr(class = "blue-button", style="height: 2px"),
-                      fluidRow(
-                        column(6, style="padding-right:0px",
-                               selectInput("ctype", "Select cancer types: *", choices = NULL, multiple = TRUE, selectize = TRUE)
-                             ),
-                        column(6, style="padding-right:0px",
-                               selectInput("termType", "Select cancer terms: *", choices = NULL, multiple = TRUE, selectize = TRUE)
-                        )
-                      ), size = "large", applyText = "Update graph"
-                   )
-
-graphSetupModalChem <- formatBSModal("graphSetupModalChem", "Chemicals Graph Settings", "btnGraphSetupChem", "btnUpdateGraphChem",
-                                     
-                        fluidRow(column(12, 
-                            HTML("<p>Selection boxes below show default graph settings (15 most frequent chemicals in 10 most frequent cancers) or your\
-                                  previous customized settings. <br><br>Tune the graph by choosing among all mentioned cancer types and chemicals for the gene. \
-                                  You can add a term by clicking on its selection box and choosing from the dropdown menu below \
-                                  (you can start typing the term to find it in the list).\
-                                  You can also remove current selection by deleting the term in the selection box. <br><br>\
-                                  When you are done, click the 'Update graph' button to apply your changes.\
-                                  We do not recommend choosing more than 10 cancer types and more than 15 chemicals. </p><br>")
-                               )),
-                       actionButton("defaultChems", "Restore Defaults", class = "btn btn-info"),
-                       actionButton("clearChems", "Clear", class = "btn btn-secondary"),
-                       hr(class = "blue-button", style="height: 2px"),
-                       fluidRow(
-                         column(6, style="padding-right:0px",
-                                selectInput("ctypeChem", "Select cancer types: *", choices = NULL, multiple = TRUE, selectize = TRUE)
-                               ),
-                         column(6, style="padding-right:0px",
-                                selectInput("chems", "Select chemicals: *", choices = NULL, multiple = TRUE, selectize = TRUE)
-                               )
-                        ), size = "large", applyText = "Update graph"
-                    )
-
-
-graphSetupModalMut <- formatBSModal("graphSetupModalMut", "Mutations Graph Settings", "btnGraphSetupMut", "btnUpdateGraphMut",
-                                     
-                        fluidRow(column(12, 
-                            HTML("<p>Selection boxes below show default graph settings (15 most frequent mutations in 10 most frequent cancers) or your\
-                                  previous customized settings. <br><br>Tune the graph by choosing among all mentioned cancer types and mutations for the gene. \
-                                  You can add a term by clicking on its selection box and choosing from the dropdown menu below \
-                                  (you can start typing the term to find it in the list).\
-                                  You can also remove current selection by deleting the term in the selection box. <br><br>\
-                                  When you are done, click the 'Update graph' button to apply your changes.\
-                                  We do not recommend choosing more than 10 cancer types and more than 15 mutations. </p><br>")
-                              )),
-                            actionButton("defaultMuts", "Restore Defaults", class = "btn btn-info"),
-                            actionButton("clearMuts", "Clear", class = "btn btn-secondary"),
-                            hr(class = "blue-button", style="height: 2px"),
-                            fluidRow(
-                                 column(6, style="padding-right:0px",
-                                    selectInput("ctypeMut", "Select cancer types: *", choices = NULL, multiple = TRUE, selectize = TRUE)
-                                 ),
-                                 column(6, style="padding-right:0px",
-                                    selectInput("muts", "Select mutations: *", choices = NULL, multiple = TRUE, selectize = TRUE)
-                                 )
-                             ), size = "large", applyText = "Update graph"
+commonModals <- bsModal('cancerTypeSetupModal','hi','notrigger3', 
+                        size = "large"
                         )
 
+formatBSModal <- function(id, title, trigger, ..., size, cancelID, actionID = NULL, actionLabel = NULL) {
+        x <- bsModal(id, title, trigger, ..., size = size)
+        x$children[[1]]$children[[1]]$children[[3]]$children[[1]]$attribs$id <- cancelID
+        #x$children[[1]]$children[[1]]$children[[3]]$children[[1]]$attribs$disabled <- ""
+        x$children[[1]]$children[[1]]$children[[3]]$children[[1]]$children[[1]] <- "Cancel"        
+        if (!is.null(actionID)) {
+           x$children[[1]]$children[[1]]$children[[3]]$children[[2]] <- 
+              actionButton(actionID, actionLabel, 
+                    class = 'btn-primary cancel', `data-dismiss` = 'modal')  
+        }
+        
+        x
+}
 
-cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Select cancer types", "", "btnSelectCancerType", 
-                                      fluidRow(column(12,
-                                            uiOutput('cancerTypeSummaryHeader'),          
-                                            progressDiv('cancerTypeProgress', 'cancerSelection-bar-text'),          
-                                              HTML("<p>Select your desired cancer types by clicking on the table or by using the drop down below. You may also
-                                                       upload your cancer types from a file, and Download your selected cancer types for future use.
-                                                           When you are finished, click the 'Retrieve' button to retrieve summaries of your results. </br></br>\
-                                                           </p>")
-                                                      )),
-                                      fluidRow(
-                                        
-                                        column(6,
-                                               withSpinner(DT::dataTableOutput("cancerSelectionTable"), type = 3,
-                                                           color.background = "white")
-                                               ),
-                                        column(1),
-                                        
-                                        column(5, 
-                                               fluidRow(
-                                               conditionalPanel(condition="!$('html').hasClass('shiny-busy')",
-                                                      style="padding-right:0px",
-                                                      div(id = "cancerTypeDiv",
-                                                          selectizeInput("cancerType", "Selected cancer types:", choices = NULL, multiple = TRUE,
-                                                                      options = list(placeholder = "(leave blank to search all articles)")),
-                                                          downloadLink('saveCancerTypes', 'Save selected cancer types to file'),
-                                                            htmlOutput("cancerSelectionMsg")
-                                                      )
-                                               ),
-                                               fluidRow(
-                                                          fileInput("cancerTypeFile", "Upload cancer types (must include MeshIDs in first column)",
-                                                                    accept = c(
-                                                                      "text/csv",
-                                                                      "text/comma-separated-values,text/plain",
-                                                                      ".csv")
-                                                          )
-                                                      )
-                                                )
-                                        )
-                                      ),
-                                      
-                                      size = "large", applyText = "Retrieve summaries for all cancer types", 
-                                      cancelID = "btnCancelCancerType", escape = FALSE
-)
+commonModals <- formatBSModal("cancerTypeSetupModal", "Select cancer types", "notrigger", 
+          fluidRow(column(12,
+              uiOutput('cancerTypeSummaryHeader'),          
+              progressDiv('cancerTypeProgress', 'cancerSelection-bar-text'),          
+              HTML("<p>Select your desired cancer types by clicking on the table or by using the drop down 
+                    below. Remove selected cancer types by clicking on the table or deleting them from the 
+                    drop down. All cancer types will be summarized if none are selected. You may also upload your cancer types from a file, and Download your selected 
+                    cancer types for future use. When you are finished, click the 'Retrieve' button to retrieve summaries of your results. </br></br>\
+              </p>")
+          )),
+          fluidRow(column(6,
+              withSpinner(DT::dataTableOutput("cancerSelectionTable"), type = 3,
+                color.background = "white")
+          ),column(1),column(5, 
+          
+          fluidRow(
+            conditionalPanel(condition="!$('html').hasClass('shiny-busy')",
+                style="padding-right:0px", 
+                div(id = "cancerTypeDiv",
+                  selectizeInput("cancerType", "Selected cancer types:", choices = NULL, multiple = TRUE,
+                            options = list(placeholder = "(leave blank to search all articles)")),
+                  downloadLink('saveCancerTypes', 'Save selected cancer types to file'),
+                  htmlOutput("cancerSelectionMsg")
+                )),
+      
+            fluidRow(
+              fileInput("cancerTypeFile", "Upload cancer types (must include MeshIDs in first column)",
+                accept = c("text/csv","text/comma-separated-values,text/plain",".csv")
+            ))
+          )
+        )),
 
+        size = "large", cancelID = "btnCancelCancerType",
+        actionID = "btnSelectCancerType", 
+        actionLabel = "Submit")
 
-##########################################################################
-# Add download button to footer
-
-##########################################################################
 
 showProgress <- function(msg = NULL) {
   if (!is.null(msg)) {

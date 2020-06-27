@@ -132,15 +132,16 @@ observeEvent(input$btnGenerateGraphMultiGene, {
 }, ignoreInit = TRUE)
 
 ## clear all Stacked Graphs
-clearStackedGraphs <- function(btnShow = TRUE){
-  output$chemGraph <- renderPlotly({}) 
-  output$mutGraph <- renderPlotly({})
-  output$geneGraph <- renderPlotly({})
-  output$cancerTermGraph <- renderPlotly({})
-  output$multiGeneGraph <- renderPlotly({})
-  toggleStackedGraphButtons(hide = TRUE)
+clearStackedGraphs <- function(toggleButtons = TRUE){
+  output$chemGraph <- renderPlotly(NULL) 
+  output$mutGraph <- renderPlotly(NULL)
+  output$geneGraph <- renderPlotly(NULL)
+  output$cancerTermGraph <- renderPlotly(NULL)
+  output$multiGeneGraph <- renderPlotly(NULL)
+  if (toggleButtons) {
+    toggleStackedGraphButtons(hide = TRUE)
+  }
 }
-
 
 # toggles graph buttons
 # buttons are always closed, but only shown if there is data
@@ -190,7 +191,7 @@ plotStackedChem <- reactive({
    msg <- "Summarizing chemicals, please wait..."
    showProgress(msg)
    shinyjs::html("bar-text", msg)
- 
+  
 #    res2 <- getStackedResults(getChemByDiseaseContingency, "Chemical")
   
    res2 <- getStackedResults2(getChemByDiseaseContingency2, "Term", chemSummary$selectedTerm)
@@ -259,6 +260,7 @@ plotStackedCancerTerms <- reactive({
   hideProgress()
   return()
 })
+
 
 
 

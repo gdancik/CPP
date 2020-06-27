@@ -23,7 +23,6 @@ observeEvent(input$btnSelectCancerType, {
   shinyjs::disable('btnSelectCancerType')
   showProgress()
   
-  shinyjs::removeClass(id = "btnWelcomeCancel", class = "cancel") 
   shinyjs::removeClass(id = "btnCancelCancerType", class = "cancel") 
   shinyjs::removeClass(id = "btnCancelFilter", class = "cancel") 
   
@@ -63,22 +62,22 @@ observeEvent(input$btnSelectCancerType, {
 # ## update btnSelectCancerType based on current selection
 observe({
   catn("observe for update btnSelectCancerType...")
-  label <- "Retrieve summaries for selected cancer types"
+  #label <- "Retrieve summaries for selected cancer types"
   if (is.null(input$cancerType)) {
-    label <- "Retrieve summaries for all cancer types"
+   # label <- "Retrieve summaries for all cancer types"
     shinyjs::hide('saveCancerTypes')
   } else {
     shinyjs::show('saveCancerTypes')
   }
-  
-  updateActionButton(session, "btnSelectCancerType", label)
+
+  #updateActionButton(session, "btnSelectCancerType", label)
   catn('btnSelectCancerType is updated...')
-  
+
   if (is.null(diseaseSummary$dat)) {
     catn('returning...')
     return()
   }
-  
+
   if (setequal(input$cancerType, cancerSelectionSummary$selected1)) {
     catn('disable')
     shinyjs::disable('btnSelectCancerType')

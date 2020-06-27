@@ -1,12 +1,16 @@
 #shinyTitle{
-font-family:Courgette;
-color:#FFF;
-font-size:25px;
+ font-family:Courgette;
+ color:#FFF;
+ font-size:25px;
 }
 
 .welcome {
     margin-left: 2%;
     margin-right:2%;
+}
+
+.container-fluid > .navbar-header {
+    margin-right: 2%;
 }
 
 logo{

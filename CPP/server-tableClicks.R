@@ -135,7 +135,9 @@ updateSelectedMeshIDs2 <- function(ids, tblSummary, colName1 = "MeshID",
 # respond to click on cancer type table
 #############################################################
 shinyjs::onclick('diseaseResults', {
+  #shinyjs::click('btnTest')  
   toggleModal(session, "cancerTypeSetupModal",  toggle = "open")
+  
 })
 
 #################################################

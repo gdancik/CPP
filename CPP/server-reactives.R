@@ -1,8 +1,5 @@
 # server-reactives.R
 
-
-NEW_SEARCH <- TRUE
-
 logFile <- reactiveValues(log = NULL)
 updateLog <- function(logFile, ...) {
   l = list(...)

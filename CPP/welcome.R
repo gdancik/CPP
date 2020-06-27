@@ -1,4 +1,5 @@
 welcomePage <- list(
+
       p(strong("Instructions:"), "Welcome to the Cancer Publication Portal for summarizing and searching cancer-related literature.",
         "To start, select a gene or genes and click the 'Summarize cancer types' button to select the cancer types you are interested in.
         After selecting the cancer types of interest, articles will be summarized based on drugs, cancer terms, mutations, and additional genes
@@ -63,4 +64,5 @@ welcomePage <- list(
         )
       )
 )
+
 

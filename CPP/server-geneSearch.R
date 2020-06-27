@@ -57,14 +57,11 @@ observeEvent(input$btnGeneSearch,{
     return()
   }
   
+  
+  # remove results since it will be added back...
+  #removeTab('headerNavBarPage', "Results")
   updateTextAreaInput(session, "multiGeneInput", value = "")
-  
   commonGeneSearch(input$geneInput)
-  
-  #cancerSummaryByGenes(input$geneInput)
-  
-  #shinyjs::addClass(id = "btnCancelCancerType", class = "cancel")
-  #shinyjs::enable('btnSelectCancerType')
   shinyjs::disable('btnGeneSearch')
   
   
@@ -89,6 +86,7 @@ observeEvent(input$btnMultiGeneSearch,{
     return()
   } 
   
+  #removeTab('headerNavBarPage', "Results")
   commonGeneSearch(genes$ids)
   updateSelectizeInput(session, "geneInput", choices = geneIDs, 
                                             selected = "", server = TRUE)
@@ -97,10 +95,8 @@ observeEvent(input$btnMultiGeneSearch,{
 
 
 commonGeneSearch <- function(gid) {
+  clearStackedGraphs(FALSE)
   cancerSummaryByGenes(gid)
-  
-  shinyjs::addClass(id = "btnCancelCancerType", class = "cancel")
-  shinyjs::enable('btnSelectCancerType')
 }
 
 # process and display cancerSummary for specified geneIDs
@@ -108,15 +104,13 @@ cancerSummaryByGenes <- function(geneID) {
 
   reset("cancerType")
   resetReactiveValues()
-  NEW_SEARCH <<- TRUE
-
+  
   isolate(selected$geneID <- geneID)  
   isolate(selected$geneSymbol <- geneID_to_symbol(geneID))
   
   shinyjs::removeClass('welcomeModalProgress', 'hide')
   
   validSearch <- getCancerTypes()
-  
   
   if (is.null(validSearch)) {
     shinyjs::addClass('welcomeModalProgress', 'hide')
@@ -129,9 +123,13 @@ cancerSummaryByGenes <- function(geneID) {
 
   shinyjs::addClass('welcomeModalProgress', 'hide')
   
-  updateNavbarPage(session, "headerNavBarPage", "Results")
+#  updateNavbarPage(session, "headerNavBarPage", "Results")
   
-
+ # removeTab('headerNavBarPage', 'Results')
+  
+  removeTab('headerNavBarPage', 'Results')
+  insertTab('headerNavBarPage', tabResults, "Search", position = "after", select = TRUE)
+  
   catn('set cancerTypeSummaryHeader...')
   output$cancerTypeSummaryHeader <- renderUI({
     HTML(
@@ -140,10 +138,15 @@ cancerSummaryByGenes <- function(geneID) {
     )
   })
 
+  
   catn('displayCancerSelectionSummary')
+  
   displayCancerSelectionSummary(cancerSelectionSummary$dat, NULL, NULL)
-
-
+  
+  catn('table is now')
+  
+  #updateTabsetPanel('headerNavBarPage', 'Results')
+  
 }
 
 ##########################################################

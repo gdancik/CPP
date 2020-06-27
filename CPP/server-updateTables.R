@@ -125,6 +125,7 @@ observe({
 })
 
 
+
 ##################################################################
 # update cancer graph
 ##################################################################
@@ -249,26 +250,30 @@ displayCancerSelectionSummary <- function(dat, ids1, ids2, outputID = "cancerSel
   
   #output$cancerSelectionTable <- DT::renderDataTable(dt)
   output[[outputID]] <- DT::renderDataTable(dt)
+  
 }
 
-cancerSelectionChoices <- function() {
+cancerSelectionChoices <- reactive({
   choices <- as.list(cancerSelectionSummary$dat$MeshID)
   names(choices) <- cancerSelectionSummary$dat$Term
   choices  
-} 
+})
 
 
-# observe any changes to the table and update
+#observe any changes to the table and update
 observe ({
   catn('observe cancerSelectionTable_rows_selected')
   m <- input$cancerSelectionTable_rows_selected
   selected <- NULL
   if (!is.null(m)) {
-    selected <- cancerSelectionSummary$dat$MeshID[m]  
+    selected <- cancerSelectionSummary$dat$MeshID[m]
   }
-  
+
+  catn('UPDATE')
   updateSelectInput(session, "cancerType", choices = cancerSelectionChoices(), selected = selected)
 })
+
+
 
 # updates cancerSelectionSummary$ids2 for new IDs
 # returns TRUE if IDs have changed
@@ -308,7 +313,6 @@ updateChildIDsForSelectedCancers <- function(){
 # change in drop down -- update table if different
 observeEvent(input$cancerType,{
     catn('observeEvent cancerType...')
-  
     if (is.null(input$cancerType)) {
       cat("NO SELECTION FOR CANCER TYPE!\n")
       cancerSelectionSummary$ids2 <- NULL
@@ -316,26 +320,26 @@ observeEvent(input$cancerType,{
       displayCancerSelectionSummary(cancerSelectionSummary$dat, NULL, NULL)
       return()
     }
-  
-  
+
+
   # refreshTable if drop down and table selections differ
    refreshTable <- !setequal(input$cancerType, cancerSelectionSummary$dat$MeshID[input$cancerSelectionTable_rows_selected])
-   
+
    newChildIDs <- updateChildIDsForSelectedCancers()
-   
+
    # refresh table because user has changed drop down
    if (refreshTable) {
      if (newChildIDs) {
        cat("\n\nCLEARING HIGHLIGHTS...\n")
        cancerSelectionSummary$highlightPending <- TRUE
-       displayCancerSelectionSummary(cancerSelectionSummary$dat, input$cancerType, NULL)  
+       displayCancerSelectionSummary(cancerSelectionSummary$dat, input$cancerType, NULL)
      } else {
-       displayCancerSelectionSummary(cancerSelectionSummary$dat, input$cancerType, cancerSelectionSummary$ids2)  
+       displayCancerSelectionSummary(cancerSelectionSummary$dat, input$cancerType, cancerSelectionSummary$ids2)
      }
      return()
    }
-  
-  # otherwise the drop down change is from a table selection 
+
+  # otherwise the drop down change is from a table selection
   # so if child ids have changed, removed highlights
   cat("updating child IDs...\n")
    if (newChildIDs & is.null(cancerSelectionSummary$highlightPending)) {
@@ -343,7 +347,7 @@ observeEvent(input$cancerType,{
      cancerSelectionSummary$highlightPending <- TRUE
      displayCancerSelectionSummary(cancerSelectionSummary$dat, input$cancerType, NULL)
    }
-   
+
 }, ignoreNULL = FALSE, ignoreInit = TRUE)
 
 
