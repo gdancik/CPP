@@ -116,6 +116,7 @@ commonStyles <- list(
                   color: darkred;
                   }
                   
+                /*
                 #summaryRow {
                   position:sticky;
                   position:-webkit-sticky;
@@ -123,6 +124,7 @@ commonStyles <- list(
                   //background:white;
                   //z-index:1000;
                 }
+                */
           
                 .shiny-notification {
                     position: fixed;                    

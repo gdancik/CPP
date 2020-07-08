@@ -8,6 +8,8 @@ observe ({
     return()
   }
   displayGeneSummaryTable()
+  
+  updateStatTable("statGeneTable", geneSummary$stat)
 })
 
 
@@ -27,7 +29,8 @@ displayGeneSummaryTable <- function() {
   isolate({
   output$geneResults <- DT::renderDataTable(datatable(geneSummary$dat, rownames = FALSE,
                                                       selection = selection,
-                                                      options = list(paging = FALSE, scrollY = 300)))
+                                                      options = list(paging = FALSE, scrollY = 300,
+                                                                     scrollX = TRUE)))
   cat("selected rows: ", input$geneResults_rows_selected)
   })
 
@@ -104,24 +107,44 @@ updateTable <- function(resTable, columnName, tableID) {
  })
 }
 
+updateStatTable <- function(tableID, x) {
+  if (is.null(x)) {
+    return (NULL)
+  }
+  output[[tableID]] <- 
+      DT::renderDataTable(datatable(x, rownames = FALSE, selection = "none", 
+                                options = list(paging = FALSE, scrollY = 300#,
+                                               #  columnDefs = list(list(targets = -1, visible = FALSE))
+                                )) %>%
+                formatStyle(c(3,6,8), `border-right` = "solid 2px")
+      )
+}
+
+
+
 observe({
   catn('observe for update chem summary table...')
   updateTable(chemSummary, "MeshID", "chemResults")
+  updateStatTable("statChemTable", chemSummary$stat)
 })
 
 observe({
   catn('observe for update mutation summary table...')
   updateTable(mutationSummary, "MutID", "mutationResults")
+  updateStatTable("statMutTable", mutationSummary$stat)
+  
 })
 
 observe({
   catn('observe for update cancerTerm summary table...')
   updateTable(cancerTermSummary, "TermID", "cancerTermResults")
+  updateStatTable("statCancerTermTable", cancerTermSummary$stat)
 })
 
 observe({
   catn('observe for cancerSelectionSummary...')
   displayCancerSelectionSummary(diseaseSummary$dat, cancerSelectionSummary$selected1, cancerSelectionSummary$selected2, "diseaseResults")
+  updateStatTable("statCancerTable", diseaseSummary$stat)
 })
 
 
@@ -176,18 +199,6 @@ observe({
 })
 
 
-############################################################
-# cancerSelectionTable
-############################################################
-# observe({
-#   x<- cancerSelectionSummary$dat
-#   cat("observe1....\n")
-#   #scan(what = character(), n = 1)
-#   output$cancerSelectionTable <- DT::renderDataTable(datatable(cancerSelectionSummary$dat, rownames = FALSE, selection = "multiple",
-#                                                                options = list(paging = FALSE, scrollY = 300)))
-# })
-
-
 #############################################################
 ### cancerSelectionSummary
 #############################################################
@@ -233,12 +244,11 @@ displayCancerSelectionSummary <- function(dat, ids1, ids2, outputID = "cancerSel
     selection <- 'none'
   }
 
-  
   # set selection, and hide the 'color' column
   dt <- datatable(x, rownames = FALSE,
                     selection = selection,
                     options = list(paging = FALSE, scrollY = 300,
-                                   columnDefs = list(list(targets = 3, visible = FALSE))
+                                   columnDefs = list(list(targets = 5, visible = FALSE))
                                    )
                   )
     
@@ -250,6 +260,10 @@ displayCancerSelectionSummary <- function(dat, ids1, ids2, outputID = "cancerSel
   
   #output$cancerSelectionTable <- DT::renderDataTable(dt)
   output[[outputID]] <- DT::renderDataTable(dt)
+  
+   # catn("setting ", outputID, '...')
+   # print(head(x))
+   # wait()
   
 }
 
@@ -270,6 +284,10 @@ observe ({
   }
 
   catn('UPDATE')
+  # print(head(cancerSelectionSummary$dat))
+  # wait()
+  
+  
   updateSelectInput(session, "cancerType", choices = cancerSelectionChoices(), selected = selected)
 })
 

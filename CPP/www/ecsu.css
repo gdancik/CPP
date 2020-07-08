@@ -21,8 +21,12 @@ td {
   padding: 5px;
 }
 
+#cancerTypeSetupModal .modal-dialog {
+    width:80%;
+}
+
 .modal-backdrop{
-background-color:transparent;
+    background-color:transparent;
 }
 
 .skin-blue .nav {

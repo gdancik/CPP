@@ -11,14 +11,13 @@ updateLog <- function(logFile, ...) {
 # change in table selection)
 createReactiveTable <- function(...) {
   reactiveValues(dat = NULL, selectedID = NULL,
-                 selectedTerm = NULL, graphData = NULL, refreshPending = NULL, ...)
+                 selectedTerm = NULL, graphData = NULL, refreshPending = NULL, 
+                 stat = NULL, ...)
 }
-
 
 # reactives to deal with results tables
 diseaseSummary <- createReactiveTable()
 chemSummary <- createReactiveTable()
-#paSummary <- createReactiveTable()
 mutationSummary <- createReactiveTable()
 geneSummary <- createReactiveTable()
 multiGeneSummary <- reactiveValues(dat = NULL)
@@ -31,7 +30,7 @@ savedFilterValues <- reactiveValues(filterGenesType = "any",filterChemType = "an
                                     
 # reactive holding original cancer summary and corresponding tree IDs 
 cancerSelectionSummary <- reactiveValues(dat = NULL, tree_ids = NULL, ids2 = NULL, highlightPending = NULL,
-                                         selected1 = NULL, selected2 = NULL)
+                                         selected1 = NULL, selected2 = NULL, stat = NULL)
 
 
 
@@ -85,7 +84,6 @@ resetReactiveValues <- function() {
   resetReactive(multiGeneSummary)
   resetReactive(cancerSelectionSummary)
   
-  #resetReactive(paSummary)
 }
 
 resetSummaryData <-function() {

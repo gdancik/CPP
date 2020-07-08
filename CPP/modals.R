@@ -1,14 +1,11 @@
 source("progress.R")
 
-################################################################
-# is issue in actionButton -- comment out for now
-
-# get rid of cancel class in last button
-# no size
-################################################################
-
-
-# from shinyGEO, includes cancel button with applyID; cancelID is optional id of cancel button
+########################################################################
+# original formatBS modal from shinyGEO
+# includes cancel button with applyID; cancelID is optional id of cancel button
+# toggleModal does not work bc modal does not have right R class; but still
+# used for filterModal
+########################################################################
 formatBSModal<-function (id, title, trigger, applyID, ..., size, applyText = "Update filters", 
                          cancelID = NULL, escape = TRUE) 
 {
@@ -53,7 +50,8 @@ formatBSModal<-function (id, title, trigger, applyID, ..., size, applyText = "Up
 selectionTypeChoices <- rev(c("ALL selected terms" = "all",
                               "ANY selected terms" = "any"))
 
-filterModal <- formatBSModal("filterModal", "Remove filters", "btnRemoveFilters", "btnSaveFilters", applyText = "Apply filters",
+filterModal <- formatBSModal("filterModal", "Remove filters", "btnTest", #"btnRemoveFilters",
+                             "btnSaveFilters", applyText = "Apply filters",
 
   conditionalPanel(condition="$('html').hasClass('shiny-busy')",
         HTML("<div class=\"progress\" style=\"z-index:1000; position: fixed; width: 95%; height:25px; !important\">
@@ -117,17 +115,6 @@ filterModal$children[[1]]$children[[1]]$children[[3]]$children[[3]] <-
 # common modals
 ########################################################
 
-# cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Select cancer types", "notrigger44", "btnSelectCancerType",
-#                                       size = "large"#, applyText = "Retrieve summaries for all cancer types",
-#                                       #cancelID = "btnCancelCancerType", escape = TRUE
-#                                       )
-
-#commonModals <- cancerTypeSetupModal
-
-commonModals <- bsModal('cancerTypeSetupModal','hi','notrigger3', 
-                        size = "large"
-                        )
-
 formatBSModal <- function(id, title, trigger, ..., size, cancelID, actionID = NULL, actionLabel = NULL) {
         x <- bsModal(id, title, trigger, ..., size = size)
         x$children[[1]]$children[[1]]$children[[3]]$children[[1]]$attribs$id <- cancelID
@@ -142,7 +129,7 @@ formatBSModal <- function(id, title, trigger, ..., size, cancelID, actionID = NU
         x
 }
 
-commonModals <- formatBSModal("cancerTypeSetupModal", "Select cancer types", "notrigger", 
+cancerTypeSetupModal <- formatBSModal("cancerTypeSetupModal", "Select cancer types", "notrigger", 
           fluidRow(column(12,
               uiOutput('cancerTypeSummaryHeader'),          
               progressDiv('cancerTypeProgress', 'cancerSelection-bar-text'),          
@@ -178,6 +165,7 @@ commonModals <- formatBSModal("cancerTypeSetupModal", "Select cancer types", "no
         actionID = "btnSelectCancerType", 
         actionLabel = "Submit")
 
+commonModals <- list(cancerTypeSetupModal, filterModal)
 
 showProgress <- function(msg = NULL) {
   if (!is.null(msg)) {

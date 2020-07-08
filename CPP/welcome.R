@@ -4,6 +4,10 @@ welcomePage <- list(
         "To start, select a gene or genes and click the 'Summarize cancer types' button to select the cancer types you are interested in.
         After selecting the cancer types of interest, articles will be summarized based on drugs, cancer terms, mutations, and additional genes
         mentioned in article titles and abstracts. Additional filters can be applied by clicking on any of the tables."),
+      
+      p('Please note that the Back button on your browser does not work on this page'),
+      
+      p(strong("Last updated:"), "Data is up-to-date with PubTator data release from 2/15/2020."),
         
       fluidRow(column(12,
                progressDiv('welcomeModalProgress', 'welcomeModal-bar-text', "Summarizing cancer types, please wait..."))),
@@ -14,8 +18,8 @@ welcomePage <- list(
              <a href = 'https://www.genenames.org/tools/multi-symbol-checker/' target = '_blank'>genenames.org</a>.</p>"),
       
       fluidRow(
-        column(2, style="padding-right:0px",
-          selectizeInput("geneInput", label = "Select a gene", 
+        column(3, style="padding-right:0px",
+          selectizeInput("geneInput", label = "Select a gene (begin typing for more)", 
                          #selected = "AGL", choices = "AGL"
                          choices = NULL)
         ),

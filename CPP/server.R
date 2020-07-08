@@ -62,6 +62,7 @@ shinyServer(function(input, output, session) {
     #toggleModal(session, "testmodal", "open")
     #toggleModal(session, "cancerTypeSetupModal", "open")
     #showTab('headerNavBarPage', 'Results')
+    #toggleModal(session, "filterModal", "open")
   })
   
   source("server-reactives.R", local = TRUE)
@@ -399,10 +400,14 @@ shinyServer(function(input, output, session) {
       
       pmidList$pmids <- data.frame(PMID = pmids)
       
-      getSummaries("Cancer Types", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
-      formatCancerSummaries()
-      
       dbDisconnect(con)
+      
+      #getSummaries("Cancer Types", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
+      #formatCancerSummaries()
+      
+      updateCancerTypesSummary()
+      
+      
       
       if (is.null(pmidList$pmids_initial)) {
         pmidList$pmids_initial <- pmidList$pmids
@@ -460,11 +465,8 @@ shinyServer(function(input, output, session) {
       
       cancerSelectionSummary$tree_ids <- dbGetQuery(con, qry)
       
-      tree_ids <- cancerSelectionSummary$tree_ids
+      #tree_ids <- cancerSelectionSummary$tree_ids
       
-      dbDisconnect(con)
-      
-     
       # skip Neoplasms by Histologic types, Neoplasms by Site, and Neoplasms
       skipIDs <- c('D009370', 'D009371', 'D009369')
       skipIDs <- c('D009370', 'D009371')
@@ -473,6 +475,8 @@ shinyServer(function(input, output, session) {
       
       cancerSelectionSummary$dat <- mesh
       
+      getStatSummaries(con, cancerSelectionSummary, "MeshID", length(pmids), "MeshCounts")
+      dbDisconnect(con)
       
       #update PMIDs
       pmidList$pmids <- data.frame(PMID = pmids)
@@ -558,6 +562,7 @@ updateCancerTypesSummary <- function() {
   con = dbConnect(MariaDB(), group = "CPP")
   getSummaries("Cancer Types", con, getMeshSummaryByPMIDs, pmids, session, diseaseSummary, "filterDisease")
   formatCancerSummaries()
+  getStatSummaries(con, diseaseSummary, "MeshID", length(pmids), "MeshCounts")
   dbDisconnect(con)
   
   #toggleStackedGraphButtons(graph = "btnGenerateGraphCancerTypes")
@@ -585,6 +590,9 @@ updateCancerTermsSummary <- function() {
   pmids <- pmidList$pmids$PMID
   con = dbConnect(MariaDB(), group = "CPP")
   getSummaries("Related Cancer Terms", con, getCancerTermSummaryByPMIDs, pmids, session, cancerTermSummary, "filterCancerTerms")
+
+  getStatSummaries(con, cancerTermSummary, "TermID", length(pmids), "CancerTermCounts")
+  
   dbDisconnect(con)
   toggleStackedGraphButtons(graph = "btnGenerateGraphCancerTerm")
   
@@ -598,6 +606,7 @@ updateChemicalSummary <- function() {
   pmids <- pmidList$pmids$PMID
   con = dbConnect(MariaDB(), group = "CPP")
   getSummaries("Related Chemicals", con, getChemSummaryByPMIDs, pmids, session, chemSummary, "filterChem", pa = TRUE)
+  getStatSummaries(con, chemSummary, "MeshID", length(pmids), "ChemCounts")
   dbDisconnect(con)
   toggleStackedGraphButtons(graph = "btnGenerateGraphChem")
 }
@@ -609,6 +618,7 @@ updateMutationSummary <- function() {
   pmids <- pmidList$pmids$PMID
   con = dbConnect(MariaDB(), group = "CPP")
   getSummaries("Related Mutations", con, getMutationSummaryByPMIDs, pmids, session, mutationSummary, "filterMutations")
+  getStatSummaries(con, mutationSummary, "MutID", length(pmids), "MutCounts")
   dbDisconnect(con)
   toggleStackedGraphButtons(graph = "btnGenerateGraphMut")
   
@@ -626,6 +636,8 @@ updateAdditionalGenesSummary <- function() {
   tmp <- getGeneSummaryByPMIDs(pmids, con)
   m <- match(selected$geneSymbol, tmp$Symbol)
   geneSummary$dat <- tmp[-m[!is.na(m)],]
+  
+  getStatSummaries(con, geneSummary, "GeneID", length(pmids), "GeneCounts")
   dbDisconnect(con)
   toggleStackedGraphButtons(graph = "btnGenerateGraphGene")
 }
