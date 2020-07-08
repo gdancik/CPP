@@ -10,7 +10,7 @@ commonResults <- list(
            #shiny::column(width = 2,
            #              radioButtons("rbDiseaseLimits", "Article Limits:",
            #                           c("Cancer-related only" = "cancer", "All articles" = "none"), selected = "cancer")),
-           
+
            shiny::column(width=1),
            shiny::column(width =10 ,
                          htmlOutput("summaryHeader")              

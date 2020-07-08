@@ -164,7 +164,10 @@ observe({
     output$cancerGraph <- renderPlot({
       
       # put levels in sorted order for plotting
-      x$Term <- factor(x$Term, levels = x$Term[order(x$Frequency)])
+      #x$Term <- factor(x$Term, levels = x$Term[order(x$Frequency)])
+      
+      # use table order
+      x$Term <- factor(x$Term, levels = rev(x$Term))
       
       xx <- subset(x, Term%in% rev(levels(x$Term))[1:min(10,nrow(x))])
       title <- paste("Cancer-related publications mentioning", selected$geneSymbol)

@@ -69,7 +69,7 @@ output$downloadCancerTypesData <- downloadHandler(
       content = function(file) {
         updateCancerTypesSummary()
         writeDownloadHeader("Cancer Type Summary", file)
-        write.table(diseaseSummary$dat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
+        write.table(diseaseSummary$stat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
       },
       contentType = "text/csv"
 )
@@ -80,7 +80,7 @@ output$downloadCancerTermsData <- downloadHandler(
   content = function(file) {
     updateCancerTermsSummary()
     writeDownloadHeader("Cancer Terms Summary", file)
-    write.table(cancerTermSummary$dat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
+    write.table(cancerTermSummary$stat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
   },
   contentType = "text/csv"
 )
@@ -91,7 +91,7 @@ output$downloadDrugTreatmentsData <- downloadHandler(
   content = function(file) {
     updateChemicalSummary()
     writeDownloadHeader("Drug Summary", file)
-    write.table(chemSummary$dat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
+    write.table(chemSummary$stat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
   },
   contentType = "text/csv"
 )
@@ -101,7 +101,7 @@ output$downloadMutationsData <- downloadHandler(
   content = function(file) {
     updateMutationSummary()
     writeDownloadHeader("Mutation Summary", file)
-    write.table(mutationSummary$dat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
+    write.table(mutationSummary$stat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
   },
   contentType = "text/csv"
 )
@@ -111,7 +111,7 @@ output$downloadGenesData <- downloadHandler(
   content = function(file) {
     updateAdditionalGenesSummary()
     writeDownloadHeader("Gene Summary", file)
-    write.table(geneSummary$dat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
+    write.table(geneSummary$stat, file, sep = ",", row.names = FALSE, col.names = TRUE, append = TRUE)  
   },
   contentType = "text/csv"
 )
