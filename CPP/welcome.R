@@ -3,13 +3,14 @@ welcomePage <- list(
       p(strong("Instructions:"), "Welcome to the Cancer Publication Portal for summarizing and searching cancer-related literature.",
         "To start, select a gene or genes and click the 'Summarize cancer types' button to select the cancer types you are interested in.
         After selecting the cancer types of interest, articles will be summarized based on drugs, cancer terms, mutations, and additional genes
-        mentioned in article titles and abstracts. Additional filters can be applied by clicking on any of the tables."),
+        mentioned in article titles and abstracts. To select specific cancer types, click on the View/Change link towards the top of the Results
+        page. Additional filters can be applied by clicking on the tables."),
       p(strong("Resuts:"), "For each term, an enrichment", em("score"), "is calculated that measures how much
       more likely a term appears in the selected articles compared to all articles in the database. For example, a",
         em("score"), "of 4 means that the term is 4x as likely to appear in the title/abstract of selected articles than all cancer-related
         articles in the database. Results are ranked in order of statistical significance."), 
-      p(strong("Last updated:"), "Data is up-to-date with PubTator data release from 2/15/2020."),
-      p('Please note that the Back button on your browser does not work on this page'),
+      p(strong("Last updated:"), "Data is up-to-date with the PubTator data release from 2/15/2020."),
+      p('Please note that the Back button on your browser will not work on this page.'),
         
       fluidRow(column(12,
                progressDiv('welcomeModalProgress', 'welcomeModal-bar-text', "Summarizing cancer types, please wait..."))),

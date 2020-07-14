@@ -134,74 +134,11 @@ updateSelectedMeshIDs2 <- function(ids, tblSummary, colName1 = "MeshID",
 #############################################################
 # respond to click on cancer type table
 #############################################################
-shinyjs::onclick('diseaseResults', {
-  #shinyjs::click('btnTest')  
-  toggleModal(session, "cancerTypeSetupModal",  toggle = "open")
-  
-})
+# shinyjs::onclick('diseaseResults', {
+#   #shinyjs::click('btnTest')  
+#   toggleModal(session, "cancerTypeSetupModal",  toggle = "open")
+# })
 
-#################################################
-# For diseaseSummary, open model if user clicks
-#################################################
-# observe( {
-#            input$diseaseResults_rows_selected
-#           
-#             if (is.null(diseaseSummary$dat)) {
-#               cat("diseaseSummary$dat is NULL\n")
-#               return()
-#             } 
-#   
-#   
-#             cat("diseaseSummary$dat is not NULL\n")
-#               
-#             initialized <- isolate(diseaseSummary$initialized)
-#             cat("initialized: ", initialized, "\n")
-#             if (is.null(initialized)) {
-#                 initialized <- 1
-#                 isolate(diseaseSummary$initialized <- initialized)
-#                 return()
-#             } else if (initialized == 1) {
-#                 initialized <- 2
-#                 isolate(diseaseSummary$initialized <- initialized)
-#                 return()
-#             }
-#             
-#             # if no rows selected
-#             if (is.null(input$diseaseResults_rows_selected)) {
-#               cat("no rows selected\n")
-#               cat("selected1: ", cancerSelectionSummary$selected1, "\n")
-#                isolate(displayCancerSelectionSummary(diseaseSummary$dat, cancerSelectionSummary$selected1, cancerSelectionSummary$selected2, "diseaseResults"))
-#                cat("toggle modal from no rows selected...\n")
-#               # toggleModal(session, "cancerTypeSetupModal",  toggle = "open")
-#                catn("click link")
-#                shinyjs::click('#cancerTypeSetupModal')
-#                
-#                return()
-#             } else {
-#               
-#                 
-#                 ids <- diseaseSummary$dat$MeshID[input$diseaseResults_rows_selected]          
-#                 
-#                 # if user didn't actually click, then return
-#                 correctIDs <- intersect(diseaseSummary$dat$MeshID, cancerSelectionSummary$selected1)
-#                 cat("indices: ", input$diseaseResults_rows_selected, "\n")
-#                 cat("selected ids = ", ids, "\n")
-#                 cat("selected1 = ", cancerSelectionSummary$selected1, "\n")
-#                 cat("correctIDs: ", correctIDs, "\n")
-#               
-#                 if (setequal(correctIDs, ids)) {
-#                     cat("returning...\n")
-#                     return()
-#                 }
-#               
-#                 isolate(displayCancerSelectionSummary(diseaseSummary$dat, cancerSelectionSummary$selected1, cancerSelectionSummary$selected2, "diseaseResults"))
-#                 cat("toggle modal from user...\n")
-#                 #shinyjs::click('#cancerTypeSetupModal')
-#                 toggleModal(session, "cancerTypeSetupModal",  toggle = "open")
-#                 return()
-#             }
-#   })
-# 
 
 ######################################################################
 # returns TRUE if any summary selections need to be refreshed

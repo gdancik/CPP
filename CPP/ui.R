@@ -170,7 +170,7 @@ shinyUI(
              header =  commonModals,  # need to be common for toggleModal to work on tabResults
     
     tabPanel('Search', 
-             actionButton("btnTest", "click me"),
+             #actionButton("btnTest", "click me"),
              commonStyles,
              tags$head(HTML(
                "<!-- Global site tag (gtag.js) - Google Analytics -->

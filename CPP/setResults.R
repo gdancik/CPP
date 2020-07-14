@@ -65,7 +65,7 @@ getStatSummaries <- function(con, resTable, res_id, n, dbTableName) {
   p <- rep(1, length(b))
   
   for (i in 1:length(p)) {
-    p[i] <- phyper(r$Frequency[i]-1, n, c[i], r$Frequency_N[i], lower.tail = FALSE)
+    p[i] <- phyper(r$Frequency[i]-1, r$Frequency_N[i], c[i], n, lower.tail = FALSE)
   }
 
   resTable$stat <- r %>% mutate(Score = Proportion/Proportion_N,

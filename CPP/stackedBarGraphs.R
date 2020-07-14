@@ -27,8 +27,8 @@ getStackedResults2 <- function(sql_function, group, group.filters) {
     m <- match(meshIDs, cancerSelectionSummary$dat$MeshID)
     diseases <- cancerSelectionSummary$dat$Term[m]
   } else {
-    meshIDs <- diseaseSummary$dat$MeshID
-    diseases <- diseaseSummary$dat$Term
+    meshIDs <- diseaseSummary$stat$MeshID
+    diseases <- diseaseSummary$stat$Term
   }
 
   msg <- NULL

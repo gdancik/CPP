@@ -20,7 +20,7 @@ library(shinycssloaders, lib.loc = lib.loc)
 
 
 CONFIG <- list(
-  DEBUG = TRUE,
+  DEBUG = FALSE,
   DEFAULT.GENE = "AGL"
 )
 

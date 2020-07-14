@@ -59,9 +59,7 @@ tabAbout = tabPanel("About",
       HTML("</li>"),
       
       HTML("</ul>")
-    ), div(
-            HTML("</br></br></br><b> Last updated: 10/24/2019</b>")
-       )
+    )
     )
 )
 

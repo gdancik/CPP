@@ -54,8 +54,8 @@ addTabPanel <- function(title, tableId, graphId = NULL, statTableId = NULL) {
                               
                               fluidRow(column(width=1),
                                        column(width = 10,
-                                              HTML('<br><b>Term enrichment in selected articles</b>. Analysis assesses whether terms are
-                                    more likely than chance to appear in the selected article abstracts. 
+                                              HTML('<br><b>Term enrichment in selected articles</b>. The analysis assesses whether terms are
+                                    more likely than chance to appear in the selected article titles/abstracts. 
                                                    <i>Frequency</i> is the number of articles with the specified term;
                                                    <i>n</i> is the number of selected articles;
                                                    <i>Proportion</i> is the proportion of selected articles with the corresponding term, rounded
