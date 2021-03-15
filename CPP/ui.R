@@ -192,7 +192,7 @@ shinyUI(
     
     # activate shinyJS
     useShinyjs(),
-    shinyjs::extendShinyjs(text = jsCode)
+    shinyjs::extendShinyjs(text = jsCode, functions = c('setReadOnly'))
     
       #logPanel()
   ) # end navbarPage
